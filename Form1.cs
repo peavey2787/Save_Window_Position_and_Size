@@ -489,7 +489,7 @@ namespace Save_Window_Position_and_Size
             var runningApps = new List<string>();
             Process.GetProcesses().ToList().ForEach(p =>
             {
-                if (p.MainWindowTitle.Length > 0 && p.MainWindowTitle != "Microsoft Text Input Application" && p.MainWindowTitle != "Settings")
+                if (p.MainWindowTitle.Length > 0 && p.MainWindowTitle != "Microsoft Text Input Application" && p.MainWindowTitle != "Settings" && p.MainWindowTitle != "Documents")
                 {
                     var rect = windowPosition.GetWindowPositionAndSize(p.MainWindowTitle);
                     if (rect.X == 0 && rect.Y == 0 && rect.Width == 0 && rect.Height == 0)
