@@ -29,7 +29,6 @@
         private void InitializeComponent()
         {
             this.Save = new System.Windows.Forms.Button();
-            this.WindowTitle = new System.Windows.Forms.TextBox();
             this.lbl_Window_Title = new System.Windows.Forms.Label();
             this.Restore = new System.Windows.Forms.Button();
             this.LogOutput = new System.Windows.Forms.TextBox();
@@ -48,13 +47,16 @@
             this.lblTime = new System.Windows.Forms.Label();
             this.Time = new System.Windows.Forms.Label();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.WindowTitle = new System.Windows.Forms.Label();
+            this.lblAllRunningApps = new System.Windows.Forms.Label();
+            this.lblSavedApps = new System.Windows.Forms.Label();
             this.AutoPosition = new System.Windows.Forms.CheckBox();
             this.panel1.SuspendLayout();
             this.SuspendLayout();
             // 
             // Save
             // 
-            this.Save.Location = new System.Drawing.Point(369, 47);
+            this.Save.Location = new System.Drawing.Point(334, 104);
             this.Save.Name = "Save";
             this.Save.Size = new System.Drawing.Size(75, 23);
             this.Save.TabIndex = 0;
@@ -62,26 +64,19 @@
             this.Save.UseVisualStyleBackColor = true;
             this.Save.Click += new System.EventHandler(this.Save_Click);
             // 
-            // WindowTitle
-            // 
-            this.WindowTitle.Location = new System.Drawing.Point(369, 12);
-            this.WindowTitle.Name = "WindowTitle";
-            this.WindowTitle.Size = new System.Drawing.Size(230, 23);
-            this.WindowTitle.TabIndex = 1;
-            this.WindowTitle.Text = "notepad";
-            // 
             // lbl_Window_Title
             // 
             this.lbl_Window_Title.AutoSize = true;
-            this.lbl_Window_Title.Location = new System.Drawing.Point(284, 15);
+            this.lbl_Window_Title.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
+            this.lbl_Window_Title.Location = new System.Drawing.Point(347, 9);
             this.lbl_Window_Title.Name = "lbl_Window_Title";
-            this.lbl_Window_Title.Size = new System.Drawing.Size(79, 15);
+            this.lbl_Window_Title.Size = new System.Drawing.Size(185, 21);
             this.lbl_Window_Title.TabIndex = 2;
-            this.lbl_Window_Title.Text = "Window Title:";
+            this.lbl_Window_Title.Text = "Selected Window Title:";
             // 
             // Restore
             // 
-            this.Restore.Location = new System.Drawing.Point(496, 47);
+            this.Restore.Location = new System.Drawing.Point(457, 104);
             this.Restore.Name = "Restore";
             this.Restore.Size = new System.Drawing.Size(75, 23);
             this.Restore.TabIndex = 3;
@@ -105,7 +100,7 @@
             // 
             this.AppsSaved.FormattingEnabled = true;
             this.AppsSaved.ItemHeight = 15;
-            this.AppsSaved.Location = new System.Drawing.Point(605, 12);
+            this.AppsSaved.Location = new System.Drawing.Point(605, 40);
             this.AppsSaved.Name = "AppsSaved";
             this.AppsSaved.ScrollAlwaysVisible = true;
             this.AppsSaved.Size = new System.Drawing.Size(183, 244);
@@ -115,7 +110,7 @@
             // 
             // WindowPosX
             // 
-            this.WindowPosX.Location = new System.Drawing.Point(424, 92);
+            this.WindowPosX.Location = new System.Drawing.Point(426, 141);
             this.WindowPosX.Name = "WindowPosX";
             this.WindowPosX.Size = new System.Drawing.Size(100, 23);
             this.WindowPosX.TabIndex = 6;
@@ -123,7 +118,7 @@
             // lblWindowPosX
             // 
             this.lblWindowPosX.AutoSize = true;
-            this.lblWindowPosX.Location = new System.Drawing.Point(332, 96);
+            this.lblWindowPosX.Location = new System.Drawing.Point(334, 145);
             this.lblWindowPosX.Name = "lblWindowPosX";
             this.lblWindowPosX.Size = new System.Drawing.Size(86, 15);
             this.lblWindowPosX.TabIndex = 7;
@@ -132,7 +127,7 @@
             // lblWindowPosY
             // 
             this.lblWindowPosY.AutoSize = true;
-            this.lblWindowPosY.Location = new System.Drawing.Point(332, 138);
+            this.lblWindowPosY.Location = new System.Drawing.Point(334, 187);
             this.lblWindowPosY.Name = "lblWindowPosY";
             this.lblWindowPosY.Size = new System.Drawing.Size(86, 15);
             this.lblWindowPosY.TabIndex = 8;
@@ -140,14 +135,14 @@
             // 
             // WindowPosY
             // 
-            this.WindowPosY.Location = new System.Drawing.Point(424, 134);
+            this.WindowPosY.Location = new System.Drawing.Point(426, 183);
             this.WindowPosY.Name = "WindowPosY";
             this.WindowPosY.Size = new System.Drawing.Size(100, 23);
             this.WindowPosY.TabIndex = 9;
             // 
             // WindowWidth
             // 
-            this.WindowWidth.Location = new System.Drawing.Point(424, 176);
+            this.WindowWidth.Location = new System.Drawing.Point(426, 225);
             this.WindowWidth.Name = "WindowWidth";
             this.WindowWidth.Size = new System.Drawing.Size(100, 23);
             this.WindowWidth.TabIndex = 10;
@@ -155,7 +150,7 @@
             // lblWindowWidth
             // 
             this.lblWindowWidth.AutoSize = true;
-            this.lblWindowWidth.Location = new System.Drawing.Point(332, 179);
+            this.lblWindowWidth.Location = new System.Drawing.Point(334, 228);
             this.lblWindowWidth.Name = "lblWindowWidth";
             this.lblWindowWidth.Size = new System.Drawing.Size(89, 15);
             this.lblWindowWidth.TabIndex = 11;
@@ -164,7 +159,7 @@
             // lblWindowHeight
             // 
             this.lblWindowHeight.AutoSize = true;
-            this.lblWindowHeight.Location = new System.Drawing.Point(332, 216);
+            this.lblWindowHeight.Location = new System.Drawing.Point(334, 265);
             this.lblWindowHeight.Name = "lblWindowHeight";
             this.lblWindowHeight.Size = new System.Drawing.Size(93, 15);
             this.lblWindowHeight.TabIndex = 12;
@@ -172,7 +167,7 @@
             // 
             // WindowHeight
             // 
-            this.WindowHeight.Location = new System.Drawing.Point(424, 213);
+            this.WindowHeight.Location = new System.Drawing.Point(426, 262);
             this.WindowHeight.Name = "WindowHeight";
             this.WindowHeight.Size = new System.Drawing.Size(100, 23);
             this.WindowHeight.TabIndex = 13;
@@ -181,7 +176,7 @@
             // 
             this.AllRunningApps.FormattingEnabled = true;
             this.AllRunningApps.ItemHeight = 15;
-            this.AllRunningApps.Location = new System.Drawing.Point(12, 12);
+            this.AllRunningApps.Location = new System.Drawing.Point(12, 40);
             this.AllRunningApps.Name = "AllRunningApps";
             this.AllRunningApps.ScrollAlwaysVisible = true;
             this.AllRunningApps.Size = new System.Drawing.Size(255, 244);
@@ -190,7 +185,7 @@
             // 
             // UpdateTimerInterval
             // 
-            this.UpdateTimerInterval.Location = new System.Drawing.Point(535, 288);
+            this.UpdateTimerInterval.Location = new System.Drawing.Point(558, 302);
             this.UpdateTimerInterval.Name = "UpdateTimerInterval";
             this.UpdateTimerInterval.Size = new System.Drawing.Size(25, 23);
             this.UpdateTimerInterval.TabIndex = 15;
@@ -200,7 +195,7 @@
             // lblUpdateTimerInterval
             // 
             this.lblUpdateTimerInterval.AutoSize = true;
-            this.lblUpdateTimerInterval.Location = new System.Drawing.Point(284, 291);
+            this.lblUpdateTimerInterval.Location = new System.Drawing.Point(307, 305);
             this.lblUpdateTimerInterval.Name = "lblUpdateTimerInterval";
             this.lblUpdateTimerInterval.Size = new System.Drawing.Size(251, 15);
             this.lblUpdateTimerInterval.TabIndex = 16;
@@ -209,7 +204,7 @@
             // lblTime
             // 
             this.lblTime.AutoSize = true;
-            this.lblTime.Location = new System.Drawing.Point(584, 291);
+            this.lblTime.Location = new System.Drawing.Point(607, 305);
             this.lblTime.Name = "lblTime";
             this.lblTime.Size = new System.Drawing.Size(65, 15);
             this.lblTime.TabIndex = 17;
@@ -218,7 +213,7 @@
             // Time
             // 
             this.Time.AutoSize = true;
-            this.Time.Location = new System.Drawing.Point(645, 291);
+            this.Time.Location = new System.Drawing.Point(668, 305);
             this.Time.Name = "Time";
             this.Time.Size = new System.Drawing.Size(34, 15);
             this.Time.TabIndex = 18;
@@ -226,13 +221,15 @@
             // 
             // panel1
             // 
+            this.panel1.Controls.Add(this.WindowTitle);
+            this.panel1.Controls.Add(this.lblAllRunningApps);
+            this.panel1.Controls.Add(this.lblSavedApps);
             this.panel1.Controls.Add(this.AutoPosition);
             this.panel1.Controls.Add(this.AllRunningApps);
             this.panel1.Controls.Add(this.Time);
             this.panel1.Controls.Add(this.Save);
             this.panel1.Controls.Add(this.lblTime);
             this.panel1.Controls.Add(this.lblUpdateTimerInterval);
-            this.panel1.Controls.Add(this.WindowTitle);
             this.panel1.Controls.Add(this.UpdateTimerInterval);
             this.panel1.Controls.Add(this.lbl_Window_Title);
             this.panel1.Controls.Add(this.Restore);
@@ -251,10 +248,37 @@
             this.panel1.Size = new System.Drawing.Size(800, 328);
             this.panel1.TabIndex = 19;
             // 
+            // WindowTitle
+            // 
+            this.WindowTitle.Location = new System.Drawing.Point(273, 30);
+            this.WindowTitle.Name = "WindowTitle";
+            this.WindowTitle.Size = new System.Drawing.Size(326, 71);
+            this.WindowTitle.TabIndex = 23;
+            // 
+            // lblAllRunningApps
+            // 
+            this.lblAllRunningApps.AutoSize = true;
+            this.lblAllRunningApps.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
+            this.lblAllRunningApps.Location = new System.Drawing.Point(64, 15);
+            this.lblAllRunningApps.Name = "lblAllRunningApps";
+            this.lblAllRunningApps.Size = new System.Drawing.Size(142, 21);
+            this.lblAllRunningApps.TabIndex = 22;
+            this.lblAllRunningApps.Text = "All Running Apps";
+            // 
+            // lblSavedApps
+            // 
+            this.lblSavedApps.AutoSize = true;
+            this.lblSavedApps.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
+            this.lblSavedApps.Location = new System.Drawing.Point(645, 14);
+            this.lblSavedApps.Name = "lblSavedApps";
+            this.lblSavedApps.Size = new System.Drawing.Size(98, 21);
+            this.lblSavedApps.TabIndex = 21;
+            this.lblSavedApps.Text = "Saved Apps";
+            // 
             // AutoPosition
             // 
             this.AutoPosition.AutoSize = true;
-            this.AutoPosition.Location = new System.Drawing.Point(169, 290);
+            this.AutoPosition.Location = new System.Drawing.Point(192, 304);
             this.AutoPosition.Name = "AutoPosition";
             this.AutoPosition.Size = new System.Drawing.Size(98, 19);
             this.AutoPosition.TabIndex = 20;
@@ -282,7 +306,6 @@
         #endregion
 
         private Button Save;
-        private TextBox WindowTitle;
         private Label lbl_Window_Title;
         private Button Restore;
         private TextBox LogOutput;
@@ -302,5 +325,8 @@
         private Label Time;
         private Panel panel1;
         private CheckBox AutoPosition;
+        private Label lblAllRunningApps;
+        private Label lblSavedApps;
+        private Label WindowTitle;
     }
 }
