@@ -36,6 +36,9 @@ namespace Save_Window_Position_and_Size
             int index = 0;
             foreach (var key in config.AppSettings.Settings.AllKeys)
             {
+                if(key == "refreshTime" || key == "autoPosition")
+                    continue;
+
                 // Load the saved apps
                 if (index == 0)
                     AppsSaved.Items.Add(key.Replace("x", ""));
@@ -329,17 +332,17 @@ namespace Save_Window_Position_and_Size
         }
         private void SaveAutoPositionSetting(bool autoPosition)
         {
-            if (config.AppSettings.Settings["AutoPosition"] != null)
-                config.AppSettings.Settings["AutoPosition"].Value = autoPosition.ToString();
+            if (config.AppSettings.Settings["autoPosition"] != null)
+                config.AppSettings.Settings["autoPosition"].Value = autoPosition.ToString();
             else
-                config.AppSettings.Settings.Add("AutoPosition", autoPosition.ToString());
+                config.AppSettings.Settings.Add("autoPosition", autoPosition.ToString());
 
             config.Save();
         }
         private bool LoadAutoPositionSetting()
         {
-            if (config.AppSettings.Settings["AutoPosition"] != null)
-                return bool.Parse(config.AppSettings.Settings["AutoPosition"].Value);
+            if (config.AppSettings.Settings["autoPosition"] != null)
+                return bool.Parse(config.AppSettings.Settings["autoPosition"].Value);
 
             return false;
         }
