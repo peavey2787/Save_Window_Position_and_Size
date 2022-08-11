@@ -9,6 +9,10 @@ The details will populate in the middle where you can edit and fine tune. Click 
 You can enable the Auto Position check box to check every minute by default to ensure all the saved apps are in their desired location. 
 If they are not then they will be moved their desired location and size.
 
+# How do I update an app's location/size after changing it?
+
+Click on the app in either list to refresh the location and size values.
+
 # Save Button
 
 The Save button saves an app, or updpates an already saved app, with its location and size.
