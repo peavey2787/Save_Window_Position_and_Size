@@ -62,8 +62,6 @@ namespace Save_Window_Position_and_Size
 
             // Load auto position setting
             AutoPosition.Checked = LoadAutoPositionSetting();
-            StartOrStopTimers(AutoPosition.Checked);
-
         }
 
         // Timers

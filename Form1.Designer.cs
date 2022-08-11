@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
             this.Save = new System.Windows.Forms.Button();
             this.lbl_Window_Title = new System.Windows.Forms.Label();
             this.Restore = new System.Windows.Forms.Button();
@@ -293,6 +294,7 @@
             this.ClientSize = new System.Drawing.Size(800, 395);
             this.Controls.Add(this.panel1);
             this.Controls.Add(this.LogOutput);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "Form1";
             this.Text = "Save Window Size and Position";
             this.Load += new System.EventHandler(this.Form1_Load);
