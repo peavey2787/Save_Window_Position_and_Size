@@ -10,6 +10,12 @@ namespace Save_Window_Position_and_Size
         System.Windows.Forms.Timer refreshTimer = new System.Windows.Forms.Timer();
         Configuration config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
 
+        const string WinPosX = "WinPosX";
+        const string WinPosY = "WinPosY";
+        const string WinWidth = "WinWidth";
+        const string WinHeight = "WinHeight";
+        const string WinKeepOnTop = "WinKeepOnTop";
+
         // Load/Close
         public Form1()
         {
@@ -23,7 +29,7 @@ namespace Save_Window_Position_and_Size
             refreshTimer.Tick += RefreshTimer_Tick;
             refreshTimer.Start();
 
-            var appSize = new Size(816, 434);
+            var appSize = new Size(974, 434);
             this.MinimumSize = appSize;
             this.MaximumSize = appSize;
         }
@@ -32,21 +38,10 @@ namespace Save_Window_Position_and_Size
             Configuration config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
 
             // Go through all the settings
-            int counter = 4;
-            int index = 0;
             foreach (var key in config.AppSettings.Settings.AllKeys)
             {
-                if(key == "refreshTime" || key == "autoPosition")
-                    continue;
-
-                // Load the saved apps
-                if (index == 0)
-                    AppsSaved.Items.Add(key.Replace("x", ""));
-
-                index++;
-
-                if (index == counter)
-                    index = 0;
+                if(key.Contains(WinPosX))
+                    AppsSaved.Items.Add(key.Replace(WinPosX, ""));
             }
 
             // Show all running apps
@@ -64,6 +59,7 @@ namespace Save_Window_Position_and_Size
             AutoPosition.Checked = LoadAutoPositionSetting();
         }
 
+
         // Timers
         int minutes = 0;
         int seconds = 60;
@@ -71,7 +67,12 @@ namespace Save_Window_Position_and_Size
         {
             // Update refresh time
             seconds--;
-            Time.Text = minutes.ToString() + ":" + seconds.ToString();
+
+            if(seconds.ToString().Length == 1)
+                Time.Text = minutes.ToString() + ":0" + seconds.ToString();
+            else
+                Time.Text = minutes.ToString() + ":" + seconds.ToString();
+
 
             if (seconds == 0)
             {
@@ -119,33 +120,79 @@ namespace Save_Window_Position_and_Size
 
 
         // User Actions
+        private void RefreshAllRunningApps_Click(object sender, EventArgs e)
+        {
+            AllRunningApps.Items.Clear();
+
+            // Show all running apps
+            var allApps = GetAllRunningApps();
+
+            foreach (var app in allApps)
+                AllRunningApps.Items.Add(app);
+        }
         private void Save_Click(object sender, EventArgs e)
         {
             if(!AppsSaved.Items.Contains(WindowTitle.Text))
                 AppsSaved.Items.Add(WindowTitle.Text);
-            
-            var windowPosAndSize = windowPosition.GetWindowPositionAndSize(WindowTitle.Text);
 
+            var windowPosAndSize = new WindowPosAndSize();
+
+            if (int.TryParse(WindowPosX.Text, out int posX))
+                windowPosAndSize.X = posX;
+            else
+                AddToOutputLog(Environment.NewLine + " Window Pos X is not a number, unable to save.");
+
+            if (int.TryParse(WindowPosY.Text, out int posY))
+                windowPosAndSize.Y = posY;
+            else
+                AddToOutputLog(Environment.NewLine + " Window Pos Y is not a number, unable to save.");
+
+            if (int.TryParse(WindowWidth.Text, out int width))
+                windowPosAndSize.Width = width;
+            else
+                AddToOutputLog(Environment.NewLine + " Window Width is not a number, unable to save.");
+
+            if (int.TryParse(WindowHeight.Text, out int height))
+                windowPosAndSize.Height = height;
+            else
+                AddToOutputLog(Environment.NewLine + " Window Height is not a number, unable to save.");
+
+            // Save settings
             SaveAppSettings(WindowTitle.Text, windowPosAndSize);
+            SaveKeepWindowOnTopSetting(WindowTitle.Text, KeepWindowOnTop.Checked);
         }
         private void Restore_Click(object sender, EventArgs e)
         {
             // Load last settings 
             var windowSizeAndPos = LoadAppSettings(WindowTitle.Text, true);
-            windowPosition.SetWindowPositionAndSize(WindowTitle.Text, windowSizeAndPos.X, windowSizeAndPos.Y, windowSizeAndPos.Width, windowSizeAndPos.Height);
+            if (WindowTitle.Text.StartsWith("File Explorer"))
+                SetFileExplorerWindowPosAndSize(WindowTitle.Text, windowSizeAndPos);
+            else
+                windowPosition.SetWindowPositionAndSize(WindowTitle.Text, windowSizeAndPos.X, windowSizeAndPos.Y, windowSizeAndPos.Width, windowSizeAndPos.Height);
         }
         private void AppsSaved_SelectedIndexChanged(object sender, EventArgs e)
         {
+            if (AppsSaved.SelectedIndex == -1)
+                return;
+
             WindowTitle.Text = AppsSaved.SelectedItem.ToString();
 
             var windowPosAndSize = LoadAppSettings(WindowTitle.Text, false);
             PopulateWindowSettings(windowPosAndSize);
+            KeepWindowOnTop.Checked = LoadKeepWindowOnTopSetting(WindowTitle.Text);
         }
         private void AllRunningApps_SelectedIndexChanged(object sender, EventArgs e)
         {
-            var windowTitle = AllRunningApps.SelectedItem.ToString();
-            var windowPosAndSize = windowPosition.GetWindowPositionAndSize(windowTitle);
-            WindowTitle.Text = AllRunningApps.SelectedItem.ToString();
+            var windowPosAndSize = new WindowPosAndSize();
+
+            var windowTitle = AllRunningApps.SelectedItem.ToString();            
+            WindowTitle.Text = windowTitle;
+
+            if(windowTitle.StartsWith("File Explorer"))
+                windowPosAndSize = GetFileExplorerWindow(windowTitle);            
+            else
+                windowPosAndSize = windowPosition.GetWindowPositionAndSize(windowTitle);            
+
             PopulateWindowSettings(windowPosAndSize);
         }
         private void AppsSaved_KeyDown(object sender, KeyEventArgs e)
@@ -177,6 +224,16 @@ namespace Save_Window_Position_and_Size
             SaveAutoPositionSetting(AutoPosition.Checked);
             StartOrStopTimers(AutoPosition.Checked);
         }
+        private void KeepWindowOnTop_CheckedChanged(object sender, EventArgs e)
+        {
+            if (KeepWindowOnTop.Checked)
+                windowPosition.SetWindowAlwaysOnTop(WindowTitle.Text);
+            else
+                windowPosition.UnsetWindowAlwaysOnTop(WindowTitle.Text);
+            
+            SaveKeepWindowOnTopSetting(WindowTitle.Text, KeepWindowOnTop.Checked);
+        }
+
 
         // UI
         private void AddToOutputLog(string message)
@@ -190,6 +247,13 @@ namespace Save_Window_Position_and_Size
             WindowWidth.Text = windowPosAndSize.Width.ToString();
             WindowHeight.Text = windowPosAndSize.Height.ToString();
         }
+        private void LogWindowSize(WindowPosAndSize windowPosAndSize)
+        {
+            AddToOutputLog(" x = " + windowPosAndSize.X.ToString());
+            AddToOutputLog(" y = " + windowPosAndSize.Y.ToString());
+            AddToOutputLog(" width = " + windowPosAndSize.Width.ToString());
+            AddToOutputLog(" height = " + windowPosAndSize.Height.ToString());
+        }
 
 
         // CRUD Settings
@@ -198,16 +262,19 @@ namespace Save_Window_Position_and_Size
             Configuration config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
             var error = false;
 
-            try { config.AppSettings.Settings.Remove(WindowTitle.Text + "x"); }
+            try { config.AppSettings.Settings.Remove(WindowTitle.Text + WinPosX); }
             catch { error = true; }
 
-            try { config.AppSettings.Settings.Remove(WindowTitle.Text + "y"); }
+            try { config.AppSettings.Settings.Remove(WindowTitle.Text + WinPosY); }
             catch { error = true; }
 
-            try { config.AppSettings.Settings.Remove(WindowTitle.Text + "width"); }
+            try { config.AppSettings.Settings.Remove(WindowTitle.Text + WinWidth); }
             catch { error = true; }
 
-            try { config.AppSettings.Settings.Remove(WindowTitle.Text + "height"); }
+            try { config.AppSettings.Settings.Remove(WindowTitle.Text + WinHeight); }
+            catch { error = true; }
+
+            try { config.AppSettings.Settings.Remove(WindowTitle.Text + WinHeight); }
             catch { error = true; }
 
             return error;
@@ -217,7 +284,7 @@ namespace Save_Window_Position_and_Size
             if (windowTitle == null)
                 return false;
 
-            if (ConfigurationManager.AppSettings[windowTitle + "x"] != null)
+            if (ConfigurationManager.AppSettings[windowTitle + WinPosX] != null)
                 return true;
 
             return false;
@@ -236,14 +303,12 @@ namespace Save_Window_Position_and_Size
             int height = 0;
 
 
-            if (config.AppSettings.Settings[windowTitle + "x"] != null)
+            if (config.AppSettings.Settings[windowTitle + WinPosX] != null)
             {
-                //ConfigurationManager.RefreshSection("appSettings");
-                
-                try { int.TryParse(config.AppSettings.Settings[windowTitle + "x"].Value, out x); } catch { error = true; LogOutput.AppendText(Environment.NewLine + "Unable to load X position settings for " + windowTitle + ". Please save new settings."); }
-                try { int.TryParse(config.AppSettings.Settings[windowTitle + "y"].Value, out y); } catch { error = true; LogOutput.AppendText(Environment.NewLine + "Unable to load Y position settings for " + windowTitle + ". Please save new settings."); }
-                try { int.TryParse(config.AppSettings.Settings[windowTitle + "width"].Value, out width); } catch { error = true; LogOutput.AppendText(Environment.NewLine + "Unable to load width settings for " + windowTitle + ". Please save new settings."); }
-                try { int.TryParse(config.AppSettings.Settings[windowTitle + "height"].Value, out height); } catch { error = true; LogOutput.AppendText(Environment.NewLine + "Unable to load height settings for " + windowTitle + ". Please save new settings."); }
+                try { int.TryParse(config.AppSettings.Settings[windowTitle + WinPosX].Value, out x); } catch { error = true; LogOutput.AppendText(Environment.NewLine + "Unable to load X position settings for " + windowTitle + ". Please save new settings."); }
+                try { int.TryParse(config.AppSettings.Settings[windowTitle + WinPosY].Value, out y); } catch { error = true; LogOutput.AppendText(Environment.NewLine + "Unable to load Y position settings for " + windowTitle + ". Please save new settings."); }
+                try { int.TryParse(config.AppSettings.Settings[windowTitle + WinWidth].Value, out width); } catch { error = true; LogOutput.AppendText(Environment.NewLine + "Unable to load width settings for " + windowTitle + ". Please save new settings."); }
+                try { int.TryParse(config.AppSettings.Settings[windowTitle + WinHeight].Value, out height); } catch { error = true; LogOutput.AppendText(Environment.NewLine + "Unable to load height settings for " + windowTitle + ". Please save new settings."); }
             }
 
             windowPosAndSize.X = x;
@@ -253,10 +318,8 @@ namespace Save_Window_Position_and_Size
 
             if (updateLog)
             {
-                AddToOutputLog(Environment.NewLine + WindowTitle.Text + " Settings Loaded: " + Environment.NewLine + " x = " + x);
-                AddToOutputLog(" y = " + y);
-                AddToOutputLog(" width = " + width);
-                AddToOutputLog(" height = " + height);
+                AddToOutputLog(Environment.NewLine + WindowTitle.Text + " Settings Loaded: ");
+                LogWindowSize(windowPosAndSize);
             }
 
             return windowPosAndSize;
@@ -270,39 +333,37 @@ namespace Save_Window_Position_and_Size
             var width = windowPosAndSize.Width.ToString();
             var height = windowPosAndSize.Height.ToString();
 
-            AddToOutputLog(Environment.NewLine + windowTitle + " Settings Saved: " + Environment.NewLine + " x = " + x);
-            AddToOutputLog(" y = " + y);
-            AddToOutputLog(" width = " + width);
-            AddToOutputLog(" height = " + height);
+            AddToOutputLog(Environment.NewLine + windowTitle + " Settings Saved: ");
+            LogWindowSize(windowPosAndSize);
 
-            if (config.AppSettings.Settings[windowTitle + "x"] != null)
-                config.AppSettings.Settings[windowTitle + "x"].Value = x;
+            if (config.AppSettings.Settings[windowTitle + WinPosX] != null)
+                config.AppSettings.Settings[windowTitle + WinPosX].Value = x;
             else
             {
                 // Only add valid running apps
-                if (!WindowTitleIsRunningProcess(windowTitle))
+                if (!WindowTitleIsRunningProcess(windowTitle) && windowTitle.StartsWith("File Explorer") == false)
                 {
                     AddToOutputLog("Couldn't find running process " + windowTitle + " settings not saved.");
                     return;
                 }
 
-                config.AppSettings.Settings.Add(windowTitle + "x", x);
+                config.AppSettings.Settings.Add(windowTitle + WinPosX, x);
             }
 
-            if (config.AppSettings.Settings[windowTitle + "y"] != null)
-                config.AppSettings.Settings[windowTitle + "y"].Value = y;
+            if (config.AppSettings.Settings[windowTitle + WinPosY] != null)
+                config.AppSettings.Settings[windowTitle + WinPosY].Value = y;
             else
-                config.AppSettings.Settings.Add(windowTitle + "y", y);
+                config.AppSettings.Settings.Add(windowTitle + WinPosY, y);
 
-            if (config.AppSettings.Settings[windowTitle + "width"] != null)
-                config.AppSettings.Settings[windowTitle + "width"].Value = width;
+            if (config.AppSettings.Settings[windowTitle + WinWidth] != null)
+                config.AppSettings.Settings[windowTitle + WinWidth].Value = width;
             else
-                config.AppSettings.Settings.Add(windowTitle + "width", width);
+                config.AppSettings.Settings.Add(windowTitle + WinWidth, width);
 
-            if (config.AppSettings.Settings[windowTitle + "height"] != null)
-                config.AppSettings.Settings[windowTitle + "height"].Value = height;
+            if (config.AppSettings.Settings[windowTitle + WinHeight] != null)
+                config.AppSettings.Settings[windowTitle + WinHeight].Value = height;
             else
-                config.AppSettings.Settings.Add(windowTitle + "height", height);
+                config.AppSettings.Settings.Add(windowTitle + WinHeight, height);
 
             config.Save();
         }
@@ -344,8 +405,73 @@ namespace Save_Window_Position_and_Size
 
             return false;
         }
+        private void SaveKeepWindowOnTopSetting(string windowTitle, bool keepWindowOnTop)
+        {
+            if (config.AppSettings.Settings[windowTitle + "keepWindowOnTopSetting"] != null)
+                config.AppSettings.Settings[windowTitle + "keepWindowOnTopSetting"].Value = keepWindowOnTop.ToString();
+            else
+                config.AppSettings.Settings.Add(windowTitle + "keepWindowOnTopSetting", keepWindowOnTop.ToString());
 
+            config.Save();
+        }
+        private bool LoadKeepWindowOnTopSetting(string windowTitle)
+        {
+            if (config.AppSettings.Settings[windowTitle + "keepWindowOnTopSetting"] != null)
+                return bool.Parse(config.AppSettings.Settings[windowTitle + "keepWindowOnTopSetting"].Value);
 
+            return false;
+        }
+
+        
+        // File Explorer Specific
+        private List<string> GetFileExplorerWindows()
+        {
+            var windows = new List<string>();
+
+            foreach (SHDocVw.InternetExplorer window in new SHDocVw.ShellWindows())
+            {
+                if (Path.GetFileNameWithoutExtension(window.FullName).ToLowerInvariant() == "explorer")
+                {
+                    var appName = window.Name + " - " + window.LocationName;
+                    windows.Add(appName);
+                }
+            }
+
+            return windows;
+        }
+        private WindowPosAndSize GetFileExplorerWindow(string windowTitle)
+        {
+            var windowPosAndSize = new WindowPosAndSize();
+
+            foreach (SHDocVw.InternetExplorer window in new SHDocVw.ShellWindows())
+            {
+                if (Path.GetFileNameWithoutExtension(window.FullName).ToLowerInvariant() == "explorer" && window.Name + " - " + window.LocationName == windowTitle)
+                {
+                    windowPosAndSize.X = window.Left;
+                    windowPosAndSize.Y = window.Top;
+                    windowPosAndSize.Width = window.Width;
+                    windowPosAndSize.Height = window.Height;
+                }
+            }
+
+            return windowPosAndSize;
+        }
+        private void SetFileExplorerWindowPosAndSize(string windowTitle, WindowPosAndSize windowPosAndSize)
+        {
+            foreach (SHDocVw.InternetExplorer window in new SHDocVw.ShellWindows())
+            {
+                if (Path.GetFileNameWithoutExtension(window.FullName).ToLowerInvariant() == "explorer" && window.Name + " - " + window.LocationName == windowTitle)
+                {
+                    window.Left = windowPosAndSize.X;
+                    window.Top = windowPosAndSize.Y;
+                    window.Width = windowPosAndSize.Width;
+                    window.Height = windowPosAndSize.Height;
+                    return;
+                }
+            }
+        }
+        
+        
         // Misc
         private bool WindowTitleIsRunningProcess(string windowTitle)
         {
@@ -363,18 +489,25 @@ namespace Save_Window_Position_and_Size
             var runningApps = new List<string>();
             Process.GetProcesses().ToList().ForEach(p =>
             {
-                if (p.MainWindowTitle.Length > 0)
+                if (p.MainWindowTitle.Length > 0 && p.MainWindowTitle != "Microsoft Text Input Application" && p.MainWindowTitle != "Settings")
                 {
-                    var rect = windowPosition.GetWindowPositionAndSize(p.ProcessName);
+                    var rect = windowPosition.GetWindowPositionAndSize(p.MainWindowTitle);
                     if (rect.X == 0 && rect.Y == 0 && rect.Width == 0 && rect.Height == 0)
                     {
-                        rect = windowPosition.GetWindowPositionAndSize(p.MainWindowTitle);
-                        runningApps.Add(p.MainWindowTitle);
+                        rect = windowPosition.GetWindowPositionAndSize(p.ProcessName);
+                        runningApps.Add(p.ProcessName);
                     }
                     else
-                        runningApps.Add(p.ProcessName);
+                        runningApps.Add(p.MainWindowTitle);
+
                 }
             });
+
+            // Add Windows File Explorer's; if any
+            var fileExplorers = GetFileExplorerWindows();
+
+            foreach (var file in fileExplorers)
+                runningApps.Add(file);
 
             return runningApps;
         }
@@ -390,6 +523,7 @@ namespace Save_Window_Position_and_Size
                 AddToOutputLog(Environment.NewLine + windowTitle + " was repositioned to saved location.");
             }
         }
+
 
     }
 }

@@ -12,18 +12,34 @@ namespace Save_Window_Position_and_Size
         [DllImport("user32.dll", SetLastError = true)]
         static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
         const UInt32 SWP_NOZORDER = 0x0004;
+        const UInt32 SWP_SHOWWINDOW = 0x0040;
+        const UInt32 SWP_NOSIZE = 0x0001;
+        const UInt32 SWP_NOMOVE = 0x0002;
+        const UInt32 SWP_NOACTIVATE = 0x0010;
+        const int SW_RESTORE = 9;
+        static readonly IntPtr HWND_TOPMOST = new IntPtr(-1);
+        static readonly IntPtr HWND_TOP = new IntPtr(0);
+        static readonly IntPtr HWND_BOTTOM = new IntPtr(1);
+
+
+        [DllImport("user32", CharSet = CharSet.Ansi, SetLastError = true, ExactSpelling = true)]
+        public static extern bool SetForegroundWindow(IntPtr hwnd);
 
         [DllImport("user32.dll")]
         private static extern int GetWindowRect(IntPtr hwnd, out Rectangle rect);
+        [DllImport("user32.dll")]
+        static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
+
+
 
         public bool SetWindowPositionAndSize(string windowTitle, int x, int y, int width, int height)
         {
             var hWnd = GetWindowHandle(windowTitle);
 
-            // If found, position it.
             if (hWnd != IntPtr.Zero)
             {
-                SetWindowPos(hWnd, IntPtr.Zero, x, y, width, height, SWP_NOZORDER);
+                SetWindowPos(hWnd, new IntPtr(), x, y, width, height, SWP_NOZORDER);
                 return true;
             }
             return false;
@@ -74,7 +90,13 @@ namespace Save_Window_Position_and_Size
             var hWnd = GetWindowHandle(windowClass, windowTitle);
             GetWindowRect(hWnd, out var rect);
             return ConvertRectToWindowPosAndSize(rect);
-        }        
+        }
+
+        public Rectangle GetWindowPositionAndSize(IntPtr hWnd)
+        {
+            GetWindowRect(hWnd, out var rect);
+            return rect;
+        }
 
         public WindowPosAndSize ConvertRectToWindowPosAndSize(Rectangle rect)
         {
@@ -84,6 +106,20 @@ namespace Save_Window_Position_and_Size
             windowPosAndSize.Width = rect.Width - rect.X;
             windowPosAndSize.Height = rect.Height - rect.Y;
             return windowPosAndSize;
+        }
+
+        public void SetWindowAlwaysOnTop(string windowTitle)
+        {
+            var hwnd = GetWindowHandle(windowTitle);
+            SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
+            SetForegroundWindow(hwnd);
+            ShowWindow(hwnd, SW_RESTORE);
+        }
+        public void UnsetWindowAlwaysOnTop(string windowTitle)
+        {
+            var hwnd = GetWindowHandle(windowTitle);
+            SetWindowPos(hwnd, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+            SetWindowPos(hwnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
         }
     }
 
