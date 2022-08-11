@@ -11,7 +11,7 @@ If they are not then they will be moved their desired location and size.
 
 # How do I update an app's location/size after changing it?
 
-Click on the app in either list to refresh the location and size values.
+Click on the app in either All Running Apps list or Saved Apps list to refresh the location and size values.
 
 # Save Button
 
