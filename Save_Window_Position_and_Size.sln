@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.2.32630.192
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Save_Window_Position_and_Size", "Save_Window_Position_and_Size.csproj", "{89C1240A-2D85-4B44-9E54-225E490A67CF}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{89C1240A-2D85-4B44-9E54-225E490A67CF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{89C1240A-2D85-4B44-9E54-225E490A67CF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{89C1240A-2D85-4B44-9E54-225E490A67CF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{89C1240A-2D85-4B44-9E54-225E490A67CF}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {D37A4ADA-605F-4083-B6F5-9E4D8666EC77}
+	EndGlobalSection
+EndGlobal
