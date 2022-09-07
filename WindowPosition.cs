@@ -52,7 +52,7 @@ namespace Save_Window_Position_and_Size
             // Find (the first-in-Z-order) Notepad window.
             if (windowTitle.Length > 0)
             {
-                hWnd = FindWindow(windowTitle, null);
+                hWnd = FindWindow(windowTitle, null); 
 
                 if (hWnd == IntPtr.Zero)
                     hWnd = FindWindow(null, windowTitle);
@@ -87,7 +87,7 @@ namespace Save_Window_Position_and_Size
 
         public WindowPosAndSize GetWindowPositionAndSize(string windowClass, string? windowTitle = "")
         {
-            var hWnd = GetWindowHandle(windowClass, windowTitle);
+            var hWnd = GetWindowHandle(windowClass, windowTitle); 
             GetWindowRect(hWnd, out var rect);
             return ConvertRectToWindowPosAndSize(rect);
         }

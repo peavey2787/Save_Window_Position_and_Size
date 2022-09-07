@@ -513,17 +513,28 @@ namespace Save_Window_Position_and_Size
         }
         private void CheckWindowPosAndSize(string windowTitle)
         {
+            var repositioned = false;
             var savedPosAndSize = LoadAppSettings(windowTitle, false);
-
             var currentPosAndSize = windowPosition.GetWindowPositionAndSize(windowTitle);
 
             if (!currentPosAndSize.CompareIsEqual(currentPosAndSize, savedPosAndSize))
             {
                 windowPosition.SetWindowPositionAndSize(windowTitle, savedPosAndSize.X, savedPosAndSize.Y, savedPosAndSize.Width, savedPosAndSize.Height);
-                AddToOutputLog(Environment.NewLine + windowTitle + " was repositioned to saved location.");
+
+                if (!currentPosAndSize.CompareIsEqual(currentPosAndSize, savedPosAndSize))
+                {
+                    SetFileExplorerWindowPosAndSize(windowTitle, savedPosAndSize);
+
+                    if (currentPosAndSize.CompareIsEqual(currentPosAndSize, savedPosAndSize))
+                        repositioned = true;
+                }
+                else
+                    repositioned = true;
             }
+
+            if(repositioned)
+                AddToOutputLog(Environment.NewLine + windowTitle + " was repositioned to saved location.");
+
         }
-
-
     }
 }

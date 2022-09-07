@@ -48,12 +48,12 @@
             this.lblTime = new System.Windows.Forms.Label();
             this.Time = new System.Windows.Forms.Label();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.RefreshAllRunningApps = new System.Windows.Forms.Button();
             this.KeepWindowOnTop = new System.Windows.Forms.CheckBox();
             this.WindowTitle = new System.Windows.Forms.Label();
             this.lblAllRunningApps = new System.Windows.Forms.Label();
             this.lblSavedApps = new System.Windows.Forms.Label();
             this.AutoPosition = new System.Windows.Forms.CheckBox();
-            this.RefreshAllRunningApps = new System.Windows.Forms.Button();
             this.panel1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -246,6 +246,16 @@
             this.panel1.Size = new System.Drawing.Size(958, 328);
             this.panel1.TabIndex = 19;
             // 
+            // RefreshAllRunningApps
+            // 
+            this.RefreshAllRunningApps.Location = new System.Drawing.Point(12, 17);
+            this.RefreshAllRunningApps.Name = "RefreshAllRunningApps";
+            this.RefreshAllRunningApps.Size = new System.Drawing.Size(75, 23);
+            this.RefreshAllRunningApps.TabIndex = 25;
+            this.RefreshAllRunningApps.Text = "Refresh";
+            this.RefreshAllRunningApps.UseVisualStyleBackColor = true;
+            this.RefreshAllRunningApps.Click += new System.EventHandler(this.RefreshAllRunningApps_Click);
+            // 
             // KeepWindowOnTop
             // 
             this.KeepWindowOnTop.AutoSize = true;
@@ -294,16 +304,6 @@
             this.AutoPosition.Text = "Auto Position";
             this.AutoPosition.UseVisualStyleBackColor = true;
             this.AutoPosition.CheckedChanged += new System.EventHandler(this.AutoPosition_CheckedChanged);
-            // 
-            // RefreshAllRunningApps
-            // 
-            this.RefreshAllRunningApps.Location = new System.Drawing.Point(12, 17);
-            this.RefreshAllRunningApps.Name = "RefreshAllRunningApps";
-            this.RefreshAllRunningApps.Size = new System.Drawing.Size(75, 23);
-            this.RefreshAllRunningApps.TabIndex = 25;
-            this.RefreshAllRunningApps.Text = "Refresh";
-            this.RefreshAllRunningApps.UseVisualStyleBackColor = true;
-            this.RefreshAllRunningApps.Click += new System.EventHandler(this.RefreshAllRunningApps_Click);
             // 
             // Form1
             // 
