@@ -54,6 +54,7 @@
             this.lblAllRunningApps = new System.Windows.Forms.Label();
             this.lblSavedApps = new System.Windows.Forms.Label();
             this.AutoPosition = new System.Windows.Forms.CheckBox();
+            this.RestoreAll = new System.Windows.Forms.Button();
             this.panel1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -223,6 +224,7 @@
             // 
             // panel1
             // 
+            this.panel1.Controls.Add(this.RestoreAll);
             this.panel1.Controls.Add(this.RefreshAllRunningApps);
             this.panel1.Controls.Add(this.KeepWindowOnTop);
             this.panel1.Controls.Add(this.WindowTitle);
@@ -288,7 +290,7 @@
             // 
             this.lblSavedApps.AutoSize = true;
             this.lblSavedApps.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
-            this.lblSavedApps.Location = new System.Drawing.Point(775, 16);
+            this.lblSavedApps.Location = new System.Drawing.Point(830, 16);
             this.lblSavedApps.Name = "lblSavedApps";
             this.lblSavedApps.Size = new System.Drawing.Size(98, 21);
             this.lblSavedApps.TabIndex = 21;
@@ -304,6 +306,16 @@
             this.AutoPosition.Text = "Auto Position";
             this.AutoPosition.UseVisualStyleBackColor = true;
             this.AutoPosition.CheckedChanged += new System.EventHandler(this.AutoPosition_CheckedChanged);
+            // 
+            // RestoreAll
+            // 
+            this.RestoreAll.Location = new System.Drawing.Point(713, 17);
+            this.RestoreAll.Name = "RestoreAll";
+            this.RestoreAll.Size = new System.Drawing.Size(75, 23);
+            this.RestoreAll.TabIndex = 26;
+            this.RestoreAll.Text = "Restore All";
+            this.RestoreAll.UseVisualStyleBackColor = true;
+            this.RestoreAll.Click += new System.EventHandler(this.RestoreAll_Click);
             // 
             // Form1
             // 
@@ -355,5 +367,6 @@
         private Label WindowTitle;
         private CheckBox KeepWindowOnTop;
         private Button RefreshAllRunningApps;
+        private Button RestoreAll;
     }
 }

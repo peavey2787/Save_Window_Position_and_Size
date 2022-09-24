@@ -536,5 +536,19 @@ namespace Save_Window_Position_and_Size
                 AddToOutputLog(Environment.NewLine + windowTitle + " was repositioned to saved location.");
 
         }
+
+        private void RestoreAll_Click(object sender, EventArgs e)
+        {
+            foreach (var savedApp in AppsSaved.Items)
+            {
+                var windowTitle = savedApp.ToString();
+                var windowSizeAndPos = LoadAppSettings(windowTitle, true);
+                if (WindowTitle.Text.StartsWith("File Explorer"))
+                    SetFileExplorerWindowPosAndSize(windowTitle, windowSizeAndPos);
+                else
+                    windowPosition.SetWindowPositionAndSize(windowTitle, windowSizeAndPos.X, windowSizeAndPos.Y, windowSizeAndPos.Width, windowSizeAndPos.Height);
+            }
+
+        }
     }
 }
