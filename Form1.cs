@@ -1,5 +1,7 @@
+using System;
 using System.Configuration;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 namespace Save_Window_Position_and_Size
 {
@@ -23,11 +25,9 @@ namespace Save_Window_Position_and_Size
             
             updateTimer.Interval = 60 * 1000; // 1min
             updateTimer.Tick += UpdateTimer_Tick;
-            updateTimer.Start();
 
             refreshTimer.Interval = 1000; // 1sec
             refreshTimer.Tick += RefreshTimer_Tick;
-            refreshTimer.Start();
 
             var appSize = new Size(974, 434);
             this.MinimumSize = appSize;
@@ -45,7 +45,7 @@ namespace Save_Window_Position_and_Size
             }
 
             // Show all running apps
-            var allApps = GetAllRunningApps();
+            var allApps = windowPosition.GetAllRunningApps();
 
             foreach(var app in allApps)
                 AllRunningApps.Items.Add(app);
@@ -91,7 +91,7 @@ namespace Save_Window_Position_and_Size
             AddToOutputLog(Environment.NewLine + "Checking window positions...");
 
             // Get all running apps
-            var allApps = GetAllRunningApps();
+            var allApps = windowPosition.GetAllRunningApps();
 
             foreach (var app in allApps)
             {
@@ -125,7 +125,7 @@ namespace Save_Window_Position_and_Size
             AllRunningApps.Items.Clear();
 
             // Show all running apps
-            var allApps = GetAllRunningApps();
+            var allApps = windowPosition.GetAllRunningApps();
 
             foreach (var app in allApps)
                 AllRunningApps.Items.Add(app);
@@ -166,7 +166,7 @@ namespace Save_Window_Position_and_Size
             // Load last settings 
             var windowSizeAndPos = LoadAppSettings(WindowTitle.Text, true);
             if (WindowTitle.Text.StartsWith("File Explorer"))
-                SetFileExplorerWindowPosAndSize(WindowTitle.Text, windowSizeAndPos);
+                windowPosition.SetFileExplorerWindowPosAndSize(WindowTitle.Text, windowSizeAndPos);
             else
                 windowPosition.SetWindowPositionAndSize(WindowTitle.Text, windowSizeAndPos.X, windowSizeAndPos.Y, windowSizeAndPos.Width, windowSizeAndPos.Height);
         }
@@ -189,7 +189,7 @@ namespace Save_Window_Position_and_Size
             WindowTitle.Text = windowTitle;
 
             if(windowTitle.StartsWith("File Explorer"))
-                windowPosAndSize = GetFileExplorerWindow(windowTitle);            
+                windowPosAndSize = windowPosition.GetFileExplorerWindow(windowTitle);            
             else
                 windowPosAndSize = windowPosition.GetWindowPositionAndSize(windowTitle);            
 
@@ -422,55 +422,7 @@ namespace Save_Window_Position_and_Size
             return false;
         }
 
-        
-        // File Explorer Specific
-        private List<string> GetFileExplorerWindows()
-        {
-            var windows = new List<string>();
 
-            foreach (SHDocVw.InternetExplorer window in new SHDocVw.ShellWindows())
-            {
-                if (Path.GetFileNameWithoutExtension(window.FullName).ToLowerInvariant() == "explorer")
-                {
-                    var appName = window.Name + " - " + window.LocationName;
-                    windows.Add(appName);
-                }
-            }
-
-            return windows;
-        }
-        private WindowPosAndSize GetFileExplorerWindow(string windowTitle)
-        {
-            var windowPosAndSize = new WindowPosAndSize();
-
-            foreach (SHDocVw.InternetExplorer window in new SHDocVw.ShellWindows())
-            {
-                if (Path.GetFileNameWithoutExtension(window.FullName).ToLowerInvariant() == "explorer" && window.Name + " - " + window.LocationName == windowTitle)
-                {
-                    windowPosAndSize.X = window.Left;
-                    windowPosAndSize.Y = window.Top;
-                    windowPosAndSize.Width = window.Width;
-                    windowPosAndSize.Height = window.Height;
-                }
-            }
-
-            return windowPosAndSize;
-        }
-        private void SetFileExplorerWindowPosAndSize(string windowTitle, WindowPosAndSize windowPosAndSize)
-        {
-            foreach (SHDocVw.InternetExplorer window in new SHDocVw.ShellWindows())
-            {
-                if (Path.GetFileNameWithoutExtension(window.FullName).ToLowerInvariant() == "explorer" && window.Name + " - " + window.LocationName == windowTitle)
-                {
-                    window.Left = windowPosAndSize.X;
-                    window.Top = windowPosAndSize.Y;
-                    window.Width = windowPosAndSize.Width;
-                    window.Height = windowPosAndSize.Height;
-                    return;
-                }
-            }
-        }
-        
         
         // Misc
         private bool WindowTitleIsRunningProcess(string windowTitle)
@@ -484,33 +436,7 @@ namespace Save_Window_Position_and_Size
             });
             return isValid;
         }
-        private List<string> GetAllRunningApps()
-        {
-            var runningApps = new List<string>();
-            Process.GetProcesses().ToList().ForEach(p =>
-            {
-                if (p.MainWindowTitle.Length > 0 && p.MainWindowTitle != "Microsoft Text Input Application" && p.MainWindowTitle != "Settings" && p.MainWindowTitle != "Documents")
-                {
-                    var rect = windowPosition.GetWindowPositionAndSize(p.MainWindowTitle);
-                    if (rect.X == 0 && rect.Y == 0 && rect.Width == 0 && rect.Height == 0)
-                    {
-                        rect = windowPosition.GetWindowPositionAndSize(p.ProcessName);
-                        runningApps.Add(p.ProcessName);
-                    }
-                    else
-                        runningApps.Add(p.MainWindowTitle);
 
-                }
-            });
-
-            // Add Windows File Explorer's; if any
-            var fileExplorers = GetFileExplorerWindows();
-
-            foreach (var file in fileExplorers)
-                runningApps.Add(file);
-
-            return runningApps;
-        }
         private void CheckWindowPosAndSize(string windowTitle)
         {
             var repositioned = false;
@@ -523,7 +449,7 @@ namespace Save_Window_Position_and_Size
 
                 if (!currentPosAndSize.CompareIsEqual(currentPosAndSize, savedPosAndSize))
                 {
-                    SetFileExplorerWindowPosAndSize(windowTitle, savedPosAndSize);
+                    windowPosition.SetFileExplorerWindowPosAndSize(windowTitle, savedPosAndSize);
 
                     if (currentPosAndSize.CompareIsEqual(currentPosAndSize, savedPosAndSize))
                         repositioned = true;
@@ -544,11 +470,16 @@ namespace Save_Window_Position_and_Size
                 var windowTitle = savedApp.ToString();
                 var windowSizeAndPos = LoadAppSettings(windowTitle, true);
                 if (WindowTitle.Text.StartsWith("File Explorer"))
-                    SetFileExplorerWindowPosAndSize(windowTitle, windowSizeAndPos);
+                    windowPosition.SetFileExplorerWindowPosAndSize(windowTitle, windowSizeAndPos);
                 else
                     windowPosition.SetWindowPositionAndSize(windowTitle, windowSizeAndPos.X, windowSizeAndPos.Y, windowSizeAndPos.Width, windowSizeAndPos.Height);
             }
 
         }
     }
+
+
+
+
 }
+

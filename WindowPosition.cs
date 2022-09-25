@@ -1,4 +1,6 @@
-﻿using System.Runtime.InteropServices; // For the P/Invoke signatures.
+﻿using System;
+using System.Diagnostics;
+using System.Runtime.InteropServices; // For the P/Invoke signatures.
 
 namespace Save_Window_Position_and_Size
 {
@@ -31,23 +33,109 @@ namespace Save_Window_Position_and_Size
         static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
 
 
+        // Get window handle for "hidden" windows
+        delegate bool EnumThreadDelegate(IntPtr hWnd, IntPtr lParam);
 
+        [DllImport("user32.dll")]
+        static extern bool EnumThreadWindows(int dwThreadId, EnumThreadDelegate lpfn,
+            IntPtr lParam);
+
+        static IEnumerable<IntPtr> EnumerateProcessWindowHandles(int processId)
+        {
+            var handles = new List<IntPtr>();
+
+            foreach (ProcessThread thread in Process.GetProcessById(processId).Threads)
+                EnumThreadWindows(thread.Id,
+                    (hWnd, lParam) => { handles.Add(hWnd); return true; }, IntPtr.Zero);
+
+            return handles;
+        }
+
+
+        public List<string> GetAllRunningApps()
+        {
+            var runningApps = new List<string>();
+            var runningProcesses = new List<string>();
+
+            Process.GetProcesses().ToList().ForEach(p =>
+            {
+                if (p.MainWindowTitle.Length > 0 && p.MainWindowTitle != "Microsoft Text Input Application" && p.MainWindowTitle != "Settings" && p.MainWindowTitle != "Documents")
+                {
+                    var rect = GetWindowPositionAndSize(p.MainWindowTitle);
+                    if (rect.X == 0 && rect.Y == 0 && rect.Width == 0 && rect.Height == 0)
+                    {
+                        rect = GetWindowPositionAndSize(p.ProcessName);
+                        runningApps.Add(p.ProcessName);
+                    }
+                    else
+                        runningApps.Add(p.MainWindowTitle);
+
+                }
+                else if (p.MainWindowTitle.Length == 0 && p.HandleCount > 0)
+                {
+                    try
+                    {
+                        // Get any "hidden" windows
+                        var windowHandles = EnumerateProcessWindowHandles(p.Id).ToList();
+                        foreach(var windowHandle in windowHandles)
+                        {
+                            var windowSize = GetWindowPositionAndSize(windowHandle);
+                            if (windowHandle != IntPtr.Zero && windowSize.Height - windowSize.Y > 110 )
+                            {
+                                runningProcesses.Add(p.ProcessName);
+                                break;
+                            }
+                        }
+
+                    }
+                    catch (Exception e) { }
+                }
+
+            });
+
+            // Add Windows File Explorer's; if any
+            var fileExplorers = GetFileExplorerWindows();
+
+            foreach (var file in fileExplorers)
+                runningApps.Add(file);
+
+            // Add all running processes
+            runningApps.AddRange(runningProcesses);
+
+            return runningApps;
+        }
 
         public bool SetWindowPositionAndSize(string windowTitle, int x, int y, int width, int height)
         {
-            var hWnd = GetWindowHandle(windowTitle);
+            var hWnds = GetWindowHandles(windowTitle);
+            var moved = false;
 
-            if (hWnd != IntPtr.Zero)
+            foreach(var hWnd in hWnds)
             {
-                SetWindowPos(hWnd, new IntPtr(), x, y, width, height, SWP_NOZORDER);
-                return true;
+                if (hWnd != IntPtr.Zero)
+                {
+                    SetWindowPos(hWnd, new IntPtr(), x, y, width, height, SWP_NOZORDER);
+                    moved = true;
+                }
             }
-            return false;
+            return moved;
         }
 
-        private IntPtr GetWindowHandle(string windowClass, string? windowTitle = "")
+        private List<IntPtr> GetWindowHandles(string windowClass, string? windowTitle = "")
         {
+            var hWnds = new List<IntPtr>();
             var hWnd = new IntPtr();
+
+            // Try to get the process by name
+            var proc = Process.GetProcessesByName(windowClass).Where(p => p.ProcessName == windowClass).FirstOrDefault();
+            if (proc != null && proc.MainWindowHandle == IntPtr.Zero)
+            {
+                // Get any "hidden" windows
+                hWnds = EnumerateProcessWindowHandles(proc.Id).ToList();
+                if (hWnds.Count > 0 && hWnds[0] != IntPtr.Zero)
+                    return hWnds;
+
+            }
 
             // Find (the first-in-Z-order) Notepad window.
             if (windowTitle.Length > 0)
@@ -58,7 +146,10 @@ namespace Save_Window_Position_and_Size
                     hWnd = FindWindow(null, windowTitle);
 
                 if (hWnd != IntPtr.Zero)
-                    return hWnd;
+                {
+                    hWnds.Add(hWnd);
+                    return hWnds;
+                }
                 
             }
             else if (windowClass.Length > 0)
@@ -69,7 +160,10 @@ namespace Save_Window_Position_and_Size
                     hWnd = FindWindow(null, windowClass);
 
                 if (hWnd != IntPtr.Zero)
-                    return hWnd;
+                {
+                    hWnds.Add(hWnd);
+                    return hWnds;
+                }
             }
             else if (windowTitle.Length > 0 && windowClass.Length > 0)
             {
@@ -79,23 +173,45 @@ namespace Save_Window_Position_and_Size
                     hWnd = FindWindow(windowClass, windowTitle);
 
                 if (hWnd != IntPtr.Zero)
-                    return hWnd;
+                {
+                    hWnds.Add(hWnd);
+                    return hWnds;
+                }
             }
 
-            return hWnd;
+            hWnds.Add(hWnd);
+            return hWnds;
         }
+
+
 
         public WindowPosAndSize GetWindowPositionAndSize(string windowClass, string? windowTitle = "")
         {
-            var hWnd = GetWindowHandle(windowClass, windowTitle); 
-            GetWindowRect(hWnd, out var rect);
-            return ConvertRectToWindowPosAndSize(rect);
+            var windowHandles = GetWindowHandles(windowClass, windowTitle);
+            foreach (var windowHandle in windowHandles)
+            {
+                var rect = GetWindowPositionAndSize(windowHandle);
+                if (windowHandle != IntPtr.Zero && IsValidWindow(rect) )
+                {
+                    return ConvertRectToWindowPosAndSize(rect);
+                }
+            }
+
+            return new WindowPosAndSize();
         }
 
         public Rectangle GetWindowPositionAndSize(IntPtr hWnd)
         {
             GetWindowRect(hWnd, out var rect);
             return rect;
+        }
+
+        private bool IsValidWindow(Rectangle rect)
+        {
+            if (rect.Height - rect.Y > 110)
+                return true;
+
+            return false;
         }
 
         public WindowPosAndSize ConvertRectToWindowPosAndSize(Rectangle rect)
@@ -110,17 +226,68 @@ namespace Save_Window_Position_and_Size
 
         public void SetWindowAlwaysOnTop(string windowTitle)
         {
-            var hwnd = GetWindowHandle(windowTitle);
+            var hwnd = GetWindowHandles(windowTitle)[0];
             SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
             SetForegroundWindow(hwnd);
             ShowWindow(hwnd, SW_RESTORE);
         }
         public void UnsetWindowAlwaysOnTop(string windowTitle)
         {
-            var hwnd = GetWindowHandle(windowTitle);
+            var hwnd = GetWindowHandles(windowTitle)[0];
             SetWindowPos(hwnd, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
             SetWindowPos(hwnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
         }
+
+
+
+        // File Explorer Specific
+        public List<string> GetFileExplorerWindows()
+        {
+            var windows = new List<string>();
+
+            foreach (SHDocVw.InternetExplorer window in new SHDocVw.ShellWindows())
+            {
+                if (Path.GetFileNameWithoutExtension(window.FullName).ToLowerInvariant() == "explorer")
+                {
+                    var appName = window.Name + " - " + window.LocationName;
+                    windows.Add(appName);
+                }
+            }
+
+            return windows;
+        }
+        public WindowPosAndSize GetFileExplorerWindow(string windowTitle)
+        {
+            var windowPosAndSize = new WindowPosAndSize();
+
+            foreach (SHDocVw.InternetExplorer window in new SHDocVw.ShellWindows())
+            {
+                if (Path.GetFileNameWithoutExtension(window.FullName).ToLowerInvariant() == "explorer" && window.Name + " - " + window.LocationName == windowTitle)
+                {
+                    windowPosAndSize.X = window.Left;
+                    windowPosAndSize.Y = window.Top;
+                    windowPosAndSize.Width = window.Width;
+                    windowPosAndSize.Height = window.Height;
+                }
+            }
+
+            return windowPosAndSize;
+        }
+        public void SetFileExplorerWindowPosAndSize(string windowTitle, WindowPosAndSize windowPosAndSize)
+        {
+            foreach (SHDocVw.InternetExplorer window in new SHDocVw.ShellWindows())
+            {
+                if (Path.GetFileNameWithoutExtension(window.FullName).ToLowerInvariant() == "explorer" && window.Name + " - " + window.LocationName == windowTitle)
+                {
+                    window.Left = windowPosAndSize.X;
+                    window.Top = windowPosAndSize.Y;
+                    window.Width = windowPosAndSize.Width;
+                    window.Height = windowPosAndSize.Height;
+                    return;
+                }
+            }
+        }
+
     }
 
     public class WindowPosAndSize
