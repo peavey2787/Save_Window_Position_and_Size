@@ -90,7 +90,7 @@ namespace Save_Window_Position_and_Size
         {
             AddToOutputLog(Environment.NewLine + "Checking window positions...");
 
-            RestoreAll.PerformClick();
+            RestoreAllWindows();
 
             AddToOutputLog(Environment.NewLine + "Window positions are all set.");
         }
@@ -165,16 +165,7 @@ namespace Save_Window_Position_and_Size
         }
         private void RestoreAll_Click(object sender, EventArgs e)
         {
-            foreach (var savedApp in AppsSaved.Items)
-            {
-                var windowTitle = savedApp.ToString();
-                var windowSizeAndPos = LoadAppSettings(windowTitle, true);
-                if (WindowTitle.Text.StartsWith("File Explorer"))
-                    windowPosition.SetFileExplorerWindowPosAndSize(windowTitle, windowSizeAndPos);
-                else
-                    windowPosition.SetWindowPositionAndSize(windowTitle, windowSizeAndPos.X, windowSizeAndPos.Y, windowSizeAndPos.Width, windowSizeAndPos.Height);
-            }
-
+            RestoreAllWindows();
         }
         private void AppsSaved_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -442,7 +433,19 @@ namespace Save_Window_Position_and_Size
             });
             return isValid;
         }
+        private void RestoreAllWindows()
+        {
+            foreach (var savedApp in AppsSaved.Items)
+            {
+                var windowTitle = savedApp.ToString();
+                var windowSizeAndPos = LoadAppSettings(windowTitle, true);
+                if (WindowTitle.Text.StartsWith("File Explorer"))
+                    windowPosition.SetFileExplorerWindowPosAndSize(windowTitle, windowSizeAndPos);
+                else
+                    windowPosition.SetWindowPositionAndSize(windowTitle, windowSizeAndPos.X, windowSizeAndPos.Y, windowSizeAndPos.Width, windowSizeAndPos.Height);
+            }
 
+        }
         private void CheckWindowPosAndSize(string windowTitle)
         {
             var repositioned = false;
