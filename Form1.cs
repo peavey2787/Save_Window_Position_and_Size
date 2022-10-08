@@ -90,14 +90,7 @@ namespace Save_Window_Position_and_Size
         {
             AddToOutputLog(Environment.NewLine + "Checking window positions...");
 
-            // Get all running apps
-            var allApps = windowPosition.GetAllRunningApps();
-
-            foreach (var app in allApps)
-            {
-                if (AppsSaved.Items.Contains(app))
-                    CheckWindowPosAndSize(app);
-            }
+            RestoreAll.PerformClick();
 
             AddToOutputLog(Environment.NewLine + "Window positions are all set.");
         }
@@ -169,6 +162,19 @@ namespace Save_Window_Position_and_Size
                 windowPosition.SetFileExplorerWindowPosAndSize(WindowTitle.Text, windowSizeAndPos);
             else
                 windowPosition.SetWindowPositionAndSize(WindowTitle.Text, windowSizeAndPos.X, windowSizeAndPos.Y, windowSizeAndPos.Width, windowSizeAndPos.Height);
+        }
+        private void RestoreAll_Click(object sender, EventArgs e)
+        {
+            foreach (var savedApp in AppsSaved.Items)
+            {
+                var windowTitle = savedApp.ToString();
+                var windowSizeAndPos = LoadAppSettings(windowTitle, true);
+                if (WindowTitle.Text.StartsWith("File Explorer"))
+                    windowPosition.SetFileExplorerWindowPosAndSize(windowTitle, windowSizeAndPos);
+                else
+                    windowPosition.SetWindowPositionAndSize(windowTitle, windowSizeAndPos.X, windowSizeAndPos.Y, windowSizeAndPos.Width, windowSizeAndPos.Height);
+            }
+
         }
         private void AppsSaved_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -462,20 +468,7 @@ namespace Save_Window_Position_and_Size
                 AddToOutputLog(Environment.NewLine + windowTitle + " was repositioned to saved location.");
 
         }
-
-        private void RestoreAll_Click(object sender, EventArgs e)
-        {
-            foreach (var savedApp in AppsSaved.Items)
-            {
-                var windowTitle = savedApp.ToString();
-                var windowSizeAndPos = LoadAppSettings(windowTitle, true);
-                if (WindowTitle.Text.StartsWith("File Explorer"))
-                    windowPosition.SetFileExplorerWindowPosAndSize(windowTitle, windowSizeAndPos);
-                else
-                    windowPosition.SetWindowPositionAndSize(windowTitle, windowSizeAndPos.X, windowSizeAndPos.Y, windowSizeAndPos.Width, windowSizeAndPos.Height);
-            }
-
-        }
+     
     }
 
 
