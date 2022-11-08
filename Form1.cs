@@ -88,11 +88,11 @@ namespace Save_Window_Position_and_Size
         }
         private void UpdateTimer_Tick(object? sender, EventArgs e)
         {
-            AddToOutputLog(Environment.NewLine + "Checking window positions...");
+            AddToOutputLog("Checking window positions...");
 
             RestoreAllWindows();
 
-            AddToOutputLog(Environment.NewLine + "Window positions are all set.");
+            AddToOutputLog("Window positions are all set.");
         }
         private void StartOrStopTimers(bool start)
         {
@@ -100,14 +100,14 @@ namespace Save_Window_Position_and_Size
             {
                 updateTimer.Start();
                 refreshTimer.Start();
-                AddToOutputLog(Environment.NewLine + "Auto positioning windows enabled.");
+                AddToOutputLog("Auto positioning windows enabled.");
             }
             else
             {
                 updateTimer.Stop();
                 refreshTimer.Stop();
                 Time.Text = "";
-                AddToOutputLog(Environment.NewLine + "Auto positioning windows disabled.");
+                AddToOutputLog("Auto positioning windows disabled.");
             }
         }
 
@@ -133,22 +133,22 @@ namespace Save_Window_Position_and_Size
             if (int.TryParse(WindowPosX.Text, out int posX))
                 windowPosAndSize.X = posX;
             else
-                AddToOutputLog(Environment.NewLine + " Window Pos X is not a number, unable to save.");
+                AddToOutputLog(" Window Pos X is not a number, unable to save.");
 
             if (int.TryParse(WindowPosY.Text, out int posY))
                 windowPosAndSize.Y = posY;
             else
-                AddToOutputLog(Environment.NewLine + " Window Pos Y is not a number, unable to save.");
+                AddToOutputLog(" Window Pos Y is not a number, unable to save.");
 
             if (int.TryParse(WindowWidth.Text, out int width))
                 windowPosAndSize.Width = width;
             else
-                AddToOutputLog(Environment.NewLine + " Window Width is not a number, unable to save.");
+                AddToOutputLog(" Window Width is not a number, unable to save.");
 
             if (int.TryParse(WindowHeight.Text, out int height))
                 windowPosAndSize.Height = height;
             else
-                AddToOutputLog(Environment.NewLine + " Window Height is not a number, unable to save.");
+                AddToOutputLog(" Window Height is not a number, unable to save.");
 
             // Save settings
             SaveAppSettings(WindowTitle.Text, windowPosAndSize);
@@ -198,8 +198,12 @@ namespace Save_Window_Position_and_Size
             {
                 var app = AppsSaved.SelectedItem.ToString();
                 if (RemoveSavedAppFromSettings(app))
+                {
                     AddToOutputLog(app + " Removed From Settings");
-                AppsSaved.Items.RemoveAt(AppsSaved.SelectedIndex);
+                    AppsSaved.Items.RemoveAt(AppsSaved.SelectedIndex);
+                }
+                else
+                    AddToOutputLog($"Unable To Remove {app} From Settings");
             }
         }
         private void UpdateTimerInterval_KeyDown(object sender, KeyEventArgs e)
@@ -210,10 +214,10 @@ namespace Save_Window_Position_and_Size
                 {
                     minutes = newInterval - 1;
                     SaveRefreshTimeSetting(newInterval.ToString());
-                    AddToOutputLog(Environment.NewLine + "Minutes between checking window positions has been updated.");
+                    AddToOutputLog("Minutes between checking window positions has been updated.");
                 }
                 else
-                    AddToOutputLog(Environment.NewLine + "Minutes interval { " + UpdateTimerInterval.Text + " } is not a whole number, timer not updated.");
+                    AddToOutputLog("Minutes interval { " + UpdateTimerInterval.Text + " } is not a whole number, timer not updated.");
             }
         }
         private void AutoPosition_CheckedChanged(object sender, EventArgs e)
@@ -235,7 +239,7 @@ namespace Save_Window_Position_and_Size
         // UI
         private void AddToOutputLog(string message)
         {
-            LogOutput.AppendText(message);
+            LogOutput.AppendText(Environment.NewLine + message);
         }
         private void PopulateWindowSettings(WindowPosAndSize windowPosAndSize)
         {
@@ -257,24 +261,24 @@ namespace Save_Window_Position_and_Size
         private bool RemoveSavedAppFromSettings(string? windowTitle)
         {
             Configuration config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
-            var error = false;
 
             try { config.AppSettings.Settings.Remove(WindowTitle.Text + WinPosX); }
-            catch { error = true; }
+            catch { return false; }
 
             try { config.AppSettings.Settings.Remove(WindowTitle.Text + WinPosY); }
-            catch { error = true; }
+            catch { return false; }
 
             try { config.AppSettings.Settings.Remove(WindowTitle.Text + WinWidth); }
-            catch { error = true; }
+            catch { return false; }
 
             try { config.AppSettings.Settings.Remove(WindowTitle.Text + WinHeight); }
-            catch { error = true; }
+            catch { return false; }
 
             try { config.AppSettings.Settings.Remove(WindowTitle.Text + WinHeight); }
-            catch { error = true; }
+            catch { return false; }
 
-            return error;
+            config.Save();
+            return true;
         }
         private bool IsAppOnSavedSettings(string? windowTitle)
         {
@@ -315,7 +319,7 @@ namespace Save_Window_Position_and_Size
 
             if (updateLog)
             {
-                AddToOutputLog(Environment.NewLine + WindowTitle.Text + " Settings Loaded: ");
+                AddToOutputLog(WindowTitle.Text + " Settings Loaded: ");
                 LogWindowSize(windowPosAndSize);
             }
 
@@ -330,7 +334,7 @@ namespace Save_Window_Position_and_Size
             var width = windowPosAndSize.Width.ToString();
             var height = windowPosAndSize.Height.ToString();
 
-            AddToOutputLog(Environment.NewLine + windowTitle + " Settings Saved: ");
+            AddToOutputLog(windowTitle + " Settings Saved: ");
             LogWindowSize(windowPosAndSize);
 
             if (config.AppSettings.Settings[windowTitle + WinPosX] != null)
@@ -468,7 +472,7 @@ namespace Save_Window_Position_and_Size
             }
 
             if(repositioned)
-                AddToOutputLog(Environment.NewLine + windowTitle + " was repositioned to saved location.");
+                AddToOutputLog(windowTitle + " was repositioned to saved location.");
 
         }
      
