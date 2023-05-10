@@ -120,6 +120,7 @@ namespace Save_Window_Position_and_Size
         {
             // Auto adds it to savedWindows if it is new or updates it with user inputs
             var window = GetSelectedWindow();
+            UpdateWindowFromGui(window);
 
             if (!AppsSaved.Items.Contains(window.DisplayName))
             {
