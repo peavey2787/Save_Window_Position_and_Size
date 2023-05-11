@@ -8,7 +8,7 @@ namespace Save_Window_Position_and_Size
 {
     internal class Window
     {
-        public IntPtr hWnd { get; set; }
+        public IntPtr? hWnd { get; set; }
         public int X { get; set; }
         public int Y { get; set; }
         public int Width { get; set; }
@@ -16,6 +16,7 @@ namespace Save_Window_Position_and_Size
         public bool KeepOnTop { get; set; }
         public bool AutoPosition { get; set; }
         public int Id { get; set; }
+        public string? ProcessName { get; set; }
         public string? TitleName { get; set; }
         public string? ClassName { get; set; }
         public string? DisplayName { get; set; }

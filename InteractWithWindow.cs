@@ -17,6 +17,14 @@ namespace Save_Window_Position_and_Size
         static readonly IntPtr HWND_BOTTOM = new IntPtr(1);
 
         // P/Invoke declarations.
+        private const int GWL_STYLE = -16;
+        private const int WS_VISIBLE = 0x10000000;
+
+        [DllImport("user32.dll", SetLastError = true)]
+        private static extern int GetWindowLong(IntPtr hWnd, int nIndex);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        private static extern bool IsWindowVisible(IntPtr hWnd);
         [DllImport("user32.dll", SetLastError = true)]
         static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
 
@@ -54,82 +62,46 @@ namespace Save_Window_Position_and_Size
 
 
         // Public Actions
-        public static Dictionary<string, Process> GetAllRunningApps(List<string> exceptions)
+        public static Dictionary<IntPtr, Process> GetAllRunningApps(List<string> exceptions)
         {
-            var runningApps = new Dictionary<string, Process>();
-            //var runningProcesses = new List<string>();
+            Dictionary<IntPtr, Process> runningApps = new Dictionary<IntPtr, Process>();
 
-            Process.GetProcesses().ToList().ForEach(p =>
+            Process[] processes = Process.GetProcesses();
+            foreach (Process process in processes)
             {
-                if (p.MainWindowTitle.Length > 0)
+                IntPtr mainWindowHandle = process.MainWindowHandle;
+                if (mainWindowHandle != IntPtr.Zero && IsWindowVisible(mainWindowHandle))
                 {
-                    var rect = GetWindowPositionAndSize(p.MainWindowTitle);
-                    if (rect.X == 0 && rect.Y == 0 && rect.Width == 0 && rect.Height == 0
-                     && !exceptions.Contains(p.ProcessName))
+                    int windowStyle = GetWindowLong(mainWindowHandle, GWL_STYLE);
+                    if ((windowStyle & WS_VISIBLE) == WS_VISIBLE)
                     {
-                        rect = GetWindowPositionAndSize(p.ProcessName);
-                        runningApps[p.ProcessName] = p;
+                        runningApps[process.MainWindowHandle] = process;
                     }
-                    else if (!exceptions.Contains(p.MainWindowTitle))
-                        runningApps[p.MainWindowTitle] = p;
-
                 }
-                else if (p.MainWindowTitle.Length == 0 && p.HandleCount > 0)
-                {
-                    try
-                    {
-                        // Get any "hidden" windows
-                        var windowHandles = EnumerateProcessWindowHandles(p.Id).ToList();
-                        foreach(var windowHandle in windowHandles)
-                        {
-                            var windowSize = GetWindowPositionAndSize(windowHandle);
-                            if (windowHandle != IntPtr.Zero && windowSize.Height - windowSize.Y > 110
-                                && !exceptions.Contains(p.ProcessName))
-                            {
-                                runningApps[p.ProcessName] = p;
-                                break;
-                            }
-                        }
+            }
 
-                    }
-                    catch (Exception e) { }
-                }
-
-            });
-
+            /*
             // Add Windows File Explorer's; if any
             var fileExplorers = GetFileExplorerWindows();
 
             foreach (var file in fileExplorers)
                 if(!exceptions.Contains(file))
                     runningApps[file] = null;
-
+            */
             return runningApps;
         }
-        public static Rectangle GetWindowPositionAndSize(IntPtr hWnd)
+        public static WindowPosAndSize GetWindowPositionAndSize(IntPtr hWnd)
         {
             GetWindowRect(hWnd, out var rect);
-            return rect;
+            var windowPosAndSize = InteractWithWindow.ConvertRectToWindowPosAndSize(rect);
+            return windowPosAndSize;
         }
-        public static WindowPosAndSize GetWindowPositionAndSize(string windowClass, string? windowTitle = "")
+        public static bool SetWindowPositionAndSize(IntPtr hWnd, int x, int y, int width, int height)
         {
-            var windowHandles = GetWindowHandles(windowClass, windowTitle);
-            foreach (var windowHandle in windowHandles)
-            {
-                var rect = GetWindowPositionAndSize(windowHandle);
-                if (windowHandle != IntPtr.Zero && IsValidWindow(rect))
-                {
-                    return ConvertRectToWindowPosAndSize(rect);
-                }
-            }
-
-            return new WindowPosAndSize();
-        }
-        public static bool SetWindowPositionAndSize(string windowTitle, int x, int y, int width, int height)
-        {
-            //SetWindowPos(hWnd, new IntPtr(), x, y, width, height, SWP_NOZORDER);
-            //return true;
-            var hWnds = GetWindowHandles(windowTitle);
+            SetWindowPos(hWnd, new IntPtr(), x, y, width, height, SWP_NOZORDER);
+            return true;
+            
+            /*var hWnds = GetWindowHandles(windowTitle);
             if (hWnds == null || hWnds.Count == 0) hWnds = GetWindowHandles("", windowTitle);
             var moved = false;
 
@@ -141,7 +113,7 @@ namespace Save_Window_Position_and_Size
                     moved = true;
                 }
             }
-            return moved;
+            return moved;*/
         }
         public static WindowPosAndSize ConvertRectToWindowPosAndSize(Rectangle rect)
         {

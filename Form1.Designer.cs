@@ -48,6 +48,8 @@
             lblTime = new Label();
             Time = new Label();
             panel1 = new Panel();
+            hWnd = new Label();
+            RefreshWindowButton = new Button();
             WindowId = new Label();
             WindowDisplayName = new TextBox();
             label1 = new Label();
@@ -61,7 +63,8 @@
             WindowTitle = new Label();
             lblAllRunningApps = new Label();
             lblSavedApps = new Label();
-            RefreshWindowButton = new Button();
+            label3 = new Label();
+            ProcessName = new Label();
             panel1.SuspendLayout();
             SuspendLayout();
             // 
@@ -79,11 +82,11 @@
             // 
             lbl_Window_Title.AutoSize = true;
             lbl_Window_Title.Font = new Font("Segoe UI", 12F, FontStyle.Bold, GraphicsUnit.Point);
-            lbl_Window_Title.Location = new Point(376, 53);
+            lbl_Window_Title.Location = new Point(403, 103);
             lbl_Window_Title.Name = "lbl_Window_Title";
-            lbl_Window_Title.Size = new Size(183, 19);
+            lbl_Window_Title.Size = new Size(112, 21);
             lbl_Window_Title.TabIndex = 2;
-            lbl_Window_Title.Text = "Selected Window Title:";
+            lbl_Window_Title.Text = "Window Title";
             // 
             // Restore
             // 
@@ -122,7 +125,7 @@
             // 
             WindowPosX.Location = new Point(367, 257);
             WindowPosX.Name = "WindowPosX";
-            WindowPosX.Size = new Size(100, 21);
+            WindowPosX.Size = new Size(100, 23);
             WindowPosX.TabIndex = 6;
             // 
             // lblWindowPosX
@@ -130,7 +133,7 @@
             lblWindowPosX.AutoSize = true;
             lblWindowPosX.Location = new Point(279, 261);
             lblWindowPosX.Name = "lblWindowPosX";
-            lblWindowPosX.Size = new Size(89, 15);
+            lblWindowPosX.Size = new Size(86, 15);
             lblWindowPosX.TabIndex = 7;
             lblWindowPosX.Text = "Window Pos X:";
             // 
@@ -139,7 +142,7 @@
             lblWindowPosY.AutoSize = true;
             lblWindowPosY.Location = new Point(279, 295);
             lblWindowPosY.Name = "lblWindowPosY";
-            lblWindowPosY.Size = new Size(88, 15);
+            lblWindowPosY.Size = new Size(86, 15);
             lblWindowPosY.TabIndex = 8;
             lblWindowPosY.Text = "Window Pos Y:";
             // 
@@ -147,14 +150,14 @@
             // 
             WindowPosY.Location = new Point(368, 291);
             WindowPosY.Name = "WindowPosY";
-            WindowPosY.Size = new Size(100, 21);
+            WindowPosY.Size = new Size(100, 23);
             WindowPosY.TabIndex = 9;
             // 
             // WindowWidth
             // 
             WindowWidth.Location = new Point(598, 257);
             WindowWidth.Name = "WindowWidth";
-            WindowWidth.Size = new Size(100, 21);
+            WindowWidth.Size = new Size(100, 23);
             WindowWidth.TabIndex = 10;
             // 
             // lblWindowWidth
@@ -162,7 +165,7 @@
             lblWindowWidth.AutoSize = true;
             lblWindowWidth.Location = new Point(506, 261);
             lblWindowWidth.Name = "lblWindowWidth";
-            lblWindowWidth.Size = new Size(88, 15);
+            lblWindowWidth.Size = new Size(89, 15);
             lblWindowWidth.TabIndex = 11;
             lblWindowWidth.Text = "Window Width:";
             // 
@@ -179,7 +182,7 @@
             // 
             WindowHeight.Location = new Point(598, 290);
             WindowHeight.Name = "WindowHeight";
-            WindowHeight.Size = new Size(100, 21);
+            WindowHeight.Size = new Size(100, 23);
             WindowHeight.TabIndex = 13;
             // 
             // AllRunningApps
@@ -198,7 +201,7 @@
             // 
             UpdateTimerInterval.Location = new Point(768, 365);
             UpdateTimerInterval.Name = "UpdateTimerInterval";
-            UpdateTimerInterval.Size = new Size(25, 21);
+            UpdateTimerInterval.Size = new Size(25, 23);
             UpdateTimerInterval.TabIndex = 15;
             UpdateTimerInterval.Text = "1";
             UpdateTimerInterval.KeyDown += UpdateTimerInterval_KeyDown;
@@ -217,7 +220,7 @@
             lblTime.AutoSize = true;
             lblTime.Location = new Point(844, 367);
             lblTime.Name = "lblTime";
-            lblTime.Size = new Size(70, 15);
+            lblTime.Size = new Size(65, 15);
             lblTime.TabIndex = 17;
             lblTime.Text = "Refresh in: ";
             // 
@@ -226,12 +229,15 @@
             Time.AutoSize = true;
             Time.Location = new Point(907, 367);
             Time.Name = "Time";
-            Time.Size = new Size(30, 15);
+            Time.Size = new Size(28, 15);
             Time.TabIndex = 18;
             Time.Text = "59   ";
             // 
             // panel1
             // 
+            panel1.Controls.Add(ProcessName);
+            panel1.Controls.Add(label3);
+            panel1.Controls.Add(hWnd);
             panel1.Controls.Add(RefreshWindowButton);
             panel1.Controls.Add(WindowId);
             panel1.Controls.Add(WindowDisplayName);
@@ -264,28 +270,47 @@
             panel1.Size = new Size(958, 366);
             panel1.TabIndex = 19;
             // 
+            // hWnd
+            // 
+            hWnd.AutoSize = true;
+            hWnd.Location = new Point(299, 29);
+            hWnd.Name = "hWnd";
+            hWnd.Size = new Size(39, 15);
+            hWnd.TabIndex = 34;
+            hWnd.Text = "hWnd";
+            // 
+            // RefreshWindowButton
+            // 
+            RefreshWindowButton.Location = new Point(459, 217);
+            RefreshWindowButton.Name = "RefreshWindowButton";
+            RefreshWindowButton.Size = new Size(75, 23);
+            RefreshWindowButton.TabIndex = 33;
+            RefreshWindowButton.Text = "Refresh";
+            RefreshWindowButton.UseVisualStyleBackColor = true;
+            RefreshWindowButton.Click += RefreshWindowButton_Click;
+            // 
             // WindowId
             // 
             WindowId.AutoSize = true;
-            WindowId.Location = new Point(288, 28);
+            WindowId.Location = new Point(299, 9);
             WindowId.Name = "WindowId";
-            WindowId.Size = new Size(0, 15);
+            WindowId.Size = new Size(18, 15);
             WindowId.TabIndex = 32;
-            WindowId.Visible = false;
+            WindowId.Text = "ID";
             // 
             // WindowDisplayName
             // 
-            WindowDisplayName.Location = new Point(459, 12);
+            WindowDisplayName.Location = new Point(459, 8);
             WindowDisplayName.Name = "WindowDisplayName";
-            WindowDisplayName.Size = new Size(100, 21);
+            WindowDisplayName.Size = new Size(100, 23);
             WindowDisplayName.TabIndex = 30;
             // 
             // label1
             // 
             label1.AutoSize = true;
-            label1.Location = new Point(371, 16);
+            label1.Location = new Point(371, 12);
             label1.Name = "label1";
-            label1.Size = new Size(63, 15);
+            label1.Size = new Size(61, 15);
             label1.TabIndex = 31;
             label1.Text = "Nickname";
             // 
@@ -302,20 +327,20 @@
             // 
             // WindowClass
             // 
-            WindowClass.Location = new Point(273, 168);
+            WindowClass.Location = new Point(273, 187);
             WindowClass.Name = "WindowClass";
-            WindowClass.Size = new Size(434, 46);
+            WindowClass.Size = new Size(434, 28);
             WindowClass.TabIndex = 29;
             // 
             // label2
             // 
             label2.AutoSize = true;
             label2.Font = new Font("Segoe UI", 12F, FontStyle.Bold, GraphicsUnit.Point);
-            label2.Location = new Point(376, 139);
+            label2.Location = new Point(406, 166);
             label2.Name = "label2";
-            label2.Size = new Size(194, 19);
+            label2.Size = new Size(120, 21);
             label2.TabIndex = 28;
-            label2.Text = "Selected Window Class:";
+            label2.Text = "Window Class:";
             // 
             // IgnoreButton
             // 
@@ -352,7 +377,7 @@
             KeepWindowOnTop.AutoSize = true;
             KeepWindowOnTop.Location = new Point(532, 332);
             KeepWindowOnTop.Name = "KeepWindowOnTop";
-            KeepWindowOnTop.Size = new Size(149, 19);
+            KeepWindowOnTop.Size = new Size(143, 19);
             KeepWindowOnTop.TabIndex = 24;
             KeepWindowOnTop.Text = "Keep Window on Top?";
             KeepWindowOnTop.UseVisualStyleBackColor = true;
@@ -360,9 +385,9 @@
             // 
             // WindowTitle
             // 
-            WindowTitle.Location = new Point(273, 80);
+            WindowTitle.Location = new Point(273, 124);
             WindowTitle.Name = "WindowTitle";
-            WindowTitle.Size = new Size(434, 46);
+            WindowTitle.Size = new Size(434, 38);
             WindowTitle.TabIndex = 23;
             // 
             // lblAllRunningApps
@@ -371,7 +396,7 @@
             lblAllRunningApps.Font = new Font("Segoe UI", 12F, FontStyle.Bold, GraphicsUnit.Point);
             lblAllRunningApps.Location = new Point(67, 6);
             lblAllRunningApps.Name = "lblAllRunningApps";
-            lblAllRunningApps.Size = new Size(141, 19);
+            lblAllRunningApps.Size = new Size(142, 21);
             lblAllRunningApps.TabIndex = 22;
             lblAllRunningApps.Text = "All Running Apps";
             // 
@@ -381,19 +406,29 @@
             lblSavedApps.Font = new Font("Segoe UI", 12F, FontStyle.Bold, GraphicsUnit.Point);
             lblSavedApps.Location = new Point(794, 6);
             lblSavedApps.Name = "lblSavedApps";
-            lblSavedApps.Size = new Size(100, 19);
+            lblSavedApps.Size = new Size(98, 21);
             lblSavedApps.TabIndex = 21;
             lblSavedApps.Text = "Saved Apps";
             // 
-            // RefreshWindowButton
+            // label3
             // 
-            RefreshWindowButton.Location = new Point(459, 217);
-            RefreshWindowButton.Name = "RefreshWindowButton";
-            RefreshWindowButton.Size = new Size(75, 23);
-            RefreshWindowButton.TabIndex = 33;
-            RefreshWindowButton.Text = "Refresh";
-            RefreshWindowButton.UseVisualStyleBackColor = true;
-            RefreshWindowButton.Click += RefreshWindowButton_Click;
+            label3.AutoSize = true;
+            label3.Font = new Font("Segoe UI", 12F, FontStyle.Bold, GraphicsUnit.Point);
+            label3.Location = new Point(398, 54);
+            label3.Name = "label3";
+            label3.Size = new Size(117, 21);
+            label3.TabIndex = 35;
+            label3.Text = "Process Name";
+            // 
+            // ProcessName
+            // 
+            ProcessName.AutoSize = true;
+            ProcessName.Font = new Font("Segoe UI", 9F, FontStyle.Regular, GraphicsUnit.Point);
+            ProcessName.Location = new Point(405, 80);
+            ProcessName.Name = "ProcessName";
+            ProcessName.Size = new Size(110, 15);
+            ProcessName.TabIndex = 36;
+            ProcessName.Text = "Process Name Here";
             // 
             // Form1
             // 
@@ -451,5 +486,8 @@
         private Label label1;
         private Label WindowId;
         private Button RefreshWindowButton;
+        private Label hWnd;
+        private Label ProcessName;
+        private Label label3;
     }
 }
