@@ -151,7 +151,7 @@ namespace Save_Window_Position_and_Size
         }
         private void RestoreAll_Click(object sender, EventArgs e)
         {
-            RestoreAllWindows();
+            RestoreAllWindows(false);
         }
         private void AppsSaved_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -388,11 +388,11 @@ namespace Save_Window_Position_and_Size
             AppSettings.Save("SavedWindows", json);
         }
 
-        private void RestoreAllWindows()
+        private void RestoreAllWindows(bool useSavedAutoPos = true)
         {
             foreach (Window window in savedWindows)
             {
-                if (!window.AutoPosition) continue;
+                if (useSavedAutoPos && !window.AutoPosition) continue;
 
                 //if (window.IsFileExplorer)
                 //  InteractWithWindow.SetFileExplorerWindowPosAndSize(window.TitleName, window.GetWindowPosAndSize());
