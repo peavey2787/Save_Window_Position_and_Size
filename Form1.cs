@@ -169,7 +169,6 @@ namespace Save_Window_Position_and_Size
         {
             if (AllRunningApps.SelectedIndex == -1) return;
 
-
             PopulateRunningApp();
         }
         private void AppsSaved_KeyDown(object sender, KeyEventArgs e)
@@ -305,25 +304,28 @@ namespace Save_Window_Position_and_Size
                 }
             }
 
-            // Get hWnd if missing
-            if (window.hWnd == null || window.hWnd == IntPtr.Zero)
+            // Get hWnd 
+            foreach (var entry in runningApps)
             {
-                foreach (var entry in runningApps)
+                bool add = false;
+                
+                if (entry.Value.ProcessName == "cmd" && entry.Value.MainWindowTitle.Equals(window.TitleName))
                 {
-                    if (entry.Value.ProcessName == "cmd" && entry.Value.MainWindowTitle == window.TitleName)
-                    {
-                        window.hWnd = entry.Value.MainWindowHandle;
-                        this.hWnd.Text = window.hWnd.ToString();
-                        break;
-                    }
-                    if (entry.Value.ProcessName == window.ProcessName)
-                    {
-                        window.hWnd = entry.Value.MainWindowHandle;
-                        this.hWnd.Text = window.hWnd.ToString();
-                        break;
-                    }
+                    add = true;
+                }
+                if (entry.Value.ProcessName != "cmd" && entry.Value.ProcessName == window.ProcessName)
+                {
+                    add = true;
+                }
+
+                if (add)
+                {
+                    window.hWnd = entry.Value.MainWindowHandle;
+                    this.hWnd.Text = window.hWnd.ToString();
+                    break;
                 }
             }
+
 
             return window;
         }
