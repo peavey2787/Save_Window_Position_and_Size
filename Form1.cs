@@ -13,12 +13,6 @@ namespace Save_Window_Position_and_Size
         System.Windows.Forms.Timer refreshTimer = new System.Windows.Forms.Timer();
         Random random = new Random();
 
-        const string WinPosX = "WinPosX";
-        const string WinPosY = "WinPosY";
-        const string WinWidth = "WinWidth";
-        const string WinHeight = "WinHeight";
-        const string WinKeepOnTop = "WinKeepOnTop";
-
         // Load/Close
         public Form1()
         {
@@ -96,7 +90,7 @@ namespace Save_Window_Position_and_Size
                 if (minutes < 0)
                 {
                     if (int.TryParse(UpdateTimerInterval.Text, out var mins))
-                        minutes = mins;
+                        minutes = mins - 1;
                     else
                         minutes = 1; // defautl to 1mins
 
@@ -381,6 +375,23 @@ namespace Save_Window_Position_and_Size
 
 
         // Misc
+        private IntPtr GetMainWindowHandle(string name)
+        {
+            var allRunningApps = InteractWithWindow.GetAllRunningApps(ignoreList);
+
+            foreach (var app in allRunningApps)
+            {
+                if (app.Value.MainWindowTitle == name)
+                {
+                    return (IntPtr)app.Value.MainWindowHandle;
+                }
+                if (app.Value.ProcessName != "cmd" && app.Value.ProcessName == name)
+                {
+                    return (IntPtr)app.Value.MainWindowHandle;
+                }
+            }
+            return IntPtr.Zero;
+        }
         private void SaveWindowSettings()
         {
             // Save settings
@@ -390,15 +401,27 @@ namespace Save_Window_Position_and_Size
 
         private void RestoreAllWindows(bool useSavedAutoPos = true)
         {
+            var allRunningApps =InteractWithWindow.GetAllRunningApps(ignoreList);
+            IntPtr hWnd = IntPtr.Zero;
+
             foreach (Window window in savedWindows)
             {
                 if (useSavedAutoPos && !window.AutoPosition) continue;
 
+                string name = "";
+                if (window.ProcessName == "cmd")
+                    name = window.TitleName;
+                else if (window.ProcessName != "cmd")
+                    name = window.ProcessName;
+
+                hWnd = GetMainWindowHandle(name);
+
                 //if (window.IsFileExplorer)
                 //  InteractWithWindow.SetFileExplorerWindowPosAndSize(window.TitleName, window.GetWindowPosAndSize());
                 //else
-                IntPtr hWnd = (IntPtr)window.hWnd;
-                InteractWithWindow.SetWindowPositionAndSize(hWnd, window.X, window.Y, window.Width, window.Height);
+                //IntPtr hWnd = (IntPtr)window.hWnd;
+                if (hWnd != IntPtr.Zero) 
+                    InteractWithWindow.SetWindowPositionAndSize(hWnd, window.X, window.Y, window.Width, window.Height);
             }
         }
         private void CheckWindowPosAndSize(Window window)
