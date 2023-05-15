@@ -66,6 +66,11 @@ namespace Save_Window_Position_and_Size
             contextMenuStrip.Items.Add(ignoreMenuItem);
 
             AllRunningApps.ContextMenuStrip = contextMenuStrip;
+
+            // Make label auto word wrap
+            WindowTitle.AutoSize = false;
+            WindowTitle.AutoEllipsis = true;
+            WindowTitle.MaximumSize = new System.Drawing.Size(200, 100);
         }
 
 
@@ -393,6 +398,9 @@ namespace Save_Window_Position_and_Size
                 this.hWnd.Text = window.hWnd.ToString();
             ProcessName.Text = window.ProcessName;
             WindowDisplayName.Text = !string.IsNullOrWhiteSpace(window.DisplayName) ? window.DisplayName : window.TitleName;
+            // Adjust the label's size to fit the wrapped text:
+            WindowTitle.Size = new System.Drawing.Size(WindowTitle.MaximumSize.Width,
+                TextRenderer.MeasureText(WindowTitle.Text, WindowTitle.Font, WindowTitle.MaximumSize).Height);
             WindowTitle.Text = window.TitleName;
             AutoPosition.Checked = window.AutoPosition;
             KeepWindowOnTop.Checked = window.KeepOnTop;
