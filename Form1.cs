@@ -233,6 +233,8 @@ namespace Save_Window_Position_and_Size
                 AppsSaved.Items.RemoveAt(AppsSaved.SelectedIndex);
 
                 SaveWindows();
+
+                AllRunningApps.SelectedIndex = 0;
             }
         }
         private void UpdateTimerInterval_KeyDown(object sender, KeyEventArgs e)
@@ -261,6 +263,7 @@ namespace Save_Window_Position_and_Size
             {
                 window = GetWindowFromGui();
                 savedWindows.Add(window);
+                AppsSaved.Items.Add(window.TitleName + " / " + WindowId.Text);
             }
             else
                 window.AutoPosition = AutoPosition.Checked;
@@ -283,6 +286,7 @@ namespace Save_Window_Position_and_Size
             {
                 window = GetWindowFromGui();
                 savedWindows.Add(window);
+                AppsSaved.Items.Add(window.TitleName + " / " + WindowId.Text);
             }
             else
                 window.KeepOnTop = KeepWindowOnTop.Checked;
