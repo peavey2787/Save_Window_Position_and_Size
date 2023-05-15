@@ -48,23 +48,21 @@
             lblTime = new Label();
             Time = new Label();
             panel1 = new Panel();
+            ProcessName = new Label();
+            label3 = new Label();
             hWnd = new Label();
             RefreshWindowButton = new Button();
             WindowId = new Label();
             WindowDisplayName = new TextBox();
             label1 = new Label();
             AutoPosition = new CheckBox();
-            WindowClass = new Label();
-            label2 = new Label();
             IgnoreButton = new Button();
             RestoreAll = new Button();
             RefreshAllRunningApps = new Button();
             KeepWindowOnTop = new CheckBox();
-            WindowTitle = new Label();
             lblAllRunningApps = new Label();
             lblSavedApps = new Label();
-            label3 = new Label();
-            ProcessName = new Label();
+            WindowTitle = new Label();
             panel1.SuspendLayout();
             SuspendLayout();
             // 
@@ -82,7 +80,7 @@
             // 
             lbl_Window_Title.AutoSize = true;
             lbl_Window_Title.Font = new Font("Segoe UI", 12F, FontStyle.Bold, GraphicsUnit.Point);
-            lbl_Window_Title.Location = new Point(403, 103);
+            lbl_Window_Title.Location = new Point(436, 155);
             lbl_Window_Title.Name = "lbl_Window_Title";
             lbl_Window_Title.Size = new Size(112, 21);
             lbl_Window_Title.TabIndex = 2;
@@ -199,7 +197,7 @@
             // 
             // UpdateTimerInterval
             // 
-            UpdateTimerInterval.Location = new Point(768, 365);
+            UpdateTimerInterval.Location = new Point(768, 367);
             UpdateTimerInterval.Name = "UpdateTimerInterval";
             UpdateTimerInterval.Size = new Size(25, 23);
             UpdateTimerInterval.TabIndex = 15;
@@ -209,7 +207,7 @@
             // lblUpdateTimerInterval
             // 
             lblUpdateTimerInterval.AutoSize = true;
-            lblUpdateTimerInterval.Location = new Point(638, 368);
+            lblUpdateTimerInterval.Location = new Point(638, 371);
             lblUpdateTimerInterval.Name = "lblUpdateTimerInterval";
             lblUpdateTimerInterval.Size = new Size(124, 15);
             lblUpdateTimerInterval.TabIndex = 16;
@@ -218,7 +216,7 @@
             // lblTime
             // 
             lblTime.AutoSize = true;
-            lblTime.Location = new Point(844, 367);
+            lblTime.Location = new Point(844, 373);
             lblTime.Name = "lblTime";
             lblTime.Size = new Size(65, 15);
             lblTime.TabIndex = 17;
@@ -227,7 +225,7 @@
             // Time
             // 
             Time.AutoSize = true;
-            Time.Location = new Point(907, 367);
+            Time.Location = new Point(907, 373);
             Time.Name = "Time";
             Time.Size = new Size(28, 15);
             Time.TabIndex = 18;
@@ -235,6 +233,7 @@
             // 
             // panel1
             // 
+            panel1.Controls.Add(WindowTitle);
             panel1.Controls.Add(ProcessName);
             panel1.Controls.Add(label3);
             panel1.Controls.Add(hWnd);
@@ -243,13 +242,10 @@
             panel1.Controls.Add(WindowDisplayName);
             panel1.Controls.Add(label1);
             panel1.Controls.Add(AutoPosition);
-            panel1.Controls.Add(WindowClass);
-            panel1.Controls.Add(label2);
             panel1.Controls.Add(IgnoreButton);
             panel1.Controls.Add(RestoreAll);
             panel1.Controls.Add(RefreshAllRunningApps);
             panel1.Controls.Add(KeepWindowOnTop);
-            panel1.Controls.Add(WindowTitle);
             panel1.Controls.Add(lblAllRunningApps);
             panel1.Controls.Add(lblSavedApps);
             panel1.Controls.Add(AllRunningApps);
@@ -270,10 +266,30 @@
             panel1.Size = new Size(958, 366);
             panel1.TabIndex = 19;
             // 
+            // ProcessName
+            // 
+            ProcessName.AutoSize = true;
+            ProcessName.Font = new Font("Segoe UI", 9F, FontStyle.Regular, GraphicsUnit.Point);
+            ProcessName.Location = new Point(436, 128);
+            ProcessName.Name = "ProcessName";
+            ProcessName.Size = new Size(110, 15);
+            ProcessName.TabIndex = 36;
+            ProcessName.Text = "Process Name Here";
+            // 
+            // label3
+            // 
+            label3.AutoSize = true;
+            label3.Font = new Font("Segoe UI", 12F, FontStyle.Bold, GraphicsUnit.Point);
+            label3.Location = new Point(431, 96);
+            label3.Name = "label3";
+            label3.Size = new Size(117, 21);
+            label3.TabIndex = 35;
+            label3.Text = "Process Name";
+            // 
             // hWnd
             // 
             hWnd.AutoSize = true;
-            hWnd.Location = new Point(299, 29);
+            hWnd.Location = new Point(636, 58);
             hWnd.Name = "hWnd";
             hWnd.Size = new Size(39, 15);
             hWnd.TabIndex = 34;
@@ -292,7 +308,7 @@
             // WindowId
             // 
             WindowId.AutoSize = true;
-            WindowId.Location = new Point(299, 9);
+            WindowId.Location = new Point(279, 54);
             WindowId.Name = "WindowId";
             WindowId.Size = new Size(18, 15);
             WindowId.TabIndex = 32;
@@ -300,7 +316,7 @@
             // 
             // WindowDisplayName
             // 
-            WindowDisplayName.Location = new Point(459, 8);
+            WindowDisplayName.Location = new Point(459, 54);
             WindowDisplayName.Name = "WindowDisplayName";
             WindowDisplayName.Size = new Size(100, 23);
             WindowDisplayName.TabIndex = 30;
@@ -308,7 +324,7 @@
             // label1
             // 
             label1.AutoSize = true;
-            label1.Location = new Point(371, 12);
+            label1.Location = new Point(371, 58);
             label1.Name = "label1";
             label1.Size = new Size(61, 15);
             label1.TabIndex = 31;
@@ -324,23 +340,6 @@
             AutoPosition.Text = "Auto Position";
             AutoPosition.UseVisualStyleBackColor = true;
             AutoPosition.CheckedChanged += AutoPosition_CheckedChanged;
-            // 
-            // WindowClass
-            // 
-            WindowClass.Location = new Point(273, 187);
-            WindowClass.Name = "WindowClass";
-            WindowClass.Size = new Size(434, 28);
-            WindowClass.TabIndex = 29;
-            // 
-            // label2
-            // 
-            label2.AutoSize = true;
-            label2.Font = new Font("Segoe UI", 12F, FontStyle.Bold, GraphicsUnit.Point);
-            label2.Location = new Point(406, 166);
-            label2.Name = "label2";
-            label2.Size = new Size(120, 21);
-            label2.TabIndex = 28;
-            label2.Text = "Window Class:";
             // 
             // IgnoreButton
             // 
@@ -383,13 +382,6 @@
             KeepWindowOnTop.UseVisualStyleBackColor = true;
             KeepWindowOnTop.CheckedChanged += KeepWindowOnTop_CheckedChanged;
             // 
-            // WindowTitle
-            // 
-            WindowTitle.Location = new Point(273, 124);
-            WindowTitle.Name = "WindowTitle";
-            WindowTitle.Size = new Size(434, 38);
-            WindowTitle.TabIndex = 23;
-            // 
             // lblAllRunningApps
             // 
             lblAllRunningApps.AutoSize = true;
@@ -410,25 +402,15 @@
             lblSavedApps.TabIndex = 21;
             lblSavedApps.Text = "Saved Apps";
             // 
-            // label3
+            // WindowTitle
             // 
-            label3.AutoSize = true;
-            label3.Font = new Font("Segoe UI", 12F, FontStyle.Bold, GraphicsUnit.Point);
-            label3.Location = new Point(398, 54);
-            label3.Name = "label3";
-            label3.Size = new Size(117, 21);
-            label3.TabIndex = 35;
-            label3.Text = "Process Name";
-            // 
-            // ProcessName
-            // 
-            ProcessName.AutoSize = true;
-            ProcessName.Font = new Font("Segoe UI", 9F, FontStyle.Regular, GraphicsUnit.Point);
-            ProcessName.Location = new Point(405, 80);
-            ProcessName.Name = "ProcessName";
-            ProcessName.Size = new Size(110, 15);
-            ProcessName.TabIndex = 36;
-            ProcessName.Text = "Process Name Here";
+            WindowTitle.AutoSize = true;
+            WindowTitle.Font = new Font("Segoe UI", 9F, FontStyle.Regular, GraphicsUnit.Point);
+            WindowTitle.Location = new Point(438, 185);
+            WindowTitle.Name = "WindowTitle";
+            WindowTitle.Size = new Size(139, 15);
+            WindowTitle.TabIndex = 37;
+            WindowTitle.Text = "Window Title Name Here";
             // 
             // Form1
             // 
@@ -475,12 +457,9 @@
         private CheckBox AutoPosition;
         private Label lblAllRunningApps;
         private Label lblSavedApps;
-        private Label WindowTitle;
         private CheckBox KeepWindowOnTop;
         private Button RefreshAllRunningApps;
         private Button RestoreAll;
-        private Label WindowClass;
-        private Label label2;
         private Button IgnoreButton;
         private TextBox WindowDisplayName;
         private Label label1;
@@ -489,5 +468,6 @@
         private Label hWnd;
         private Label ProcessName;
         private Label label3;
+        private Label WindowTitle;
     }
 }
