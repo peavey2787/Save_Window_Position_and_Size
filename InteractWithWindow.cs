@@ -70,7 +70,7 @@ namespace Save_Window_Position_and_Size
             foreach (Process process in processes)
             {
                 IntPtr mainWindowHandle = process.MainWindowHandle;
-                if (mainWindowHandle != IntPtr.Zero && IsWindowVisible(mainWindowHandle))
+                if (mainWindowHandle != IntPtr.Zero)// && IsWindowVisible(mainWindowHandle))
                 {
                     int windowStyle = GetWindowLong(mainWindowHandle, GWL_STYLE);
                     if ((windowStyle & WS_VISIBLE) == WS_VISIBLE)

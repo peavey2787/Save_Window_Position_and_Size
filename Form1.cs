@@ -347,7 +347,7 @@ namespace Save_Window_Position_and_Size
 
             foreach (var app in runningApps)
             {
-                if (app.Value.ProcessName == "cmd")
+                if (!String.IsNullOrWhiteSpace(app.Value.MainWindowTitle))
                     AllRunningApps.AddItemThreadSafe($"{app.Value.MainWindowTitle} / {app.Key}");
                 else
                     AllRunningApps.AddItemThreadSafe($"{app.Value.ProcessName} / {app.Key}");
@@ -423,7 +423,7 @@ namespace Save_Window_Position_and_Size
                 {
                     return app.Value;
                 }
-                if (app.Value.ProcessName != "cmd" && app.Value.ProcessName == window.ProcessName)
+                if (String.IsNullOrWhiteSpace(app.Value.MainWindowTitle) && app.Value.ProcessName == window.ProcessName)
                 {
                     return app.Value;
                 }
