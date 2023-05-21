@@ -423,7 +423,8 @@ namespace Save_Window_Position_and_Size
                 {
                     return app.Value;
                 }
-                if (String.IsNullOrWhiteSpace(app.Value.MainWindowTitle) && app.Value.ProcessName == window.ProcessName)
+                if ( !(app.Value.ProcessName == "cmd" || app.Value.ProcessName == "windows terminal")
+                    && app.Value.ProcessName == window.ProcessName)
                 {
                     return app.Value;
                 }
@@ -438,10 +439,11 @@ namespace Save_Window_Position_and_Size
         }
         private void RestoreAllWindows(bool useSavedAutoPos = true)
         {
-            IntPtr hWnd = IntPtr.Zero;
-
+            
             foreach (Window window in savedWindows)
             {
+                IntPtr hWnd = IntPtr.Zero;
+
                 if (useSavedAutoPos && !window.AutoPosition) continue;
 
                 var process = GetRunningAppProcessBy(window);
