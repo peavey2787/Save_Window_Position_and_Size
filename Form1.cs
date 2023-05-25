@@ -174,7 +174,7 @@ namespace Save_Window_Position_and_Size
             // Get the id and set it to gui
             var parts = AppsSaved.Text.Split('/');
             string displayName = parts[0];
-            if (parts.Length > 1 && int.TryParse(parts[1], out int id))
+            if (parts.Length > 1 && int.TryParse(parts.Last(), out int id))
                 WindowId.Text = id.ToString();
             else return;
 
@@ -190,7 +190,7 @@ namespace Save_Window_Position_and_Size
 
             var parts = AllRunningApps.SelectedItem.ToString().Split('/');
             var processName = parts[0];
-            var hWnd = IntPtr.Parse(parts[1]);
+            var hWnd = IntPtr.Parse(parts.Last());
 
             // Get process from running apps
             var process = runningApps.TryGetValue(hWnd, out var proc) ? proc : null;
