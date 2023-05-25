@@ -103,16 +103,6 @@ namespace Save_Window_Position_and_Size.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap redo_multiple {
-            get {
-                object obj = ResourceManager.GetObject("redo-multiple", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap refresh_blue_arrows {
             get {
                 object obj = ResourceManager.GetObject("refresh-blue-arrows", resourceCulture);
