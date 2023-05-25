@@ -67,28 +67,26 @@ namespace Save_Window_Position_and_Size
         {
             Dictionary<IntPtr, Process> runningApps = new Dictionary<IntPtr, Process>();
 
+            // Get all apps
             Process[] processes = Process.GetProcesses();
             foreach (Process process in processes)
             {
+                // With windows
                 IntPtr mainWindowHandle = process.MainWindowHandle;
-                if (mainWindowHandle != IntPtr.Zero)// && IsWindowVisible(mainWindowHandle))
+                if (mainWindowHandle != IntPtr.Zero)
                 {
+                    // That are visible
                     int windowStyle = GetWindowLong(mainWindowHandle, GWL_STYLE);
                     if ((windowStyle & WS_VISIBLE) == WS_VISIBLE)
                     {
-                        runningApps[process.MainWindowHandle] = process;
+                        // And not on the ignore list
+                        if(!exceptions.Contains(process.MainWindowTitle)
+                            && !exceptions.Contains(process.ProcessName))
+                            runningApps[process.MainWindowHandle] = process;
                     }
                 }
-            }
-
-            /*
-            // Add Windows File Explorer's; if any
-            var fileExplorers = GetFileExplorerWindows();
-
-            foreach (var file in fileExplorers)
-                if(!exceptions.Contains(file))
-                    runningApps[file] = null;
-            */
+            }           
+            
             return runningApps;
         }
         public static WindowPosAndSize GetWindowPositionAndSize(IntPtr hWnd)
@@ -101,20 +99,6 @@ namespace Save_Window_Position_and_Size
         {
             SetWindowPos(hWnd, new IntPtr(), x, y, width, height, SWP_NOZORDER);
             return true;
-            
-            /*var hWnds = GetWindowHandles(windowTitle);
-            if (hWnds == null || hWnds.Count == 0) hWnds = GetWindowHandles("", windowTitle);
-            var moved = false;
-
-            foreach(var hWnd in hWnds)
-            {
-                if (hWnd != IntPtr.Zero)
-                {
-                    SetWindowPos(hWnd, new IntPtr(), x, y, width, height, SWP_NOZORDER);
-                    moved = true;
-                }
-            }
-            return moved;*/
         }
         public static WindowPosAndSize ConvertRectToWindowPosAndSize(Rectangle rect)
         {
@@ -138,7 +122,7 @@ namespace Save_Window_Position_and_Size
         }
 
         // File Explorer Specific
-        public static List<string> GetFileExplorerWindows()
+        public static List<string> GetFileExplorerWindows(List<string> exceptions)
         {
             var windows = new List<string>();
 
@@ -146,20 +130,28 @@ namespace Save_Window_Position_and_Size
             {
                 if (Path.GetFileNameWithoutExtension(window.FullName).ToLowerInvariant() == "explorer")
                 {
-                    var appName = window.Name + " - " + window.LocationName;
+                    // Skip minimized windows
+                    if (window.Left == -32000) continue;
+
+                    var appName = $"FileExplorer: {window.Name} - {window.LocationName}";
                     windows.Add(appName);
                 }
             }
 
             return windows;
         }
-        public static WindowPosAndSize GetFileExplorerWindow(string windowTitle)
+        public static WindowPosAndSize GetFileExplorerPosAndSize(string windowTitle)
         {
+
             var windowPosAndSize = new WindowPosAndSize();
             foreach (SHDocVw.InternetExplorer window in new SHDocVw.ShellWindows())
             {
-                if (Path.GetFileNameWithoutExtension(window.FullName).ToLowerInvariant() == "explorer" && window.Name + " - " + window.LocationName == windowTitle)
-                {
+                // Skip minimized windows
+                if (window.Left == -32000) continue;
+
+                if (Path.GetFileNameWithoutExtension(window.FullName).ToLowerInvariant() == "explorer" 
+                    && $"FileExplorer: {window.Name} - {window.LocationName}" == windowTitle)
+                { 
                     windowPosAndSize.X = window.Left;
                     windowPosAndSize.Y = window.Top;
                     windowPosAndSize.Width = window.Width;
@@ -173,7 +165,8 @@ namespace Save_Window_Position_and_Size
         {
             foreach (SHDocVw.InternetExplorer window in new SHDocVw.ShellWindows())
             {
-                if (Path.GetFileNameWithoutExtension(window.FullName).ToLowerInvariant() == "explorer" && window.Name + " - " + window.LocationName == windowTitle)
+                if (Path.GetFileNameWithoutExtension(window.FullName).ToLowerInvariant() == "explorer" 
+                    && $"FileExplorer: {window.Name} - {window.LocationName}" == windowTitle)
                 {
                     window.Left = windowPosAndSize.X;
                     window.Top = windowPosAndSize.Y;

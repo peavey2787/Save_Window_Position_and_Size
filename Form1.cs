@@ -177,6 +177,14 @@ namespace Save_Window_Position_and_Size
                 window.WindowPosAndSize.Width = saved.WindowPosAndSize.Width;
                 window.WindowPosAndSize.Height = saved.WindowPosAndSize.Height;
             }
+            
+            // Handle File Explorer windows
+            if(window.IsFileExplorer)
+            {
+                InteractWithWindow.SetFileExplorerWindowPosAndSize(window.TitleName, window.WindowPosAndSize);
+                SetWindowGui(window);
+                return;
+            }
 
             // Get the window of the running app 
             var process = GetRunningAppProcessBy(window);
@@ -214,10 +222,28 @@ namespace Save_Window_Position_and_Size
         }
         private void AllRunningApps_SelectedIndexChanged(object sender, EventArgs e)
         {
+            // Do nothing if nothing selected
             if (AllRunningApps.SelectedIndex == -1) return;
-            AppsSaved.SelectedIndex = -1;
+            
+            AppsSaved.SelectedIndex = -1; // Deselect any saved apps
 
-            var parts = AllRunningApps.SelectedItem.ToString().Split('/');
+            string selected = AllRunningApps.SelectedItem.ToString();
+
+            // Handle File explorer windows
+            if (selected.StartsWith("FileExplorer: "))
+            {
+                var newWindow = new Window();
+                newWindow.IsFileExplorer = true;
+                newWindow.TitleName = selected;
+                newWindow.ProcessName = "File Explorer";
+                newWindow.WindowPosAndSize = InteractWithWindow.GetFileExplorerPosAndSize(selected);
+                
+                SetWindowGui(newWindow); // Update GUI
+                return;
+            }
+
+            // Handle all other apps by getting their window handle
+            var parts = selected.Split('/');
             var processName = parts[0];
             var hWnd = IntPtr.Parse(parts.Last());
 
@@ -230,7 +256,7 @@ namespace Save_Window_Position_and_Size
 
             if (window == null)
             {
-                // Create a new window
+                // Create a new window if not
                 window = new Window();
                 window.Id = random.Next(300, 32034);
                 window.DisplayName = process.MainWindowTitle;
@@ -241,13 +267,9 @@ namespace Save_Window_Position_and_Size
             window.hWnd = hWnd;
 
             // Get the current position and size
-            var windowPosAndSize = new WindowPosAndSize();
-
-            windowPosAndSize = InteractWithWindow.GetWindowPositionAndSize(hWnd);
-
-            window.WindowPosAndSize = windowPosAndSize;
-
-            SetWindowGui(window);
+            window.WindowPosAndSize = InteractWithWindow.GetWindowPositionAndSize(hWnd);            
+            
+            SetWindowGui(window); // Update GUI
         }
         private void AppsSaved_KeyDown(object sender, KeyEventArgs e)
         {
@@ -358,18 +380,24 @@ namespace Save_Window_Position_and_Size
             if (String.IsNullOrWhiteSpace(WindowId.Text)) return;
 
             Window window = GetWindowFromGui();
+
+            // Handle File Explorer windows
+            if (window.IsFileExplorer)
+            {
+                window.WindowPosAndSize = InteractWithWindow.GetFileExplorerPosAndSize(window.TitleName);
+                SetWindowGui(window);
+                return;
+            }
+
             var process = GetRunningAppProcessBy(window);
             if (process == null) return;
 
-            var windowPosAndSize = InteractWithWindow.GetWindowPositionAndSize(process.MainWindowHandle);
-            WindowPosX.Text = windowPosAndSize.X.ToString();
-            WindowPosY.Text = windowPosAndSize.Y.ToString();
-            WindowHeight.Text = windowPosAndSize.Height.ToString();
-            WindowWidth.Text = windowPosAndSize.Width.ToString();
-            this.hWnd.Text = process.MainWindowHandle.ToString();
+            window.WindowPosAndSize = InteractWithWindow.GetWindowPositionAndSize(process.MainWindowHandle);
+            SetWindowGui(window);
         }
         private void AllRunningApps_MouseDown(object sender, MouseEventArgs e)
         {
+            // If right mouse btn clicked show menu to add app to ignore list
             if (e.Button == MouseButtons.Right)
             {
                 int index = AllRunningApps.IndexFromPoint(e.Location);
@@ -397,6 +425,12 @@ namespace Save_Window_Position_and_Size
                 else
                     AllRunningApps.AddItemThreadSafe($"{app.Value.ProcessName} / {app.Key}");
             }
+
+            // Add file explorer windows
+            var fileExplorers = InteractWithWindow.GetFileExplorerWindows(ignoreList);
+
+            foreach (var fileExplorer in fileExplorers)
+                AllRunningApps.AddItemThreadSafe(fileExplorer);            
         }
         private Window GetWindowFromGui()
         {
@@ -409,6 +443,10 @@ namespace Save_Window_Position_and_Size
                 window.hWnd = handle;
 
             window.ProcessName = ProcessName.Text;
+            if (window.ProcessName == "File Explorer")
+                window.IsFileExplorer = true;
+            else
+                window.IsFileExplorer = false;
             window.DisplayName = !string.IsNullOrWhiteSpace(WindowDisplayName.Text) ? WindowDisplayName.Text : WindowTitle.Text;
             window.TitleName = WindowTitle.Text;
             window.WindowPosAndSize.X = int.TryParse(WindowPosX.Text, out int X) ? X : 0;
@@ -435,24 +473,31 @@ namespace Save_Window_Position_and_Size
                 WindowWidth.Text = "";
                 AutoPosition.Checked = false;
                 KeepWindowOnTop.Checked = false;
+                return;
             }
 
             if (window.Id != null)
                 WindowId.Text = window.Id.ToString();
             if (window.hWnd != null && window.hWnd != IntPtr.Zero)
                 this.hWnd.Text = window.hWnd.ToString();
+
             ProcessName.Text = window.ProcessName;
             WindowDisplayName.Text = !string.IsNullOrWhiteSpace(window.DisplayName) ? window.DisplayName : window.TitleName;
+
             // Adjust the label's size to fit the wrapped text:
             WindowTitle.Size = new System.Drawing.Size(WindowTitle.MaximumSize.Width,
                 TextRenderer.MeasureText(WindowTitle.Text, WindowTitle.Font, WindowTitle.MaximumSize).Height);
+
             WindowTitle.Text = window.TitleName;
-            AutoPosition.Checked = window.AutoPosition;
+            AutoPosition.Checked = window.AutoPosition;            
             KeepWindowOnTop.Checked = window.KeepOnTop;
             WindowPosX.Text = window.WindowPosAndSize.X.ToString();
             WindowPosY.Text = window.WindowPosAndSize.Y.ToString();
             WindowWidth.Text = window.WindowPosAndSize.Width.ToString();
             WindowHeight.Text = window.WindowPosAndSize.Height.ToString();
+
+            // Hide keep on top for file explorer windows as I'm not sure how to get their hWnd yet
+            KeepWindowOnTop.Visible = !window.IsFileExplorer;
         }
 
 
@@ -487,6 +532,12 @@ namespace Save_Window_Position_and_Size
 
             foreach (Window window in savedWindows)
             {
+                // Handle File Explorer windows
+                if (window.IsFileExplorer)
+                {
+                    InteractWithWindow.SetFileExplorerWindowPosAndSize(window.TitleName, window.WindowPosAndSize);
+                }
+
                 IntPtr hWnd = IntPtr.Zero;
 
                 if (useSavedAutoPos && !window.AutoPosition) continue;

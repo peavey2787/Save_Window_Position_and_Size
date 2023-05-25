@@ -16,6 +16,7 @@ namespace Save_Window_Position_and_Size
         public string ProcessName { get; set; }
         public string TitleName { get; set; }
         public string DisplayName { get; set; }
+        public bool IsFileExplorer { get; set; }
 
         public Window() 
         {
