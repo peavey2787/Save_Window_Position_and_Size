@@ -1,6 +1,6 @@
 # Save_Window_Position_and_Size
 
-![Save_Window_Position_and_Size App Screen Shot](https://user-images.githubusercontent.com/11081113/184188229-fa5ebd50-6f7e-45c0-94b8-e3f4d4c36ada.png)
+![Save_Window_Position_and_Size App Screen Shot](Resources/Screenshot.png)
 
 # How to Use?
 
