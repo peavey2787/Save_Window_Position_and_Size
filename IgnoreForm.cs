@@ -52,7 +52,7 @@ namespace Save_Window_Position_and_Size
         {
             IgnoreList = new List<string>();
             foreach (string item in IgnoreListBox.Items)
-                if(item != "Add item...")
+                if (item != "Add item...")
                     IgnoreList.Add(item);
         }
 

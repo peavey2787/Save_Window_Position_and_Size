@@ -3,6 +3,7 @@ using System;
 using System.Diagnostics;
 using System.Windows.Forms;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.ToolBar;
 
 namespace Save_Window_Position_and_Size
 {
@@ -71,6 +72,18 @@ namespace Save_Window_Position_and_Size
             WindowTitle.AutoSize = false;
             WindowTitle.AutoEllipsis = true;
             WindowTitle.MaximumSize = new System.Drawing.Size(200, 100);
+
+            // Reset labels
+            hWnd.Text = "";
+            WindowId.Text = "";
+
+            // Tool tip
+            toolTip1.SetToolTip(RefreshAllRunningApps, "Refresh running apps and their locations/sizes");
+            toolTip1.SetToolTip(IgnoreButton, "List of apps to hide from showing in the running apps list");
+            toolTip1.SetToolTip(RestoreAll, "Restore all saved apps' window sizes/locations");
+            toolTip1.SetToolTip(Save, "Save/Update the selected app's window settings");
+            toolTip1.SetToolTip(RefreshWindowButton, "Refresh and get the selected app's current window size/location");
+            toolTip1.SetToolTip(Restore, "Restore the selected app's saved window size/location");
         }
 
 
@@ -154,12 +167,28 @@ namespace Save_Window_Position_and_Size
         private void Restore_Click(object sender, EventArgs e)
         {
             var window = GetWindowFromGui();
+
+            // Restore saved window pos/size if this app is saved
+            var saved = savedWindows.Find(s => s.Id.Equals(window.Id));
+            if (saved != null)
+            {
+                window.WindowPosAndSize.X = saved.WindowPosAndSize.X;
+                window.WindowPosAndSize.Y = saved.WindowPosAndSize.Y;
+                window.WindowPosAndSize.Width = saved.WindowPosAndSize.Width;
+                window.WindowPosAndSize.Height = saved.WindowPosAndSize.Height;
+            }
+
+            // Get the window of the running app 
             var process = GetRunningAppProcessBy(window);
             IntPtr hWnd = process.MainWindowHandle;
 
+            // Update the window pos/size if the window was found
             if (hWnd != null && hWnd != IntPtr.Zero)
             {
-                InteractWithWindow.SetWindowPositionAndSize(hWnd, int.Parse(WindowPosX.Text), int.Parse(WindowPosY.Text), int.Parse(WindowWidth.Text), int.Parse(WindowHeight.Text));
+                InteractWithWindow.SetWindowPositionAndSize(hWnd, window.WindowPosAndSize.X, window.WindowPosAndSize.Y, window.WindowPosAndSize.Width, window.WindowPosAndSize.Height);
+                
+                // Update the window pos/size textboxes
+                SetWindowGui(window);
             }
         }
         private void RestoreAll_Click(object sender, EventArgs e)
@@ -277,8 +306,14 @@ namespace Save_Window_Position_and_Size
         }
         private void KeepWindowOnTop_CheckedChanged(object sender, EventArgs e)
         {
-            if (String.IsNullOrWhiteSpace(this.hWnd.Text)) return;
+            // Do nothing if no app selected
+            if (String.IsNullOrWhiteSpace(this.hWnd.Text))
+            {
+                KeepWindowOnTop.Checked = false;
+                return;
+            }
 
+            // Try getting the saved app
             Window window = null;
 
             if (!String.IsNullOrWhiteSpace(WindowId.Text))
@@ -287,6 +322,7 @@ namespace Save_Window_Position_and_Size
                 window = savedWindows.Find(w => w.Id.Equals(id));
             }
 
+            // If no saved app, create and add one
             if (window == null)
             {
                 window = GetWindowFromGui();
@@ -295,6 +331,14 @@ namespace Save_Window_Position_and_Size
             }
             else
                 window.KeepOnTop = KeepWindowOnTop.Checked;
+
+            // Get current app's window
+            var process = GetRunningAppProcessBy(window);
+
+            if(window.KeepOnTop)
+                InteractWithWindow.SetWindowAlwaysOnTop(process.MainWindowHandle);
+            else
+                InteractWithWindow.UnsetWindowAlwaysOnTop(process.MainWindowHandle);
 
             SaveWindows();
         }
@@ -315,6 +359,7 @@ namespace Save_Window_Position_and_Size
 
             Window window = GetWindowFromGui();
             var process = GetRunningAppProcessBy(window);
+            if (process == null) return;
 
             var windowPosAndSize = InteractWithWindow.GetWindowPositionAndSize(process.MainWindowHandle);
             WindowPosX.Text = windowPosAndSize.X.ToString();
@@ -423,7 +468,7 @@ namespace Save_Window_Position_and_Size
                 {
                     return app.Value;
                 }
-                if ( !(app.Value.ProcessName == "cmd" || app.Value.ProcessName == "windows terminal")
+                if (!(app.Value.ProcessName == "cmd" || app.Value.ProcessName == "windows terminal")
                     && app.Value.ProcessName == window.ProcessName)
                 {
                     return app.Value;
@@ -439,7 +484,7 @@ namespace Save_Window_Position_and_Size
         }
         private void RestoreAllWindows(bool useSavedAutoPos = true)
         {
-            
+
             foreach (Window window in savedWindows)
             {
                 IntPtr hWnd = IntPtr.Zero;

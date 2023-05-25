@@ -25,6 +25,7 @@ namespace Save_Window_Position_and_Size
 
         [DllImport("user32.dll", SetLastError = true)]
         private static extern bool IsWindowVisible(IntPtr hWnd);
+
         [DllImport("user32.dll", SetLastError = true)]
         static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
 
@@ -124,18 +125,16 @@ namespace Save_Window_Position_and_Size
             windowPosAndSize.Height = rect.Height - rect.Y;
             return windowPosAndSize;
         }
-        public static void SetWindowAlwaysOnTop(string windowTitle)
+        public static void SetWindowAlwaysOnTop(IntPtr hWnd)
         {
-            var hwnd = GetWindowHandles(windowTitle)[0];
-            SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
-            SetForegroundWindow(hwnd);
-            ShowWindow(hwnd, SW_RESTORE);
+            SetWindowPos(hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
+            SetForegroundWindow(hWnd);
+            ShowWindow(hWnd, SW_RESTORE);
         }
-        public static void UnsetWindowAlwaysOnTop(string windowTitle)
+        public static void UnsetWindowAlwaysOnTop(IntPtr hWnd)
         {
-            var hwnd = GetWindowHandles(windowTitle)[0];
-            SetWindowPos(hwnd, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
-            SetWindowPos(hwnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
+            SetWindowPos(hWnd, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+            SetWindowPos(hWnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
         }
 
         // File Explorer Specific
