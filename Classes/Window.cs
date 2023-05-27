@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Save_Window_Position_and_Size
+namespace Save_Window_Position_and_Size.Classes
 {
     internal class Window
     {
@@ -18,7 +18,7 @@ namespace Save_Window_Position_and_Size
         public string DisplayName { get; set; }
         public bool IsFileExplorer { get; set; }
 
-        public Window() 
+        public Window()
         {
             WindowPosAndSize = new WindowPosAndSize();
         }

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Save_Window_Position_and_Size
+namespace Save_Window_Position_and_Size.Classes
 {
     internal class Extensions
     {

@@ -2,15 +2,15 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices; // For the P/Invoke signatures.
 
-namespace Save_Window_Position_and_Size
+namespace Save_Window_Position_and_Size.Classes
 {
     public class InteractWithWindow
     {
-        const UInt32 SWP_NOZORDER = 0x0004;
-        const UInt32 SWP_SHOWWINDOW = 0x0040;
-        const UInt32 SWP_NOSIZE = 0x0001;
-        const UInt32 SWP_NOMOVE = 0x0002;
-        const UInt32 SWP_NOACTIVATE = 0x0010;
+        const uint SWP_NOZORDER = 0x0004;
+        const uint SWP_SHOWWINDOW = 0x0040;
+        const uint SWP_NOSIZE = 0x0001;
+        const uint SWP_NOMOVE = 0x0002;
+        const uint SWP_NOACTIVATE = 0x0010;
         const int SW_RESTORE = 9;
         static readonly IntPtr HWND_TOPMOST = new IntPtr(-1);
         static readonly IntPtr HWND_TOP = new IntPtr(0);
@@ -80,19 +80,19 @@ namespace Save_Window_Position_and_Size
                     if ((windowStyle & WS_VISIBLE) == WS_VISIBLE)
                     {
                         // And not on the ignore list
-                        if(!exceptions.Contains(process.MainWindowTitle)
+                        if (!exceptions.Contains(process.MainWindowTitle)
                             && !exceptions.Contains(process.ProcessName))
                             runningApps[process.MainWindowHandle] = process;
                     }
                 }
-            }           
-            
+            }
+
             return runningApps;
         }
         public static WindowPosAndSize GetWindowPositionAndSize(IntPtr hWnd)
         {
             GetWindowRect(hWnd, out var rect);
-            var windowPosAndSize = InteractWithWindow.ConvertRectToWindowPosAndSize(rect);
+            var windowPosAndSize = ConvertRectToWindowPosAndSize(rect);
             return windowPosAndSize;
         }
         public static bool SetWindowPositionAndSize(IntPtr hWnd, int x, int y, int width, int height)
@@ -149,9 +149,9 @@ namespace Save_Window_Position_and_Size
                 // Skip minimized windows
                 if (window.Left == -32000) continue;
 
-                if (Path.GetFileNameWithoutExtension(window.FullName).ToLowerInvariant() == "explorer" 
+                if (Path.GetFileNameWithoutExtension(window.FullName).ToLowerInvariant() == "explorer"
                     && $"FileExplorer: {window.Name} - {window.LocationName}" == windowTitle)
-                { 
+                {
                     windowPosAndSize.X = window.Left;
                     windowPosAndSize.Y = window.Top;
                     windowPosAndSize.Width = window.Width;
@@ -165,7 +165,7 @@ namespace Save_Window_Position_and_Size
         {
             foreach (SHDocVw.InternetExplorer window in new SHDocVw.ShellWindows())
             {
-                if (Path.GetFileNameWithoutExtension(window.FullName).ToLowerInvariant() == "explorer" 
+                if (Path.GetFileNameWithoutExtension(window.FullName).ToLowerInvariant() == "explorer"
                     && $"FileExplorer: {window.Name} - {window.LocationName}" == windowTitle)
                 {
                     window.Left = windowPosAndSize.X;
@@ -199,7 +199,7 @@ namespace Save_Window_Position_and_Size
             // Find (the first-in-Z-order) Notepad window.
             if (windowTitle.Length > 0)
             {
-                hWnd = FindWindow(windowTitle, null); 
+                hWnd = FindWindow(windowTitle, null);
 
                 if (hWnd == IntPtr.Zero)
                     hWnd = FindWindow(null, windowTitle);
@@ -209,7 +209,7 @@ namespace Save_Window_Position_and_Size
                     hWnds.Add(hWnd);
                     return hWnds;
                 }
-                
+
             }
             else if (windowClass.Length > 0)
             {
@@ -240,7 +240,7 @@ namespace Save_Window_Position_and_Size
 
             hWnds.Add(hWnd);
             return hWnds;
-        }        
+        }
         private static bool IsValidWindow(Rectangle rect)
         {
             if (rect.Height - rect.Y > 110)
@@ -265,7 +265,7 @@ namespace Save_Window_Position_and_Size
 
             return new string(classNameBuffer, 0, classNameLength);
         }
-        
+
     }
 
     public class WindowPosAndSize
@@ -277,9 +277,9 @@ namespace Save_Window_Position_and_Size
 
         public bool CompareIsEqual(WindowPosAndSize win1, WindowPosAndSize win2)
         {
-            if(win1.X == win2.X && win1.Y == win2.Y && win1.Width == win2.Width && win1.Height == win2.Height)
+            if (win1.X == win2.X && win1.Y == win2.Y && win1.Width == win2.Width && win1.Height == win2.Height)
                 return true;
-            
+
             return false;
         }
     }

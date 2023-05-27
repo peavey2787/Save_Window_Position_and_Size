@@ -1,9 +1,11 @@
 using Newtonsoft.Json;
+using Save_Window_Position_and_Size.Classes;
 using System;
 using System.Diagnostics;
 using System.Windows.Forms;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.ToolBar;
+using Window = Save_Window_Position_and_Size.Classes.Window;
 
 namespace Save_Window_Position_and_Size
 {
@@ -15,15 +17,19 @@ namespace Save_Window_Position_and_Size
         System.Windows.Forms.Timer refreshTimer = new System.Windows.Forms.Timer();
         Random random = new Random();
 
+
+
         // Load/Close
         public Form1()
         {
             InitializeComponent();
 
+            // Initialize the timer
             refreshTimer.Interval = 1000; // 1sec
             refreshTimer.Tick += RefreshTimer_Tick;
             refreshTimer.Start();
 
+            // Set the app size
             var appSize = new Size(974, 434);
             this.MinimumSize = appSize;
             this.MaximumSize = appSize;
@@ -36,9 +42,12 @@ namespace Save_Window_Position_and_Size
             // Load saved windows
             string json = AppSettings.Load("SavedWindows");
             if (json != null)
+            {
                 savedWindows = JsonConvert.DeserializeObject<List<Window>>(json);
 
-            foreach (Window window in savedWindows) AppsSaved.Items.Add(window.DisplayName + " / " + window.Id);
+                // Add each saved window to GUI
+                foreach (Window window in savedWindows) AppsSaved.Items.Add(window.DisplayName + " / " + window.Id);
+            }
 
             // Load ignore list
             json = AppSettings.Load("IgnoreList");
@@ -65,7 +74,6 @@ namespace Save_Window_Position_and_Size
                 }
             };
             contextMenuStrip.Items.Add(ignoreMenuItem);
-
             AllRunningApps.ContextMenuStrip = contextMenuStrip;
 
             // Make label auto word wrap
@@ -77,7 +85,7 @@ namespace Save_Window_Position_and_Size
             hWnd.Text = "";
             WindowId.Text = "";
 
-            // Tool tip
+            // Set text when user hovers over a button
             toolTip1.SetToolTip(RefreshAllRunningApps, "Refresh running apps and their locations/sizes");
             toolTip1.SetToolTip(IgnoreButton, "List of apps to hide from showing in the running apps list");
             toolTip1.SetToolTip(RestoreAll, "Restore all saved apps' window sizes/locations");
@@ -87,20 +95,20 @@ namespace Save_Window_Position_and_Size
         }
 
 
-        // Timers
+        // Timer
         int minutes = 0;
         int seconds = 60;
         private async void RefreshTimer_Tick(object? sender, EventArgs e)
-        {
-            // Update refresh time
+        {            
             seconds--;
 
+            // Update GUI refresh time count down
             if (seconds.ToString().Length == 1)
                 Time.Text = minutes.ToString() + ":0" + seconds.ToString();
             else
                 Time.Text = minutes.ToString() + ":" + seconds.ToString();
 
-
+            // Reset counters if timer reaches 0
             if (seconds == 0)
             {
                 seconds = 60;
@@ -111,13 +119,15 @@ namespace Save_Window_Position_and_Size
                     if (int.TryParse(UpdateTimerInterval.Text, out var mins))
                         minutes = mins - 1;
                     else
-                        minutes = 1; // defautl to 1mins
+                        minutes = 1; 
 
-                    LogOutput.AppendText("Checking window positions...");
+                    // Timer elapsed perform window restores
+
+                    LogOutput.AppendText("Checking window positions..."); 
 
                     await Task.Run(() => { RestoreAllWindows(); });
 
-                    LogOutput.AppendText("Window positions are all set.");
+                    LogOutput.AppendText("Window positions are all set."); 
                 }
             }
         }
@@ -142,6 +152,7 @@ namespace Save_Window_Position_and_Size
                 if (item[1] == WindowId.Text)
                 {
                     int id = int.TryParse(item[1], out int value) ? value : 0;
+                    
                     // update existing
                     var existing = savedWindows.Find(s => s.Id.Equals(id));
                     if (existing != null)
@@ -529,7 +540,6 @@ namespace Save_Window_Position_and_Size
         }
         private void RestoreAllWindows(bool useSavedAutoPos = true)
         {
-
             foreach (Window window in savedWindows)
             {
                 // Handle File Explorer windows

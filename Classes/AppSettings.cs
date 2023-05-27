@@ -1,6 +1,6 @@
 ﻿using System.Configuration;
 
-namespace Save_Window_Position_and_Size
+namespace Save_Window_Position_and_Size.Classes
 {
     public static class AppSettings
     {
