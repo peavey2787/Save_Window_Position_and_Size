@@ -18,8 +18,45 @@ namespace Save_Window_Position_and_Size
         Random random = new Random();
 
 
+        // Timer
+        int minutes = 0;
+        int seconds = 60;
+        private async void RefreshTimer_Tick(object? sender, EventArgs e)
+        {
+            seconds--;
 
-        // Load/Close
+            // Update GUI refresh time count down
+            if (seconds.ToString().Length == 1)
+                Time.Text = minutes.ToString() + ":0" + seconds.ToString();
+            else
+                Time.Text = minutes.ToString() + ":" + seconds.ToString();
+
+            // Reset counters if timer reaches 0
+            if (seconds == 0)
+            {
+                seconds = 60;
+
+                minutes--;
+                if (minutes < 0)
+                {
+                    if (int.TryParse(UpdateTimerInterval.Text, out var mins))
+                        minutes = mins - 1;
+                    else
+                        minutes = 1;
+
+                    // Timer elapsed perform window restores
+
+                    LogOutput.AppendText("Checking window positions...");
+
+                    await Task.Run(() => { RestoreAllWindows(); });
+
+                    LogOutput.AppendText("Window positions are all set.");
+                }
+            }
+        }
+
+
+        // Startup
         public Form1()
         {
             InitializeComponent();
@@ -94,46 +131,7 @@ namespace Save_Window_Position_and_Size
         }
 
 
-        // Timer
-        int minutes = 0;
-        int seconds = 60;
-        private async void RefreshTimer_Tick(object? sender, EventArgs e)
-        {            
-            seconds--;
-
-            // Update GUI refresh time count down
-            if (seconds.ToString().Length == 1)
-                Time.Text = minutes.ToString() + ":0" + seconds.ToString();
-            else
-                Time.Text = minutes.ToString() + ":" + seconds.ToString();
-
-            // Reset counters if timer reaches 0
-            if (seconds == 0)
-            {
-                seconds = 60;
-
-                minutes--;
-                if (minutes < 0)
-                {
-                    if (int.TryParse(UpdateTimerInterval.Text, out var mins))
-                        minutes = mins - 1;
-                    else
-                        minutes = 1; 
-
-                    // Timer elapsed perform window restores
-
-                    LogOutput.AppendText("Checking window positions..."); 
-
-                    await Task.Run(() => { RestoreAllWindows(); });
-
-                    LogOutput.AppendText("Window positions are all set."); 
-                }
-            }
-        }
-
-
-
-        // User Actions
+        // Buttons
         private void RefreshAllRunningApps_Click(object sender, EventArgs e)
         {
             UpdateRunningApps();
@@ -151,7 +149,7 @@ namespace Save_Window_Position_and_Size
                 if (item[1] == WindowId.Text)
                 {
                     int id = int.TryParse(item[1], out int value) ? value : 0;
-                    
+
                     // update existing
                     var existing = savedWindows.Find(s => s.Id.Equals(id));
                     if (existing != null)
@@ -187,9 +185,9 @@ namespace Save_Window_Position_and_Size
                 window.WindowPosAndSize.Width = saved.WindowPosAndSize.Width;
                 window.WindowPosAndSize.Height = saved.WindowPosAndSize.Height;
             }
-            
+
             // Handle File Explorer windows
-            if(window.IsFileExplorer)
+            if (window.IsFileExplorer)
             {
                 InteractWithWindow.SetFileExplorerWindowPosAndSize(window.TitleName, window.WindowPosAndSize);
                 SetWindowGui(window);
@@ -204,7 +202,7 @@ namespace Save_Window_Position_and_Size
             if (hWnd != null && hWnd != IntPtr.Zero)
             {
                 InteractWithWindow.SetWindowPositionAndSize(hWnd, window.WindowPosAndSize.X, window.WindowPosAndSize.Y, window.WindowPosAndSize.Width, window.WindowPosAndSize.Height);
-                
+
                 // Update the window pos/size textboxes
                 SetWindowGui(window);
             }
@@ -213,6 +211,40 @@ namespace Save_Window_Position_and_Size
         {
             RestoreAllWindows(false);
         }
+        private void IgnoreButton_Click(object sender, EventArgs e)
+        {
+            var ignoreForm = new IgnoreForm(ignoreList);
+            var result = ignoreForm.ShowDialog();
+
+            ignoreList = ignoreForm.GetIgnoreList();
+            string json = JsonConvert.SerializeObject(ignoreList);
+            AppSettings.Save("IgnoreList", json);
+
+            ignoreForm.Close();
+        }
+        private void RefreshWindowButton_Click(object sender, EventArgs e)
+        {
+            if (String.IsNullOrWhiteSpace(WindowId.Text)) return;
+
+            Window window = GetWindowFromGui();
+
+            // Handle File Explorer windows
+            if (window.IsFileExplorer)
+            {
+                window.WindowPosAndSize = InteractWithWindow.GetFileExplorerPosAndSize(window.TitleName);
+                SetWindowGui(window);
+                return;
+            }
+
+            var process = GetRunningAppProcessBy(window);
+            if (process == null) return;
+
+            window.WindowPosAndSize = InteractWithWindow.GetWindowPositionAndSize(process.MainWindowHandle);
+            SetWindowGui(window);
+        }
+
+
+        // ListBoxes
         private void AppsSaved_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (AppsSaved.SelectedIndex == -1 && AppsSaved.Items.Count > 0) return;
@@ -220,10 +252,7 @@ namespace Save_Window_Position_and_Size
 
             // Get the id and set it to gui
             var parts = AppsSaved.Text.Split('/');
-            string displayName = parts[0];
-            if (parts.Length > 1 && int.TryParse(parts.Last(), out int id))
-                WindowId.Text = id.ToString();
-            else return;
+            int id = int.TryParse(parts.Last(), out int parsedId) ? parsedId : -1;
 
             // Get the window and show it
             var window = savedWindows.Find(s => s.Id.Equals(id));
@@ -234,7 +263,7 @@ namespace Save_Window_Position_and_Size
         {
             // Do nothing if nothing selected
             if (AllRunningApps.SelectedIndex == -1) return;
-            
+
             AppsSaved.SelectedIndex = -1; // Deselect any saved apps
 
             string selected = AllRunningApps.SelectedItem.ToString();
@@ -247,7 +276,7 @@ namespace Save_Window_Position_and_Size
                 newWindow.TitleName = selected;
                 newWindow.ProcessName = "File Explorer";
                 newWindow.WindowPosAndSize = InteractWithWindow.GetFileExplorerPosAndSize(selected);
-                
+
                 SetWindowGui(newWindow); // Update GUI
                 return;
             }
@@ -261,18 +290,14 @@ namespace Save_Window_Position_and_Size
             var process = runningApps.TryGetValue(hWnd, out var proc) ? proc : null;
 
             // Check if we have a saved window for this running app
-
-
             var window = savedWindows.Find(w => (w.TitleName.Equals(process.MainWindowTitle))
             || (process.ProcessName != "cmd" && w.ProcessName.Equals(process.ProcessName)));
-
 
             if (window == null)
             {
                 // Create a new window if not
                 window = new Window();
                 window.Id = random.Next(300, 32034);
-                window.DisplayName = process.MainWindowTitle;
                 window.DisplayName = !string.IsNullOrWhiteSpace(process.MainWindowTitle) ? process.MainWindowTitle : process.ProcessName;
                 window.ProcessName = process.ProcessName;
                 window.TitleName = process.MainWindowTitle;
@@ -281,42 +306,25 @@ namespace Save_Window_Position_and_Size
             window.hWnd = hWnd;
 
             // Get the current position and size
-            window.WindowPosAndSize = InteractWithWindow.GetWindowPositionAndSize(hWnd);            
-            
+            window.WindowPosAndSize = InteractWithWindow.GetWindowPositionAndSize(hWnd);
+
             SetWindowGui(window); // Update GUI
         }
-        private void AppsSaved_KeyDown(object sender, KeyEventArgs e)
+        private void AllRunningApps_MouseDown(object sender, MouseEventArgs e)
         {
-            if (e.KeyCode == Keys.Delete && AppsSaved.SelectedIndex > -1)
+            // If right mouse btn clicked show menu to add app to ignore list
+            if (e.Button == MouseButtons.Right)
             {
-                Window window = null;
-
-                if (!String.IsNullOrWhiteSpace(WindowId.Text))
+                int index = AllRunningApps.IndexFromPoint(e.Location);
+                if (index >= 0 && index < AllRunningApps.Items.Count)
                 {
-                    int id = int.TryParse(WindowId.Text, out int value) ? value : 0;
-                    window = savedWindows.Find(w => w.Id.Equals(id));
+                    AllRunningApps.SelectedIndex = index;
                 }
-
-                if (window == null) return;
-
-                savedWindows.Remove(window);
-                AppsSaved.Items.RemoveAt(AppsSaved.SelectedIndex);
-
-                SaveWindows();
-
-                AllRunningApps.SelectedIndex = 0;
             }
         }
-        private void UpdateTimerInterval_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (e.KeyCode == Keys.Enter)
-            {
-                if (int.TryParse(UpdateTimerInterval.Text, out int refreshTime))
-                    AppSettings.Save("RefreshTime", refreshTime.ToString());
-                else
-                    LogOutput.AppendText($"Auto Position Interval {UpdateTimerInterval.Text} must be an integer, timer not updated.");
-            }
-        }
+
+
+        // CheckBoxes
         private void AutoPosition_CheckedChanged(object sender, EventArgs e)
         {
             if (String.IsNullOrWhiteSpace(this.hWnd.Text)) return;
@@ -371,60 +379,105 @@ namespace Save_Window_Position_and_Size
             // Get current app's window
             var process = GetRunningAppProcessBy(window);
 
-            if(window.KeepOnTop)
+            if (window.KeepOnTop)
                 InteractWithWindow.SetWindowAlwaysOnTop(process.MainWindowHandle);
             else
                 InteractWithWindow.UnsetWindowAlwaysOnTop(process.MainWindowHandle);
 
             SaveWindows();
         }
-        private void IgnoreButton_Click(object sender, EventArgs e)
+
+
+        // TextBoxes
+        private void AppsSaved_KeyDown(object sender, KeyEventArgs e)
         {
-            var ignoreForm = new IgnoreForm(ignoreList);
-            var result = ignoreForm.ShowDialog();
-
-            ignoreList = ignoreForm.GetIgnoreList();
-            string json = JsonConvert.SerializeObject(ignoreList);
-            AppSettings.Save("IgnoreList", json);
-
-            ignoreForm.Close();
-        }
-        private void RefreshWindowButton_Click(object sender, EventArgs e)
-        {
-            if (String.IsNullOrWhiteSpace(WindowId.Text)) return;
-
-            Window window = GetWindowFromGui();
-
-            // Handle File Explorer windows
-            if (window.IsFileExplorer)
+            if (e.KeyCode == Keys.Delete && AppsSaved.SelectedIndex > -1)
             {
-                window.WindowPosAndSize = InteractWithWindow.GetFileExplorerPosAndSize(window.TitleName);
-                SetWindowGui(window);
-                return;
-            }
+                Window window = null;
 
-            var process = GetRunningAppProcessBy(window);
-            if (process == null) return;
-
-            window.WindowPosAndSize = InteractWithWindow.GetWindowPositionAndSize(process.MainWindowHandle);
-            SetWindowGui(window);
-        }
-        private void AllRunningApps_MouseDown(object sender, MouseEventArgs e)
-        {
-            // If right mouse btn clicked show menu to add app to ignore list
-            if (e.Button == MouseButtons.Right)
-            {
-                int index = AllRunningApps.IndexFromPoint(e.Location);
-                if (index >= 0 && index < AllRunningApps.Items.Count)
+                if (!String.IsNullOrWhiteSpace(WindowId.Text))
                 {
-                    AllRunningApps.SelectedIndex = index;
+                    int id = int.TryParse(WindowId.Text, out int value) ? value : 0;
+                    window = savedWindows.Find(w => w.Id.Equals(id));
                 }
+
+                if (window == null) return;
+
+                savedWindows.Remove(window);
+                AppsSaved.Items.RemoveAt(AppsSaved.SelectedIndex);
+
+                SaveWindows();
+
+                AllRunningApps.SelectedIndex = 0;
+            }
+        }
+        private void UpdateTimerInterval_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                if (int.TryParse(UpdateTimerInterval.Text, out int refreshTime))
+                {
+                    refreshTime--;
+                    AppSettings.Save("RefreshTime", refreshTime.ToString());
+
+                    minutes = refreshTime;
+                    seconds = 60;
+                }
+                else
+                    LogOutput.AppendText($"Auto Position Interval {UpdateTimerInterval.Text} must be an integer, timer not updated.");
+            }
+        }
+        private void WindowDisplayName_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                // Do nothing if nothing selected
+                if (AppsSaved.SelectedIndex == -1) return;
+
+                var newNickname = WindowDisplayName.Text;
+
+                // Update GUI listbox item
+                AppsSaved.Items[AppsSaved.SelectedIndex] = $"{newNickname} / {WindowId.Text}";
+
+                WindowDisplayName.Text = newNickname;
+
+                // Update the saved item
+                Save.PerformClick();
+            }
+        }
+        private void WindowWidth_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                // Do nothing if nothing selected
+                if (AppsSaved.SelectedIndex == -1) return;
+
+                Save.PerformClick();
+            }
+        }
+        private void WindowPosY_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                // Do nothing if nothing selected
+                if (AppsSaved.SelectedIndex == -1) return;
+
+                Save.PerformClick();
+            }
+        }
+        private void WindowHeight_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                // Do nothing if nothing selected
+                if (AppsSaved.SelectedIndex == -1) return;
+
+                Save.PerformClick();
             }
         }
 
 
-
-        // UI
+        // UI Changes
         private void UpdateRunningApps()
         {
             AllRunningApps.ClearItemsThreadSafe();
@@ -444,7 +497,7 @@ namespace Save_Window_Position_and_Size
             var fileExplorers = InteractWithWindow.GetFileExplorerWindows(ignoreList);
 
             foreach (var fileExplorer in fileExplorers)
-                AllRunningApps.AddItemThreadSafe(fileExplorer);            
+                AllRunningApps.AddItemThreadSafe(fileExplorer);
         }
         private Window GetWindowFromGui()
         {
@@ -493,7 +546,7 @@ namespace Save_Window_Position_and_Size
                 TextRenderer.MeasureText(WindowTitle.Text, WindowTitle.Font, WindowTitle.MaximumSize).Height);
 
             WindowTitle.Text = window.TitleName;
-            AutoPosition.Checked = window.AutoPosition;            
+            AutoPosition.Checked = window.AutoPosition;
             KeepWindowOnTop.Checked = window.KeepOnTop;
             WindowPosX.Text = window.WindowPosAndSize.X.ToString();
             WindowPosY.Text = window.WindowPosAndSize.Y.ToString();
@@ -519,8 +572,7 @@ namespace Save_Window_Position_and_Size
         }
 
 
-
-        // Misc
+        // Misc Helpers
         private Process GetRunningAppProcessBy(Window window)
         {
             var allRunningApps = InteractWithWindow.GetAllRunningApps(ignoreList);
@@ -568,12 +620,18 @@ namespace Save_Window_Position_and_Size
             }
         }
 
+        private void WindowPosX_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                // Do nothing if nothing selected
+                if (AppsSaved.SelectedIndex == -1) return;
+
+                Save.PerformClick();
+            }
+        }
 
 
     }
-
-
-
-
 }
 

@@ -132,6 +132,7 @@
             WindowPosX.Name = "WindowPosX";
             WindowPosX.Size = new Size(50, 21);
             WindowPosX.TabIndex = 6;
+            WindowPosX.KeyDown += WindowPosX_KeyDown;
             // 
             // lblWindowPosX
             // 
@@ -157,6 +158,7 @@
             WindowPosY.Name = "WindowPosY";
             WindowPosY.Size = new Size(49, 21);
             WindowPosY.TabIndex = 9;
+            WindowPosY.KeyDown += WindowPosY_KeyDown;
             // 
             // WindowWidth
             // 
@@ -164,6 +166,7 @@
             WindowWidth.Name = "WindowWidth";
             WindowWidth.Size = new Size(50, 21);
             WindowWidth.TabIndex = 10;
+            WindowWidth.KeyDown += WindowWidth_KeyDown;
             // 
             // lblWindowWidth
             // 
@@ -189,6 +192,7 @@
             WindowHeight.Name = "WindowHeight";
             WindowHeight.Size = new Size(50, 21);
             WindowHeight.TabIndex = 13;
+            WindowHeight.KeyDown += WindowHeight_KeyDown;
             // 
             // AllRunningApps
             // 
@@ -206,7 +210,7 @@
             // 
             // UpdateTimerInterval
             // 
-            UpdateTimerInterval.Location = new Point(762, 370);
+            UpdateTimerInterval.Location = new Point(205, 366);
             UpdateTimerInterval.Name = "UpdateTimerInterval";
             UpdateTimerInterval.Size = new Size(25, 21);
             UpdateTimerInterval.TabIndex = 15;
@@ -218,7 +222,7 @@
             lblUpdateTimerInterval.AutoSize = true;
             lblUpdateTimerInterval.BackColor = Color.Transparent;
             lblUpdateTimerInterval.ForeColor = SystemColors.ControlLightLight;
-            lblUpdateTimerInterval.Location = new Point(598, 373);
+            lblUpdateTimerInterval.Location = new Point(41, 369);
             lblUpdateTimerInterval.Name = "lblUpdateTimerInterval";
             lblUpdateTimerInterval.Size = new Size(166, 15);
             lblUpdateTimerInterval.TabIndex = 16;
@@ -229,7 +233,7 @@
             lblTime.AutoSize = true;
             lblTime.BackColor = Color.Transparent;
             lblTime.ForeColor = SystemColors.ControlLightLight;
-            lblTime.Location = new Point(815, 373);
+            lblTime.Location = new Point(454, 372);
             lblTime.Name = "lblTime";
             lblTime.Size = new Size(70, 15);
             lblTime.TabIndex = 17;
@@ -240,11 +244,11 @@
             Time.AutoSize = true;
             Time.BackColor = Color.Transparent;
             Time.ForeColor = SystemColors.ControlLightLight;
-            Time.Location = new Point(878, 373);
+            Time.Location = new Point(517, 372);
             Time.Name = "Time";
-            Time.Size = new Size(30, 15);
+            Time.Size = new Size(23, 15);
             Time.TabIndex = 18;
-            Time.Text = "59   ";
+            Time.Text = "0   ";
             // 
             // panel1
             // 
@@ -360,6 +364,7 @@
             WindowDisplayName.Name = "WindowDisplayName";
             WindowDisplayName.Size = new Size(163, 21);
             WindowDisplayName.TabIndex = 30;
+            WindowDisplayName.KeyDown += WindowDisplayName_KeyDown;
             // 
             // label1
             // 
@@ -455,7 +460,7 @@
             AutoScaleMode = AutoScaleMode.Font;
             BackgroundImage = Properties.Resources.blue_mesh_background;
             BackgroundImageLayout = ImageLayout.Center;
-            ClientSize = new Size(958, 401);
+            ClientSize = new Size(958, 393);
             Controls.Add(UpdateTimerInterval);
             Controls.Add(panel1);
             Controls.Add(LogOutput);
@@ -472,6 +477,7 @@
             ResumeLayout(false);
             PerformLayout();
         }
+
 
         #endregion
 
