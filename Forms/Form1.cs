@@ -261,8 +261,11 @@ namespace Save_Window_Position_and_Size
             var process = runningApps.TryGetValue(hWnd, out var proc) ? proc : null;
 
             // Check if we have a saved window for this running app
-            var window = savedWindows.Find(w => (!w.ProcessName.Equals("cmd") && w.ProcessName.Equals(process.ProcessName))
-                || (w.ProcessName.Equals("cmd") && w.TitleName.Equals(process.MainWindowTitle)));
+
+
+            var window = savedWindows.Find(w => (w.TitleName.Equals(process.MainWindowTitle))
+            || (process.ProcessName != "cmd" && w.ProcessName.Equals(process.ProcessName)));
+
 
             if (window == null)
             {
@@ -270,6 +273,7 @@ namespace Save_Window_Position_and_Size
                 window = new Window();
                 window.Id = random.Next(300, 32034);
                 window.DisplayName = process.MainWindowTitle;
+                window.DisplayName = !string.IsNullOrWhiteSpace(process.MainWindowTitle) ? process.MainWindowTitle : process.ProcessName;
                 window.ProcessName = process.ProcessName;
                 window.TitleName = process.MainWindowTitle;
             }
