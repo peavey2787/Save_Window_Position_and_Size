@@ -82,8 +82,7 @@ namespace Save_Window_Position_and_Size
             WindowTitle.MaximumSize = new System.Drawing.Size(200, 100);
 
             // Reset labels
-            hWnd.Text = "";
-            WindowId.Text = "";
+            ClearWindowGUI();
 
             // Set text when user hovers over a button
             toolTip1.SetToolTip(RefreshAllRunningApps, "Refresh running apps and their locations/sizes");
@@ -473,17 +472,7 @@ namespace Save_Window_Position_and_Size
         {
             if (window == null)
             {
-                WindowId.Text = "";
-                this.hWnd.Text = "";
-                ProcessName.Text = "";
-                WindowDisplayName.Text = "";
-                WindowTitle.Text = "";
-                WindowPosX.Text = "";
-                WindowPosY.Text = "";
-                WindowHeight.Text = "";
-                WindowWidth.Text = "";
-                AutoPosition.Checked = false;
-                KeepWindowOnTop.Checked = false;
+                ClearWindowGUI();
                 return;
             }
 
@@ -509,6 +498,20 @@ namespace Save_Window_Position_and_Size
 
             // Hide keep on top for file explorer windows as I'm not sure how to get their hWnd yet
             KeepWindowOnTop.Visible = !window.IsFileExplorer;
+        }
+        private void ClearWindowGUI()
+        {
+            WindowId.Text = "";
+            this.hWnd.Text = "";
+            ProcessName.Text = "";
+            WindowDisplayName.Text = "";
+            WindowTitle.Text = "";
+            WindowPosX.Text = "";
+            WindowPosY.Text = "";
+            WindowHeight.Text = "";
+            WindowWidth.Text = "";
+            AutoPosition.Checked = false;
+            KeepWindowOnTop.Checked = false;
         }
 
 
