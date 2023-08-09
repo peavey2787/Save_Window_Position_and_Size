@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices; // For the P/Invoke signatures.
+using System.Text;
 
 namespace Save_Window_Position_and_Size.Classes
 {
@@ -29,6 +30,17 @@ namespace Save_Window_Position_and_Size.Classes
         [DllImport("user32.dll", SetLastError = true)]
         static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
 
+        [DllImport("user32.dll")]
+        private static extern bool EnumWindows(EnumWindowsProc enumProc, IntPtr lParam);
+        private delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
+
+        [DllImport("user32.dll")]
+        private static extern bool EnumChildWindows(IntPtr hWndParent, EnumWindowsProc enumProc, IntPtr lParam);
+
+        [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        private static extern int GetWindowText(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
+
+
         [DllImport("user32.dll", SetLastError = true)]
         static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
 
@@ -36,7 +48,7 @@ namespace Save_Window_Position_and_Size.Classes
         public static extern bool SetForegroundWindow(IntPtr hwnd);
 
         [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
-        private static extern int GetClassName(IntPtr hWnd, char[] lpClassName, int nMaxCount);
+        private static extern int GetClassName(IntPtr hWnd, StringBuilder lpClassName, int nMaxCount);
 
         [DllImport("user32.dll")]
         private static extern int GetWindowRect(IntPtr hwnd, out Rectangle rect);
@@ -63,31 +75,25 @@ namespace Save_Window_Position_and_Size.Classes
 
 
         // Public Actions
-        public static Dictionary<IntPtr, Process> GetAllRunningApps(List<string> exceptions)
+        public static Dictionary<IntPtr, String> GetAllRunningApps(List<string> exceptions)
         {
-            Dictionary<IntPtr, Process> runningApps = new Dictionary<IntPtr, Process>();
+            Dictionary<IntPtr, String> allWindows = new Dictionary<IntPtr, String>();
 
-            // Get all apps
-            Process[] processes = Process.GetProcesses();
-            foreach (Process process in processes)
+            // Get all windows
+            var dicWindows = GetAllMainWindowHandles();
+            foreach(var dicWin in dicWindows)
             {
-                // With windows
-                IntPtr mainWindowHandle = process.MainWindowHandle;
-                if (mainWindowHandle != IntPtr.Zero)
+                // That are visible
+                int windowStyle = GetWindowLong(dicWin.Value, GWL_STYLE);
+                if ((windowStyle & WS_VISIBLE) == WS_VISIBLE)
                 {
-                    // That are visible
-                    int windowStyle = GetWindowLong(mainWindowHandle, GWL_STYLE);
-                    if ((windowStyle & WS_VISIBLE) == WS_VISIBLE)
-                    {
-                        // And not on the ignore list
-                        if (!exceptions.Contains(process.MainWindowTitle)
-                            && !exceptions.Contains(process.ProcessName))
-                            runningApps[process.MainWindowHandle] = process;
-                    }
+                    // And not on the ignore list
+                    if (!exceptions.Contains(dicWin.Key))
+                        allWindows[dicWin.Value] = dicWin.Key;
                 }
             }
 
-            return runningApps;
+            return allWindows; //return runningApps;
         }
         public static WindowPosAndSize GetWindowPositionAndSize(IntPtr hWnd)
         {
@@ -179,93 +185,68 @@ namespace Save_Window_Position_and_Size.Classes
 
 
 
-        // Private Helpers
-        private static List<IntPtr> GetWindowHandles(string windowClass, string? windowTitle = "")
+        // Helpers
+        public static IntPtr GetMainWindowHandle(string windowTitle)
         {
-            var hWnds = new List<IntPtr>();
-            var hWnd = new IntPtr();
+            IntPtr mainWindowHandle = IntPtr.Zero;
 
-            // Try to get the process by name
-            var proc = Process.GetProcessesByName(windowClass).Where(p => p.ProcessName == windowClass).FirstOrDefault();
-            if (proc != null && proc.MainWindowHandle == IntPtr.Zero)
+            EnumWindows(delegate (IntPtr hWnd, IntPtr lParam)
             {
-                // Get any "hidden" windows
-                hWnds = EnumerateProcessWindowHandles(proc.Id).ToList();
-                if (hWnds.Count > 0 && hWnds[0] != IntPtr.Zero)
-                    return hWnds;
+                StringBuilder className = new StringBuilder(256);
+                GetClassName(hWnd, className, className.Capacity);
 
-            }
-
-            // Find (the first-in-Z-order) Notepad window.
-            if (windowTitle.Length > 0)
-            {
-                hWnd = FindWindow(windowTitle, null);
-
-                if (hWnd == IntPtr.Zero)
-                    hWnd = FindWindow(null, windowTitle);
-
-                if (hWnd != IntPtr.Zero)
+                if (className.ToString() == "ApplicationFrameWindow")
                 {
-                    hWnds.Add(hWnd);
-                    return hWnds;
+                    EnumChildWindows(hWnd, delegate (IntPtr childHWnd, IntPtr lParamChild)
+                    {
+                        StringBuilder title = new StringBuilder(256);
+                        GetWindowText(childHWnd, title, title.Capacity);
+
+                        if (title.ToString() == windowTitle)
+                        {
+                            mainWindowHandle = childHWnd;
+                            return false; // Stop enumerating child windows
+                        }
+
+                        return true;
+                    }, IntPtr.Zero);
+                }
+                else
+                {
+                    StringBuilder title = new StringBuilder(256);
+                    GetWindowText(hWnd, title, title.Capacity);
+
+                    if (title.ToString() == windowTitle)
+                    {
+                        mainWindowHandle = hWnd;
+                        return false; // Stop enumerating top-level windows
+                    }
                 }
 
-            }
-            else if (windowClass.Length > 0)
-            {
-                hWnd = FindWindow(windowClass, null);
-
-                if (hWnd == IntPtr.Zero)
-                    hWnd = FindWindow(null, windowClass);
-
-                if (hWnd != IntPtr.Zero)
-                {
-                    hWnds.Add(hWnd);
-                    return hWnds;
-                }
-            }
-            else if (windowTitle.Length > 0 && windowClass.Length > 0)
-            {
-                hWnd = FindWindow(windowClass, windowTitle);
-
-                if (hWnd == IntPtr.Zero)
-                    hWnd = FindWindow(windowClass, windowTitle);
-
-                if (hWnd != IntPtr.Zero)
-                {
-                    hWnds.Add(hWnd);
-                    return hWnds;
-                }
-            }
-
-            hWnds.Add(hWnd);
-            return hWnds;
-        }
-        private static bool IsValidWindow(Rectangle rect)
-        {
-            if (rect.Height - rect.Y > 110)
                 return true;
+            }, IntPtr.Zero);
 
-            return false;
+            return mainWindowHandle;
         }
-
-        public static string? GetWindowClassName(Process process)
+        public static Dictionary<string, IntPtr> GetAllMainWindowHandles()
         {
+            Dictionary<string, IntPtr> windowHandles = new Dictionary<string, IntPtr>();
 
-            IntPtr mainWindowHandle = process.MainWindowHandle;
-            if (mainWindowHandle == IntPtr.Zero)
-                return null;
+            EnumWindows(delegate (IntPtr hWnd, IntPtr lParam)
+            {
+                StringBuilder title = new StringBuilder(256);
+                GetWindowText(hWnd, title, title.Capacity);
 
-            const int maxClassNameLength = 256;
-            char[] classNameBuffer = new char[maxClassNameLength];
+                if (!string.IsNullOrWhiteSpace(title.ToString()))
+                {
+                    windowHandles[title.ToString()] = hWnd;
+                }
 
-            int classNameLength = GetClassName(mainWindowHandle, classNameBuffer, maxClassNameLength);
-            if (classNameLength == 0)
-                return null;
+                return true;
+            }, IntPtr.Zero);
 
-            return new string(classNameBuffer, 0, classNameLength);
+            return windowHandles;
         }
-
     }
 
     public class WindowPosAndSize

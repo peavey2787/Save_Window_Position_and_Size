@@ -13,7 +13,7 @@ namespace Save_Window_Position_and_Size
     {
         List<Window> savedWindows = new List<Window>();
         List<string> ignoreList = new List<string>();
-        Dictionary<IntPtr, Process> runningApps = new Dictionary<IntPtr, Process>();
+        Dictionary<IntPtr, String> runningApps = new Dictionary<IntPtr, String>();
         System.Windows.Forms.Timer refreshTimer = new System.Windows.Forms.Timer();
         Random random = new Random();
 
@@ -196,7 +196,7 @@ namespace Save_Window_Position_and_Size
 
             // Get the window of the running app 
             var process = GetRunningAppProcessBy(window);
-            IntPtr hWnd = process.MainWindowHandle;
+            IntPtr hWnd = process;
 
             // Update the window pos/size if the window was found
             if (hWnd != null && hWnd != IntPtr.Zero)
@@ -239,7 +239,7 @@ namespace Save_Window_Position_and_Size
             var process = GetRunningAppProcessBy(window);
             if (process == null) return;
 
-            window.WindowPosAndSize = InteractWithWindow.GetWindowPositionAndSize(process.MainWindowHandle);
+            window.WindowPosAndSize = InteractWithWindow.GetWindowPositionAndSize(process);
             SetWindowGui(window);
         }
 
@@ -287,20 +287,20 @@ namespace Save_Window_Position_and_Size
             var hWnd = IntPtr.Parse(parts.Last());
 
             // Get process from running apps
-            var process = runningApps.TryGetValue(hWnd, out var proc) ? proc : null;
+            var mainWindowTitle = runningApps.TryGetValue(hWnd, out var proc) ? proc : null;
 
             // Check if we have a saved window for this running app
-            var window = savedWindows.Find(w => (w.TitleName.Equals(process.MainWindowTitle))
-            || (process.ProcessName != "cmd" && w.ProcessName.Equals(process.ProcessName)));
+            var window = savedWindows.Find(w => w.TitleName.Equals(mainWindowTitle));//(w.TitleName.Equals(process.MainWindowTitle))
+            //|| (process.ProcessName != "cmd" && w.ProcessName.Equals(process.ProcessName)));
 
             if (window == null)
             {
                 // Create a new window if not
                 window = new Window();
                 window.Id = random.Next(300, 32034);
-                window.DisplayName = !string.IsNullOrWhiteSpace(process.MainWindowTitle) ? process.MainWindowTitle : process.ProcessName;
-                window.ProcessName = process.ProcessName;
-                window.TitleName = process.MainWindowTitle;
+                window.DisplayName = mainWindowTitle;// !string.IsNullOrWhiteSpace(mainWindowTitle.MainWindowTitle) ? mainWindowTitle.MainWindowTitle : mainWindowTitle.ProcessName;
+                window.ProcessName = "";// mainWindowTitle.ProcessName;
+                window.TitleName = mainWindowTitle;// mainWindowTitle.MainWindowTitle;
             }
 
             window.hWnd = hWnd;
@@ -380,9 +380,9 @@ namespace Save_Window_Position_and_Size
             var process = GetRunningAppProcessBy(window);
 
             if (window.KeepOnTop)
-                InteractWithWindow.SetWindowAlwaysOnTop(process.MainWindowHandle);
+                InteractWithWindow.SetWindowAlwaysOnTop(process);
             else
-                InteractWithWindow.UnsetWindowAlwaysOnTop(process.MainWindowHandle);
+                InteractWithWindow.UnsetWindowAlwaysOnTop(process);
 
             SaveWindows();
         }
@@ -487,10 +487,8 @@ namespace Save_Window_Position_and_Size
 
             foreach (var app in runningApps)
             {
-                if (!String.IsNullOrWhiteSpace(app.Value.MainWindowTitle))
-                    AllRunningApps.AddItemThreadSafe($"{app.Value.MainWindowTitle} / {app.Key}");
-                else
-                    AllRunningApps.AddItemThreadSafe($"{app.Value.ProcessName} / {app.Key}");
+                if (!String.IsNullOrWhiteSpace(app.Value))
+                    AllRunningApps.AddItemThreadSafe($"{app.Value} / {app.Key}");
             }
 
             // Add file explorer windows
@@ -573,23 +571,18 @@ namespace Save_Window_Position_and_Size
 
 
         // Misc Helpers
-        private Process GetRunningAppProcessBy(Window window)
+        private IntPtr GetRunningAppProcessBy(Window window)
         {
             var allRunningApps = InteractWithWindow.GetAllRunningApps(ignoreList);
 
             foreach (var app in allRunningApps)
             {
-                if (app.Value.MainWindowTitle == window.TitleName)
+                if (app.Value == window.TitleName)
                 {
-                    return app.Value;
-                }
-                if (!(app.Value.ProcessName == "cmd" || app.Value.ProcessName == "windows terminal")
-                    && app.Value.ProcessName == window.ProcessName)
-                {
-                    return app.Value;
+                    return app.Key;
                 }
             }
-            return null;
+            return IntPtr.Zero;
         }
         private void SaveWindows()
         {
@@ -613,7 +606,7 @@ namespace Save_Window_Position_and_Size
 
                 var process = GetRunningAppProcessBy(window);
                 if (process != null)
-                    hWnd = process.MainWindowHandle;
+                    hWnd = process;
 
                 if (hWnd != IntPtr.Zero)
                     InteractWithWindow.SetWindowPositionAndSize(hWnd, window.WindowPosAndSize.X, window.WindowPosAndSize.Y, window.WindowPosAndSize.Width, window.WindowPosAndSize.Height);
