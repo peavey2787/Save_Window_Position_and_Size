@@ -74,20 +74,14 @@ namespace Save_Window_Position_and_Size
         private void Form1_Load(object sender, EventArgs e)
         {
             // Show all running apps
-            Task.Run(() => { UpdateRunningApps(); });
+            UpdateRunningApps();
 
-            // Load saved windows
-            string json = AppSettings.Load("SavedWindows");
-            if (json != null)
-            {
-                savedWindows = JsonConvert.DeserializeObject<List<Window>>(json);
-
-                // Add each saved window to GUI
-                foreach (Window window in savedWindows) AppsSaved.Items.Add(window.DisplayName + " / " + window.Id);
-            }
+            // Load last selected profile
+            int profileIndex = int.TryParse(AppSettings.Load("SelectedProfile"), out int parsedProfileIndex) ? parsedProfileIndex : 0;
+            profileComboBox.SelectedIndex = profileIndex;
 
             // Load ignore list
-            json = AppSettings.Load("IgnoreList");
+            string json = AppSettings.Load("IgnoreList");
             if (json != null)
                 ignoreList = JsonConvert.DeserializeObject<List<string>>(json);
 
@@ -128,6 +122,49 @@ namespace Save_Window_Position_and_Size
             toolTip1.SetToolTip(Save, "Save/Update the selected app's window settings");
             toolTip1.SetToolTip(RefreshWindowButton, "Refresh and get the selected app's current window size/location");
             toolTip1.SetToolTip(Restore, "Restore the selected app's saved window size/location");
+        }
+        private Windows LoadAllSavedProfiles()
+        {
+            string json = AppSettings.Load("SavedWindows");
+
+            if (string.IsNullOrWhiteSpace(json))
+                return new Windows();
+
+            Windows allSavedWindows = JsonConvert.DeserializeObject<Windows>(json);
+
+            if (allSavedWindows == null || allSavedWindows.Profiles.Count() == 0)
+                return new Windows();
+
+            return allSavedWindows;
+        }
+        private void LoadSavedWindows(int profileIndex)
+        {
+            // Clear current window settings
+            AppsSaved.Items.Clear();
+
+            Windows allSavedProfiles = LoadAllSavedProfiles();
+
+            if (allSavedProfiles.Profiles[profileIndex] == null) return;
+
+            savedWindows = allSavedProfiles.Profiles[profileIndex];
+
+            // Add each saved window to GUI
+            foreach (Window window in savedWindows)
+                AppsSaved.Items.Add(window.DisplayName + " / " + window.Id);
+        }
+        private void SaveWindows()
+        {
+            Windows allSavedProfiles = LoadAllSavedProfiles();
+
+            // Get current profile index
+            int profileIndex = profileComboBox.SelectedIndex;
+
+            // Save window settings to selected profile
+            allSavedProfiles.Profiles[profileIndex] = savedWindows;
+
+            // Save all window settings
+            string json = JsonConvert.SerializeObject(allSavedProfiles);
+            AppSettings.Save("SavedWindows", json);
         }
 
 
@@ -286,21 +323,24 @@ namespace Save_Window_Position_and_Size
             var processName = parts[0];
             var hWnd = IntPtr.Parse(parts.Last());
 
+            // Bring window to front to get correct size/pos
+            InteractWithWindow.SetForegroundWindow(hWnd);
+            InteractWithWindow.SetForegroundWindow(this.Handle);
+
             // Get process from running apps
             var mainWindowTitle = runningApps.TryGetValue(hWnd, out var proc) ? proc : null;
 
             // Check if we have a saved window for this running app
-            var window = savedWindows.Find(w => w.TitleName.Equals(mainWindowTitle));//(w.TitleName.Equals(process.MainWindowTitle))
-            //|| (process.ProcessName != "cmd" && w.ProcessName.Equals(process.ProcessName)));
+            var window = savedWindows.Find(w => w.TitleName.Equals(mainWindowTitle));
 
             if (window == null)
             {
                 // Create a new window if not
                 window = new Window();
                 window.Id = random.Next(300, 32034);
-                window.DisplayName = mainWindowTitle;// !string.IsNullOrWhiteSpace(mainWindowTitle.MainWindowTitle) ? mainWindowTitle.MainWindowTitle : mainWindowTitle.ProcessName;
-                window.ProcessName = "";// mainWindowTitle.ProcessName;
-                window.TitleName = mainWindowTitle;// mainWindowTitle.MainWindowTitle;
+                window.DisplayName = mainWindowTitle;
+                window.ProcessName = InteractWithWindow.GetProcessNameByWindowTitle(mainWindowTitle);
+                window.TitleName = mainWindowTitle;
             }
 
             window.hWnd = hWnd;
@@ -321,6 +361,18 @@ namespace Save_Window_Position_and_Size
                     AllRunningApps.SelectedIndex = index;
                 }
             }
+        }
+
+        
+        // ComboBoxes
+        private void profileComboBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            // Get selected profile index and save it
+            int profileIndex = profileComboBox.SelectedIndex;
+            AppSettings.Save("SelectedProfile", profileIndex.ToString());
+
+            // Load selected profile
+            LoadSavedWindows(profileIndex);
         }
 
 
@@ -383,6 +435,51 @@ namespace Save_Window_Position_and_Size
                 InteractWithWindow.SetWindowAlwaysOnTop(process);
             else
                 InteractWithWindow.UnsetWindowAlwaysOnTop(process);
+
+            SaveWindows();
+        }
+
+
+        // Radio Buttons
+        private void ProcNameRadioButton_CheckedChanged(object sender, EventArgs e)
+        {
+            // Try getting the saved app
+            Window window = null;
+
+            if (!String.IsNullOrWhiteSpace(WindowId.Text))
+            {
+                int id = int.TryParse(WindowId.Text, out int value) ? value : 0;
+                window = savedWindows.Find(w => w.Id.Equals(id));
+            }
+
+            // If no saved app, create and add one
+            if (window == null)
+            {
+                window = GetWindowFromGui();
+                savedWindows.Add(window);
+                AppsSaved.Items.Add(window.TitleName + " / " + WindowId.Text);
+            }
+
+            SaveWindows();
+        }
+        private void WinTitleRadioButton_CheckedChanged(object sender, EventArgs e)
+        {
+            // Try getting the saved app
+            Window window = null;
+
+            if (!String.IsNullOrWhiteSpace(WindowId.Text))
+            {
+                int id = int.TryParse(WindowId.Text, out int value) ? value : 0;
+                window = savedWindows.Find(w => w.Id.Equals(id));
+            }
+
+            // If no saved app, create and add one
+            if (window == null)
+            {
+                window = GetWindowFromGui();
+                savedWindows.Add(window);
+                AppsSaved.Items.Add(window.TitleName + " / " + WindowId.Text);
+            }
 
             SaveWindows();
         }
@@ -455,6 +552,16 @@ namespace Save_Window_Position_and_Size
                 Save.PerformClick();
             }
         }
+        private void WindowPosX_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                // Do nothing if nothing selected
+                if (AppsSaved.SelectedIndex == -1) return;
+
+                Save.PerformClick();
+            }
+        }
         private void WindowPosY_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Enter)
@@ -478,24 +585,27 @@ namespace Save_Window_Position_and_Size
 
 
         // UI Changes
-        private void UpdateRunningApps()
+        private Task UpdateRunningApps()
         {
-            AllRunningApps.ClearItemsThreadSafe();
-
-            // Show all running apps
-            runningApps = InteractWithWindow.GetAllRunningApps(ignoreList);
-
-            foreach (var app in runningApps)
+            return Task.Run(() =>
             {
-                if (!String.IsNullOrWhiteSpace(app.Value))
-                    AllRunningApps.AddItemThreadSafe($"{app.Value} / {app.Key}");
-            }
+                AllRunningApps.ClearItemsThreadSafe();
 
-            // Add file explorer windows
-            var fileExplorers = InteractWithWindow.GetFileExplorerWindows(ignoreList);
+                // Show all running apps
+                runningApps = InteractWithWindow.GetAllRunningApps(ignoreList);
 
-            foreach (var fileExplorer in fileExplorers)
-                AllRunningApps.AddItemThreadSafe(fileExplorer);
+                foreach (var app in runningApps)
+                {
+                    if (!String.IsNullOrWhiteSpace(app.Value))
+                        AllRunningApps.AddItemThreadSafe($"{app.Value} / {app.Key}");
+                }
+
+                // Add file explorer windows
+                var fileExplorers = InteractWithWindow.GetFileExplorerWindows(ignoreList);
+
+                foreach (var fileExplorer in fileExplorers)
+                    AllRunningApps.AddItemThreadSafe(fileExplorer);
+            });
         }
         private Window GetWindowFromGui()
         {
@@ -520,6 +630,8 @@ namespace Save_Window_Position_and_Size
             window.WindowPosAndSize.Width = int.TryParse(WindowWidth.Text, out int Width) ? Width : 0;
             window.AutoPosition = AutoPosition.Checked;
             window.KeepOnTop = KeepWindowOnTop.Checked;
+            window.UseProcessName = ProcNameRadioButton.Checked;
+            window.UseTitleName = WinTitleRadioButton.Checked;
 
             return window;
         }
@@ -536,14 +648,26 @@ namespace Save_Window_Position_and_Size
             if (window.hWnd != null && window.hWnd != IntPtr.Zero)
                 this.hWnd.Text = window.hWnd.ToString();
 
-            ProcessName.Text = window.ProcessName;
+            ProcessName.Text = !string.IsNullOrWhiteSpace(window.ProcessName) ? window.ProcessName : InteractWithWindow.GetProcessNameByWindowTitle(window.TitleName);
+
             WindowDisplayName.Text = !string.IsNullOrWhiteSpace(window.DisplayName) ? window.DisplayName : window.TitleName;
 
+            if (window.UseProcessName)
+            {
+                WinTitleRadioButton.Checked = false;
+                ProcNameRadioButton.Checked = true;
+            }
+            else
+            {
+                WinTitleRadioButton.Checked = true;
+                ProcNameRadioButton.Checked = false;
+            }
+
+            WindowTitle.Text = !string.IsNullOrWhiteSpace(window.TitleName) ? window.TitleName : InteractWithWindow.GetWindowTitleByProcessName(window.ProcessName);
             // Adjust the label's size to fit the wrapped text:
             WindowTitle.Size = new System.Drawing.Size(WindowTitle.MaximumSize.Width,
                 TextRenderer.MeasureText(WindowTitle.Text, WindowTitle.Font, WindowTitle.MaximumSize).Height);
 
-            WindowTitle.Text = window.TitleName;
             AutoPosition.Checked = window.AutoPosition;
             KeepWindowOnTop.Checked = window.KeepOnTop;
             WindowPosX.Text = window.WindowPosAndSize.X.ToString();
@@ -573,7 +697,12 @@ namespace Save_Window_Position_and_Size
         // Misc Helpers
         private IntPtr GetRunningAppProcessBy(Window window)
         {
-            var allRunningApps = InteractWithWindow.GetAllRunningApps(ignoreList);
+            var allRunningApps = new Dictionary<IntPtr, string>();
+
+            if (window.UseTitleName || string.IsNullOrWhiteSpace(window.ProcessName))
+                allRunningApps = InteractWithWindow.GetAllRunningApps(ignoreList);
+            else if (!string.IsNullOrWhiteSpace(window.ProcessName))
+                return InteractWithWindow.GetWindowHandleByProcessName(window.ProcessName);
 
             foreach (var app in allRunningApps)
             {
@@ -584,12 +713,7 @@ namespace Save_Window_Position_and_Size
             }
             return IntPtr.Zero;
         }
-        private void SaveWindows()
-        {
-            // Save settings
-            string json = JsonConvert.SerializeObject(savedWindows);
-            AppSettings.Save("SavedWindows", json);
-        }
+
         private void RestoreAllWindows(bool useSavedAutoPos = true)
         {
             foreach (Window window in savedWindows)
@@ -605,7 +729,7 @@ namespace Save_Window_Position_and_Size
                 if (useSavedAutoPos && !window.AutoPosition) continue;
 
                 var process = GetRunningAppProcessBy(window);
-                if (process != null)
+                if (process != IntPtr.Zero)
                     hWnd = process;
 
                 if (hWnd != IntPtr.Zero)
@@ -613,16 +737,7 @@ namespace Save_Window_Position_and_Size
             }
         }
 
-        private void WindowPosX_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (e.KeyCode == Keys.Enter)
-            {
-                // Do nothing if nothing selected
-                if (AppsSaved.SelectedIndex == -1) return;
 
-                Save.PerformClick();
-            }
-        }
 
 
     }

@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Save_Window_Position_and_Size.Classes
 {
-    public class InteractWithWindow
+    public static class InteractWithWindow
     {
         const uint SWP_NOZORDER = 0x0004;
         const uint SWP_SHOWWINDOW = 0x0040;
@@ -21,14 +21,14 @@ namespace Save_Window_Position_and_Size.Classes
         private const int GWL_STYLE = -16;
         private const int WS_VISIBLE = 0x10000000;
 
-        [DllImport("user32.dll", SetLastError = true)]
+        [DllImport("user32.dll")]
         private static extern int GetWindowLong(IntPtr hWnd, int nIndex);
 
         [DllImport("user32.dll", SetLastError = true)]
         private static extern bool IsWindowVisible(IntPtr hWnd);
 
         [DllImport("user32.dll", SetLastError = true)]
-        static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
+        private static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
 
         [DllImport("user32.dll")]
         private static extern bool EnumWindows(EnumWindowsProc enumProc, IntPtr lParam);
@@ -39,7 +39,6 @@ namespace Save_Window_Position_and_Size.Classes
 
         [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
         private static extern int GetWindowText(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
-
 
         [DllImport("user32.dll", SetLastError = true)]
         static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
@@ -55,46 +54,67 @@ namespace Save_Window_Position_and_Size.Classes
 
         [DllImport("user32.dll")]
         static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
-
-        // Get window handle for "hidden" windows
-        delegate bool EnumThreadDelegate(IntPtr hWnd, IntPtr lParam);
-
+        
         [DllImport("user32.dll")]
-        static extern bool EnumThreadWindows(int dwThreadId, EnumThreadDelegate lpfn, IntPtr lParam);
-        static IEnumerable<IntPtr> EnumerateProcessWindowHandles(int processId)
-        {
-            var handles = new List<IntPtr>();
-
-            foreach (ProcessThread thread in Process.GetProcessById(processId).Threads)
-                EnumThreadWindows(thread.Id,
-                    (hWnd, lParam) => { handles.Add(hWnd); return true; }, IntPtr.Zero);
-
-            return handles;
-        }
-
+        private static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
 
 
         // Public Actions
-        public static Dictionary<IntPtr, String> GetAllRunningApps(List<string> exceptions)
+        public static Dictionary<IntPtr, string> GetAllRunningApps(List<string> exceptions)
         {
-            Dictionary<IntPtr, String> allWindows = new Dictionary<IntPtr, String>();
+            var allWindows = new Dictionary<IntPtr, string>();
 
-            // Get all windows
-            var dicWindows = GetAllMainWindowHandles();
-            foreach(var dicWin in dicWindows)
+            foreach (var dicWin in GetAllMainWindowHandles().Where(dicWin => !exceptions.Contains(dicWin.Key)))
             {
-                // That are visible
                 int windowStyle = GetWindowLong(dicWin.Value, GWL_STYLE);
                 if ((windowStyle & WS_VISIBLE) == WS_VISIBLE)
                 {
-                    // And not on the ignore list
-                    if (!exceptions.Contains(dicWin.Key))
-                        allWindows[dicWin.Value] = dicWin.Key;
+                    allWindows[dicWin.Value] = dicWin.Key;
                 }
             }
 
-            return allWindows; //return runningApps;
+            return allWindows;
         }
+        public static IntPtr GetWindowHandleByProcessName(string processName)
+        {
+            IntPtr hWnd = IntPtr.Zero;
+            var processes = Process.GetProcessesByName(processName);
+
+            foreach (var process in processes)
+            {
+                IntPtr mainWindowHandle = process.MainWindowHandle;
+                if (mainWindowHandle != IntPtr.Zero)
+                {
+                    int windowStyle = GetWindowLong(mainWindowHandle, GWL_STYLE);
+                    if ((windowStyle & WS_VISIBLE) == WS_VISIBLE)
+                    {
+                        hWnd = process.MainWindowHandle;
+                    }
+                }
+            }
+
+            return hWnd;
+        }
+        public static string GetWindowTitleByProcessName(string processName)
+        {
+            string windowTitle = "";
+            var processes = Process.GetProcessesByName(processName);
+
+            foreach (var process in processes)
+            {
+                IntPtr mainWindowHandle = process.MainWindowHandle;
+                if (mainWindowHandle != IntPtr.Zero)
+                {
+                    int windowStyle = GetWindowLong(mainWindowHandle, GWL_STYLE);
+                    if ((windowStyle & WS_VISIBLE) == WS_VISIBLE)
+                    {
+                        windowTitle = process.MainWindowTitle;
+                    }
+                }
+            }
+
+            return windowTitle;
+        }        
         public static WindowPosAndSize GetWindowPositionAndSize(IntPtr hWnd)
         {
             GetWindowRect(hWnd, out var rect);
@@ -108,11 +128,13 @@ namespace Save_Window_Position_and_Size.Classes
         }
         public static WindowPosAndSize ConvertRectToWindowPosAndSize(Rectangle rect)
         {
-            var windowPosAndSize = new WindowPosAndSize();
-            windowPosAndSize.X = rect.Location.X;
-            windowPosAndSize.Y = rect.Location.Y;
-            windowPosAndSize.Width = rect.Width - rect.X;
-            windowPosAndSize.Height = rect.Height - rect.Y;
+            var windowPosAndSize = new WindowPosAndSize
+            {
+                X = rect.Location.X,
+                Y = rect.Location.Y,
+                Width = rect.Width - rect.X,
+                Height = rect.Height - rect.Y
+            };
             return windowPosAndSize;
         }
         public static void SetWindowAlwaysOnTop(IntPtr hWnd)
@@ -126,6 +148,57 @@ namespace Save_Window_Position_and_Size.Classes
             SetWindowPos(hWnd, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
             SetWindowPos(hWnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
         }
+        public static Process GetProcessByWindowTitle(string windowTitle)
+        {
+            return Process.GetProcesses()
+                .FirstOrDefault(process =>
+                    !string.IsNullOrWhiteSpace(process.MainWindowTitle) &&
+                    process.MainWindowTitle.Equals(windowTitle, StringComparison.OrdinalIgnoreCase)
+                );
+        }
+
+        public static string GetProcessNameByWindowTitle(string windowTitle)
+        {
+            IntPtr hWnd = FindWindowByTitle(windowTitle);
+            if (hWnd != IntPtr.Zero)
+            {
+                uint processId;
+                GetWindowThreadProcessId(hWnd, out processId);
+                try
+                {
+                    Process process = Process.GetProcessById((int)processId);
+                    return process.ProcessName;
+                }
+                catch (ArgumentException)
+                {
+                    // Handle exceptions if the process is not found
+                    return null;
+                }
+            }
+
+            return null; // Window not found
+        }
+        public static IntPtr FindWindowByTitle(string windowTitle)
+        {
+            IntPtr result = IntPtr.Zero;
+
+            EnumWindows((hWnd, lParam) =>
+            {
+                StringBuilder title = new StringBuilder(256);
+                GetWindowText(hWnd, title, title.Capacity);
+
+                if (title.ToString() == windowTitle)
+                {
+                    result = hWnd;
+                    return false; // Stop enumerating
+                }
+
+                return true;
+            }, IntPtr.Zero);
+
+            return result;
+        }
+
 
         // File Explorer Specific
         public static List<string> GetFileExplorerWindows(List<string> exceptions)
@@ -184,53 +257,10 @@ namespace Save_Window_Position_and_Size.Classes
         }
 
 
-
         // Helpers
-        public static IntPtr GetMainWindowHandle(string windowTitle)
-        {
-            IntPtr mainWindowHandle = IntPtr.Zero;
-
-            EnumWindows(delegate (IntPtr hWnd, IntPtr lParam)
-            {
-                StringBuilder className = new StringBuilder(256);
-                GetClassName(hWnd, className, className.Capacity);
-
-                if (className.ToString() == "ApplicationFrameWindow")
-                {
-                    EnumChildWindows(hWnd, delegate (IntPtr childHWnd, IntPtr lParamChild)
-                    {
-                        StringBuilder title = new StringBuilder(256);
-                        GetWindowText(childHWnd, title, title.Capacity);
-
-                        if (title.ToString() == windowTitle)
-                        {
-                            mainWindowHandle = childHWnd;
-                            return false; // Stop enumerating child windows
-                        }
-
-                        return true;
-                    }, IntPtr.Zero);
-                }
-                else
-                {
-                    StringBuilder title = new StringBuilder(256);
-                    GetWindowText(hWnd, title, title.Capacity);
-
-                    if (title.ToString() == windowTitle)
-                    {
-                        mainWindowHandle = hWnd;
-                        return false; // Stop enumerating top-level windows
-                    }
-                }
-
-                return true;
-            }, IntPtr.Zero);
-
-            return mainWindowHandle;
-        }
         public static Dictionary<string, IntPtr> GetAllMainWindowHandles()
         {
-            Dictionary<string, IntPtr> windowHandles = new Dictionary<string, IntPtr>();
+            var windowHandles = new Dictionary<string, IntPtr>();
 
             EnumWindows(delegate (IntPtr hWnd, IntPtr lParam)
             {
@@ -255,13 +285,5 @@ namespace Save_Window_Position_and_Size.Classes
         public int Y;
         public int Width;
         public int Height;
-
-        public bool CompareIsEqual(WindowPosAndSize win1, WindowPosAndSize win2)
-        {
-            if (win1.X == win2.X && win1.Y == win2.Y && win1.Width == win2.Width && win1.Height == win2.Height)
-                return true;
-
-            return false;
-        }
     }
 }
