@@ -11,12 +11,12 @@ namespace Save_Window_Position_and_Size
 {
     public partial class Form1 : Form
     {
+        #region Variables
         List<Window> savedWindows = new List<Window>();
         List<string> ignoreList = new List<string>();
         Dictionary<IntPtr, String> runningApps = new Dictionary<IntPtr, String>();
         System.Windows.Forms.Timer refreshTimer = new System.Windows.Forms.Timer();
         Random random = new Random();
-
 
         // Timer
         int minutes = 0;
@@ -54,8 +54,10 @@ namespace Save_Window_Position_and_Size
                 }
             }
         }
+        #endregion
 
 
+        #region Startup
         // Startup
         public Form1()
         {
@@ -150,7 +152,9 @@ namespace Save_Window_Position_and_Size
 
             // Add each saved window to GUI
             foreach (Window window in savedWindows)
-                AppsSaved.Items.Add(window.DisplayName + " / " + window.Id);
+            {                
+                AppsSaved.Items.Add(window);
+            }
         }
         private void SaveWindows()
         {
@@ -166,8 +170,10 @@ namespace Save_Window_Position_and_Size
             string json = JsonConvert.SerializeObject(allSavedProfiles);
             AppSettings.Save("SavedWindows", json);
         }
+        #endregion
 
 
+        #region GUI Controls
         // Buttons
         private void RefreshAllRunningApps_Click(object sender, EventArgs e)
         {
@@ -175,20 +181,13 @@ namespace Save_Window_Position_and_Size
         }
         private void Save_Click(object sender, EventArgs e)
         {
-            var newItem = WindowDisplayName.Text + " / " + WindowId.Text;
-
             // Check if item is already on the list
-            foreach (string savedItem in AppsSaved.Items)
+            foreach (Window savedItem in AppsSaved.Items)
             {
-                var item = savedItem.Split('/');
-                item[1] = item[1].Trim();
-
-                if (item[1] == WindowId.Text)
+                if (savedItem.Id.ToString() == WindowId.Text)
                 {
-                    int id = int.TryParse(item[1], out int value) ? value : 0;
-
                     // update existing
-                    var existing = savedWindows.Find(s => s.Id.Equals(id));
+                    var existing = savedWindows.Find(s => s.Id.Equals(savedItem.Id));
                     if (existing != null)
                     {
                         savedWindows.Remove(existing);
@@ -202,9 +201,8 @@ namespace Save_Window_Position_and_Size
             }
 
             // Create and add new item
-            AppsSaved.Items.Add(newItem);
-
             var window = GetWindowFromGui();
+            AppsSaved.Items.Add(window);            
             savedWindows.Add(window);
 
             SaveWindows();
@@ -288,13 +286,12 @@ namespace Save_Window_Position_and_Size
             AllRunningApps.SelectedIndex = -1;
 
             // Get the id and set it to gui
-            var parts = AppsSaved.Text.Split('/');
-            int id = int.TryParse(parts.Last(), out int parsedId) ? parsedId : -1;
+            Window selectedWindow = AppsSaved.SelectedItem as Window;
 
             // Get the window and show it
-            var window = savedWindows.Find(s => s.Id.Equals(id));
-            if (window != null)
-                SetWindowGui(window);
+            var window = savedWindows.Find(s => s.Id.Equals(selectedWindow.Id));
+            if (selectedWindow != null)
+                SetWindowGui(selectedWindow);
         }
         private void AllRunningApps_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -367,6 +364,9 @@ namespace Save_Window_Position_and_Size
         // ComboBoxes
         private void profileComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
+            AppsSaved.SelectedIndex = -1;
+            ClearWindowGUI();
+
             // Get selected profile index and save it
             int profileIndex = profileComboBox.SelectedIndex;
             AppSettings.Save("SelectedProfile", profileIndex.ToString());
@@ -582,8 +582,10 @@ namespace Save_Window_Position_and_Size
                 Save.PerformClick();
             }
         }
+        #endregion
 
 
+        #region Helpers
         // UI Changes
         private Task UpdateRunningApps()
         {
@@ -694,7 +696,7 @@ namespace Save_Window_Position_and_Size
         }
 
 
-        // Misc Helpers
+        // Misc 
         private IntPtr GetRunningAppProcessBy(Window window)
         {
             var allRunningApps = new Dictionary<IntPtr, string>();
@@ -713,7 +715,6 @@ namespace Save_Window_Position_and_Size
             }
             return IntPtr.Zero;
         }
-
         private void RestoreAllWindows(bool useSavedAutoPos = true)
         {
             foreach (Window window in savedWindows)
@@ -736,7 +737,7 @@ namespace Save_Window_Position_and_Size
                     InteractWithWindow.SetWindowPositionAndSize(hWnd, window.WindowPosAndSize.X, window.WindowPosAndSize.Y, window.WindowPosAndSize.Width, window.WindowPosAndSize.Height);
             }
         }
-
+        #endregion
 
 
 

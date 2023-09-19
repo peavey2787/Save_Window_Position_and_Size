@@ -32,6 +32,9 @@ namespace Save_Window_Position_and_Size.Classes
         {
             WindowPosAndSize = new WindowPosAndSize();
         }
-
+        public override string ToString()
+        {
+            return DisplayName;
+        }
     }
 }
