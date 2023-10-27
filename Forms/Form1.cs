@@ -152,7 +152,8 @@ namespace Save_Window_Position_and_Size
 
             // Add each saved window to GUI
             foreach (Window window in savedWindows)
-            {                
+            {
+                window.hWnd = IntPtr.Zero; // clear to ensure latest window is used
                 AppsSaved.Items.Add(window);
             }
         }
@@ -708,6 +709,10 @@ namespace Save_Window_Position_and_Size
 
             foreach (var app in allRunningApps)
             {
+                if(app.Value.Contains("mail"))
+                {
+                    var come = "get me";
+                }
                 if (app.Value == window.TitleName)
                 {
                     return app.Key;
@@ -731,10 +736,10 @@ namespace Save_Window_Position_and_Size
 
                 var process = GetRunningAppProcessBy(window);
                 if (process != IntPtr.Zero)
+                {
                     hWnd = process;
-
-                if (hWnd != IntPtr.Zero)
                     InteractWithWindow.SetWindowPositionAndSize(hWnd, window.WindowPosAndSize.X, window.WindowPosAndSize.Y, window.WindowPosAndSize.Width, window.WindowPosAndSize.Height);
+                }
             }
         }
         #endregion
