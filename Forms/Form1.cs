@@ -67,11 +67,6 @@ namespace Save_Window_Position_and_Size
             refreshTimer.Interval = 1000; // 1sec
             refreshTimer.Tick += RefreshTimer_Tick;
             refreshTimer.Start();
-
-            // Set the app size
-            var appSize = new Size(974, 434);
-            this.MinimumSize = appSize;
-            this.MaximumSize = appSize;
         }
         private void Form1_Load(object sender, EventArgs e)
         {
@@ -203,7 +198,7 @@ namespace Save_Window_Position_and_Size
 
             // Create and add new item
             var window = GetWindowFromGui();
-            AppsSaved.Items.Add(window);            
+            AppsSaved.Items.Add(window);
             savedWindows.Add(window);
 
             SaveWindows();
@@ -361,7 +356,7 @@ namespace Save_Window_Position_and_Size
             }
         }
 
-        
+
         // ComboBoxes
         private void profileComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -709,7 +704,7 @@ namespace Save_Window_Position_and_Size
 
             foreach (var app in allRunningApps)
             {
-                if(app.Value.Contains("mail"))
+                if (app.Value.Contains("mail"))
                 {
                     var come = "get me";
                 }
