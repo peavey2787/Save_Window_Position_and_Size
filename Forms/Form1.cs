@@ -789,7 +789,7 @@ namespace Save_Window_Position_and_Size
         // Manage saved windows list
         private Window GetSavedWindowById(string id)
         {
-            Window? saved = savedWindows.Find(s => s.Id.Equals(id));
+            Window? saved = savedWindows.Find(s => s.Id.ToString().Equals(id));
             if (saved == null) { saved = new Window(); }
             return saved;
         }
