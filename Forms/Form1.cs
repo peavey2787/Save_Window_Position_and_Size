@@ -80,7 +80,13 @@ namespace Save_Window_Position_and_Size
             // Load ignore list
             string json = AppSettings.Load("IgnoreList");
             if (json != null)
-                ignoreList = JsonConvert.DeserializeObject<List<string>>(json);
+            {
+                var savedIgnoreList = JsonConvert.DeserializeObject<List<string>>(json);
+                if(savedIgnoreList != null)
+                    ignoreList = savedIgnoreList;
+                else
+                    ignoreList = new List<string>();
+            }
 
             // Load saved refresh time
             if (int.TryParse(AppSettings.Load("RefreshTime"), out int refreshTime))
@@ -138,6 +144,7 @@ namespace Save_Window_Position_and_Size
         {
             // Clear current window settings
             AppsSaved.Items.Clear();
+            savedWindows.Clear();
 
             Windows allSavedProfiles = LoadAllSavedProfiles();
 
@@ -183,7 +190,7 @@ namespace Save_Window_Position_and_Size
                 if (savedItem.Id.ToString() == WindowId.Text)
                 {
                     // update existing
-                    var existing = savedWindows.Find(s => s.Id.Equals(savedItem.Id));
+                    var existing = GetSavedWindowById(savedItem.Id.ToString());
                     if (existing != null)
                     {
                         savedWindows.Remove(existing);
@@ -208,7 +215,7 @@ namespace Save_Window_Position_and_Size
             var window = GetWindowFromGui();
 
             // Restore saved window pos/size if this app is saved
-            var saved = savedWindows.Find(s => s.Id.Equals(window.Id));
+            var saved = GetSavedWindowById(window.Id.ToString());
             if (saved != null)
             {
                 window.WindowPosAndSize.X = saved.WindowPosAndSize.X;
@@ -226,11 +233,11 @@ namespace Save_Window_Position_and_Size
             }
 
             // Get the window of the running app 
-            var process = GetRunningAppProcessBy(window);
+            var process = GetRunningApphWndBy(window);
             IntPtr hWnd = process;
 
             // Update the window pos/size if the window was found
-            if (hWnd != null && hWnd != IntPtr.Zero)
+            if (hWnd != IntPtr.Zero)
             {
                 InteractWithWindow.SetWindowPositionAndSize(hWnd, window.WindowPosAndSize.X, window.WindowPosAndSize.Y, window.WindowPosAndSize.Width, window.WindowPosAndSize.Height);
 
@@ -267,8 +274,8 @@ namespace Save_Window_Position_and_Size
                 return;
             }
 
-            var process = GetRunningAppProcessBy(window);
-            if (process == null) return;
+            var process = GetRunningApphWndBy(window);
+            if (process == IntPtr.Zero) return;
 
             window.WindowPosAndSize = InteractWithWindow.GetWindowPositionAndSize(process);
             SetWindowGui(window);
@@ -279,15 +286,17 @@ namespace Save_Window_Position_and_Size
         private void AppsSaved_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (AppsSaved.SelectedIndex == -1 && AppsSaved.Items.Count > 0) return;
+            
             AllRunningApps.SelectedIndex = -1;
 
             // Get the id and set it to gui
             Window selectedWindow = AppsSaved.SelectedItem as Window;
-
-            // Get the window and show it
-            var window = savedWindows.Find(s => s.Id.Equals(selectedWindow.Id));
+            
             if (selectedWindow != null)
-                SetWindowGui(selectedWindow);
+            {
+                if (selectedWindow != null)
+                    SetWindowGui(selectedWindow);
+            }
         }
         private void AllRunningApps_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -322,26 +331,27 @@ namespace Save_Window_Position_and_Size
 
             // Get process from running apps
             var mainWindowTitle = runningApps.TryGetValue(hWnd, out var proc) ? proc : null;
-
-            // Check if we have a saved window for this running app
-            var window = savedWindows.Find(w => w.TitleName.Equals(mainWindowTitle));
-
-            if (window == null)
+            if (mainWindowTitle != null)
             {
-                // Create a new window if not
-                window = new Window();
-                window.Id = random.Next(300, 32034);
-                window.DisplayName = mainWindowTitle;
-                window.ProcessName = InteractWithWindow.GetProcessNameByWindowTitle(mainWindowTitle);
-                window.TitleName = mainWindowTitle;
+                // Check if we have a saved window for this running app
+                var window = GetSavedWindowByTitle(mainWindowTitle);
+                if (window == null)
+                {
+                    // Create a new window if not
+                    window = new Window();
+                    window.Id = random.Next(300, 32034);
+                    window.DisplayName = mainWindowTitle;
+                    window.ProcessName = InteractWithWindow.GetProcessNameByWindowTitle(mainWindowTitle);
+                    window.TitleName = mainWindowTitle;
+                }
+
+                window.hWnd = hWnd;
+
+                // Get the current position and size
+                window.WindowPosAndSize = InteractWithWindow.GetWindowPositionAndSize(hWnd);
+
+                SetWindowGui(window); // Update GUI
             }
-
-            window.hWnd = hWnd;
-
-            // Get the current position and size
-            window.WindowPosAndSize = InteractWithWindow.GetWindowPositionAndSize(hWnd);
-
-            SetWindowGui(window); // Update GUI
         }
         private void AllRunningApps_MouseDown(object sender, MouseEventArgs e)
         {
@@ -382,7 +392,7 @@ namespace Save_Window_Position_and_Size
             if (!String.IsNullOrWhiteSpace(WindowId.Text))
             {
                 int id = int.TryParse(WindowId.Text, out int value) ? value : 0;
-                window = savedWindows.Find(w => w.Id.Equals(id));
+                window = GetSavedWindowById(id.ToString());
             }
 
             if (window == null)
@@ -411,7 +421,7 @@ namespace Save_Window_Position_and_Size
             if (!String.IsNullOrWhiteSpace(WindowId.Text))
             {
                 int id = int.TryParse(WindowId.Text, out int value) ? value : 0;
-                window = savedWindows.Find(w => w.Id.Equals(id));
+                window = GetSavedWindowById(id.ToString());
             }
 
             // If no saved app, create and add one
@@ -425,7 +435,7 @@ namespace Save_Window_Position_and_Size
                 window.KeepOnTop = KeepWindowOnTop.Checked;
 
             // Get current app's window
-            var process = GetRunningAppProcessBy(window);
+            var process = GetRunningApphWndBy(window);
 
             if (window.KeepOnTop)
                 InteractWithWindow.SetWindowAlwaysOnTop(process);
@@ -445,7 +455,7 @@ namespace Save_Window_Position_and_Size
             if (!String.IsNullOrWhiteSpace(WindowId.Text))
             {
                 int id = int.TryParse(WindowId.Text, out int value) ? value : 0;
-                window = savedWindows.Find(w => w.Id.Equals(id));
+                window = GetSavedWindowById(id.ToString());
             }
 
             // If no saved app, create and add one
@@ -466,7 +476,7 @@ namespace Save_Window_Position_and_Size
             if (!String.IsNullOrWhiteSpace(WindowId.Text))
             {
                 int id = int.TryParse(WindowId.Text, out int value) ? value : 0;
-                window = savedWindows.Find(w => w.Id.Equals(id));
+                window = GetSavedWindowById(id.ToString());
             }
 
             // If no saved app, create and add one
@@ -491,7 +501,7 @@ namespace Save_Window_Position_and_Size
                 if (!String.IsNullOrWhiteSpace(WindowId.Text))
                 {
                     int id = int.TryParse(WindowId.Text, out int value) ? value : 0;
-                    window = savedWindows.Find(w => w.Id.Equals(id));
+                    window = GetSavedWindowById(id.ToString());
                 }
 
                 if (window == null) return;
@@ -641,9 +651,9 @@ namespace Save_Window_Position_and_Size
                 return;
             }
 
-            if (window.Id != null)
+            if (!string.IsNullOrWhiteSpace(window.Id.ToString()))
                 WindowId.Text = window.Id.ToString();
-            if (window.hWnd != null && window.hWnd != IntPtr.Zero)
+            if (window.hWnd != IntPtr.Zero)
                 this.hWnd.Text = window.hWnd.ToString();
 
             ProcessName.Text = !string.IsNullOrWhiteSpace(window.ProcessName) ? window.ProcessName : InteractWithWindow.GetProcessNameByWindowTitle(window.TitleName);
@@ -693,7 +703,7 @@ namespace Save_Window_Position_and_Size
 
 
         // Misc 
-        private IntPtr GetRunningAppProcessBy(Window window)
+        private IntPtr GetRunningApphWndBy(Window window)
         {
             var allRunningApps = new Dictionary<IntPtr, string>();
 
@@ -704,10 +714,6 @@ namespace Save_Window_Position_and_Size
 
             foreach (var app in allRunningApps)
             {
-                if (app.Value.Contains("mail"))
-                {
-                    var come = "get me";
-                }
                 if (app.Value == window.TitleName)
                 {
                     return app.Key;
@@ -729,13 +735,23 @@ namespace Save_Window_Position_and_Size
 
                 if (useSavedAutoPos && !window.AutoPosition) continue;
 
-                var process = GetRunningAppProcessBy(window);
+                var process = GetRunningApphWndBy(window);
                 if (process != IntPtr.Zero)
                 {
                     hWnd = process;
                     InteractWithWindow.SetWindowPositionAndSize(hWnd, window.WindowPosAndSize.X, window.WindowPosAndSize.Y, window.WindowPosAndSize.Width, window.WindowPosAndSize.Height);
                 }
             }
+        }
+        private Window GetSavedWindowById(string id)
+        {
+            var saved = savedWindows.Find(s => s.Id.Equals(id));
+            return saved;
+        }
+        private Window GetSavedWindowByTitle(string mainWindowTitle)
+        {
+            var saved = savedWindows.Find(w => w.TitleName.Equals(mainWindowTitle));
+            return saved;
         }
         #endregion
 

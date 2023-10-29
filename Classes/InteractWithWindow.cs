@@ -172,11 +172,11 @@ namespace Save_Window_Position_and_Size.Classes
                 catch (ArgumentException)
                 {
                     // Handle exceptions if the process is not found
-                    return null;
+                    return "";
                 }
             }
 
-            return null; // Window not found
+            return ""; // Window not found
         }
         public static IntPtr FindWindowByTitle(string windowTitle)
         {
