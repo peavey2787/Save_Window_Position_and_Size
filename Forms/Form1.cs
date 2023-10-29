@@ -18,6 +18,7 @@ namespace Save_Window_Position_and_Size
         Dictionary<IntPtr, String> runningApps = new Dictionary<IntPtr, String>();
         System.Windows.Forms.Timer refreshTimer = new System.Windows.Forms.Timer();
         Random random = new Random();
+        bool loading = false;
 
         // Timer
         int minutes = 0;
@@ -105,6 +106,7 @@ namespace Save_Window_Position_and_Size
                     if (!ignoreList.Contains(AllRunningApps.Text))
                         ignoreList.Add(AllRunningApps.Text);
                     AllRunningApps.Items.Remove(AllRunningApps.SelectedItem);
+                    ClearWindowGUI();
                 }
             };
             contextMenuStrip.Items.Add(ignoreMenuItem);
@@ -255,10 +257,13 @@ namespace Save_Window_Position_and_Size
 
             // Create and add new item
             var window = GetWindowFromGui();
-            AppsSaved.Items.Add(window);
-            savedWindows.Add(window);
+            if (window != null && !string.IsNullOrWhiteSpace(window.DisplayName))
+            {
+                AppsSaved.Items.Add(window);
+                savedWindows.Add(window);
 
-            SaveWindows();
+                SaveWindows();
+            }
         }
         private void Restore_Click(object sender, EventArgs e)
         {
@@ -323,10 +328,10 @@ namespace Save_Window_Position_and_Size
                 return;
             }
 
-            var process = GetRunningApphWndBy(window);
-            if (process == IntPtr.Zero) return;
+            var hWnd = GetRunningApphWndBy(window);
+            if (hWnd == IntPtr.Zero) return;
 
-            window.WindowPosAndSize = InteractWithWindow.GetWindowPositionAndSize(process);
+            window.WindowPosAndSize = InteractWithWindow.GetWindowPositionAndSize(hWnd);
             SetWindowGui(window);
         }
 
@@ -341,7 +346,7 @@ namespace Save_Window_Position_and_Size
 
             // Show the window info
             Window? selectedWindow = AppsSaved.SelectedItem as Window;
-            if (selectedWindow != null)
+            if (selectedWindow != null && !string.IsNullOrWhiteSpace(selectedWindow.DisplayName))
                 SetWindowGui(selectedWindow);
         }
         private void AllRunningApps_SelectedIndexChanged(object sender, EventArgs e)
@@ -412,6 +417,25 @@ namespace Save_Window_Position_and_Size
                 }
             }
         }
+        private void AppsSaved_KeyDown(object sender, KeyEventArgs e)
+        {
+            int selectedIndex = AppsSaved.SelectedIndex;
+
+            if (e.KeyCode == Keys.Delete && selectedIndex > -1)
+            {
+                int id = int.TryParse(WindowId.Text, out int value) ? value : 0;
+                Window window = GetSavedWindowByTitle(AppsSaved.Text);
+
+                if (string.IsNullOrWhiteSpace(window.DisplayName)) return;
+
+                savedWindows.Remove(window);
+                AppsSaved.Items.RemoveAt(selectedIndex);
+
+                SaveWindows();
+
+                AllRunningApps.SelectedIndex = 0;
+            }
+        }
 
 
         // ComboBoxes
@@ -432,7 +456,7 @@ namespace Save_Window_Position_and_Size
         // CheckBoxes
         private void AutoPosition_CheckedChanged(object sender, EventArgs e)
         {
-            if (String.IsNullOrWhiteSpace(this.hWnd.Text)) return;
+            if (loading || AppsSaved.SelectedItems.Count == 0 && AllRunningApps.SelectedItems.Count == 0) return;
 
             Window window = new Window();
 
@@ -455,8 +479,8 @@ namespace Save_Window_Position_and_Size
         }
         private void KeepWindowOnTop_CheckedChanged(object sender, EventArgs e)
         {
-            // Do nothing if no app selected
-            if (String.IsNullOrWhiteSpace(this.hWnd.Text) && AppsSaved.SelectedItems.Count == 0 && AllRunningApps.SelectedItems.Count == 0)
+            // Do nothing if no app selected             
+            if (loading || AppsSaved.SelectedItems.Count == 0 && AllRunningApps.SelectedItems.Count == 0)
             {
                 KeepWindowOnTop.Checked = false;
                 return;
@@ -496,6 +520,8 @@ namespace Save_Window_Position_and_Size
         // Radio Buttons
         private void ProcNameRadioButton_CheckedChanged(object sender, EventArgs e)
         {
+            if (loading) return;
+
             // Try getting the saved app
             Window window = new Window();
 
@@ -517,6 +543,8 @@ namespace Save_Window_Position_and_Size
         }
         private void WinTitleRadioButton_CheckedChanged(object sender, EventArgs e)
         {
+            if (loading) return;
+
             // Try getting the saved app
             Window window = new Window();
 
@@ -539,23 +567,6 @@ namespace Save_Window_Position_and_Size
 
 
         // TextBoxes
-        private void AppsSaved_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (e.KeyCode == Keys.Delete && AppsSaved.SelectedIndex > -1)
-            {
-                int id = int.TryParse(WindowId.Text, out int value) ? value : 0;
-                Window window = GetSavedWindowByTitle(AppsSaved.Text);
-
-                if (string.IsNullOrWhiteSpace(window.DisplayName)) return;
-
-                savedWindows.Remove(window);
-                AppsSaved.Items.RemoveAt(AppsSaved.SelectedIndex);
-
-                SaveWindows();
-
-                AllRunningApps.SelectedIndex = 0;
-            }
-        }
         private void UpdateTimerInterval_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Enter)
@@ -685,6 +696,8 @@ namespace Save_Window_Position_and_Size
         }
         private void SetWindowGui(Window window)
         {
+            loading = true;
+
             if ( (window != null && string.IsNullOrWhiteSpace(window.DisplayName)) || window == null)
             {
                 ClearWindowGUI();
@@ -725,6 +738,8 @@ namespace Save_Window_Position_and_Size
 
             // Hide keep on top for file explorer windows as I'm not sure how to get their hWnd yet
             KeepWindowOnTop.Visible = !window.IsFileExplorer;
+
+            loading = false;
         }
         private void ClearWindowGUI()
         {
