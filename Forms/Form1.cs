@@ -241,15 +241,15 @@ namespace Save_Window_Position_and_Size
                 {
                     // update existing
                     var existing = GetSavedWindowById(savedItem.Id.ToString());
-                    if (existing != null)
+                    if (existing != null && !string.IsNullOrWhiteSpace(existing.DisplayName))
                     {
                         savedWindows.Remove(existing);
                         var newWindow = GetWindowFromGui();
                         savedWindows.Add(newWindow);
 
                         SaveWindows();
-                    }
-                    return;
+                        return;
+                    }                    
                 }
             }
 
@@ -266,7 +266,7 @@ namespace Save_Window_Position_and_Size
 
             // Restore saved window pos/size if this app is saved
             var saved = GetSavedWindowById(window.Id.ToString());
-            if (saved != null)
+            if (saved != null && !string.IsNullOrWhiteSpace(saved.DisplayName))
             {
                 window.WindowPosAndSize.X = saved.WindowPosAndSize.X;
                 window.WindowPosAndSize.Y = saved.WindowPosAndSize.Y;
@@ -283,8 +283,7 @@ namespace Save_Window_Position_and_Size
             }
 
             // Get the window of the running app 
-            var process = GetRunningApphWndBy(window);
-            IntPtr hWnd = process;
+            IntPtr hWnd = GetRunningApphWndBy(window);
 
             // Update the window pos/size if the window was found
             if (hWnd != IntPtr.Zero)
