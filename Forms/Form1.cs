@@ -12,6 +12,7 @@ namespace Save_Window_Position_and_Size
     public partial class Form1 : Form
     {
         #region Variables
+        NotifyIcon notify_icon;
         List<Window> savedWindows = new List<Window>();
         List<string> ignoreList = new List<string>();
         Dictionary<IntPtr, String> runningApps = new Dictionary<IntPtr, String>();
@@ -57,16 +58,20 @@ namespace Save_Window_Position_and_Size
         #endregion
 
 
-        #region Startup
+        #region Startup/Shutdown
         // Startup
         public Form1()
         {
             InitializeComponent();
 
+            // Create notify icon
+            CreateNotifyIcon();
+
             // Initialize the timer
             refreshTimer.Interval = 1000; // 1sec
             refreshTimer.Tick += RefreshTimer_Tick;
             refreshTimer.Start();
+
         }
         private void Form1_Load(object sender, EventArgs e)
         {
@@ -82,7 +87,7 @@ namespace Save_Window_Position_and_Size
             if (json != null)
             {
                 var savedIgnoreList = JsonConvert.DeserializeObject<List<string>>(json);
-                if(savedIgnoreList != null)
+                if (savedIgnoreList != null)
                     ignoreList = savedIgnoreList;
                 else
                     ignoreList = new List<string>();
@@ -126,52 +131,103 @@ namespace Save_Window_Position_and_Size
             toolTip1.SetToolTip(RefreshWindowButton, "Refresh and get the selected app's current window size/location");
             toolTip1.SetToolTip(Restore, "Restore the selected app's saved window size/location");
         }
-        private Windows LoadAllSavedProfiles()
+        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
-            string json = AppSettings.Load("SavedWindows");
-
-            if (string.IsNullOrWhiteSpace(json))
-                return new Windows();
-
-            Windows allSavedWindows = JsonConvert.DeserializeObject<Windows>(json);
-
-            if (allSavedWindows == null || allSavedWindows.Profiles.Count() == 0)
-                return new Windows();
-
-            return allSavedWindows;
-        }
-        private void LoadSavedWindows(int profileIndex)
-        {
-            // Clear current window settings
-            AppsSaved.Items.Clear();
-            savedWindows.Clear();
-
-            Windows allSavedProfiles = LoadAllSavedProfiles();
-
-            if (allSavedProfiles.Profiles[profileIndex] == null) return;
-
-            savedWindows = allSavedProfiles.Profiles[profileIndex];
-
-            // Add each saved window to GUI
-            foreach (Window window in savedWindows)
+            // If user presses the X (exit) button
+            if (e.CloseReason == CloseReason.UserClosing)
             {
-                window.hWnd = IntPtr.Zero; // clear to ensure latest window is used
-                AppsSaved.Items.Add(window);
+                e.Cancel = true;
+                // Hide form and only show the notify icon
+                this.Hide();
+                this.ShowInTaskbar = false;
+                this.WindowState = FormWindowState.Minimized;
             }
+            else
+                CloseApp();
         }
-        private void SaveWindows()
+
+        // Shutdown
+        private void CloseApp()
         {
-            Windows allSavedProfiles = LoadAllSavedProfiles();
+            // Remove notify icon
+            notify_icon.Dispose();
 
-            // Get current profile index
-            int profileIndex = profileComboBox.SelectedIndex;
+            // Close the main form
+            this.Close();
+            this.Dispose();
 
-            // Save window settings to selected profile
-            allSavedProfiles.Profiles[profileIndex] = savedWindows;
+            // Exit the application
+            Environment.Exit(0);
+            Application.Exit();
+            Application.ExitThread();
+        }
+        #endregion
 
-            // Save all window settings
-            string json = JsonConvert.SerializeObject(allSavedProfiles);
-            AppSettings.Save("SavedWindows", json);
+        #region Notify Icon
+        // Notify Icon
+        private void CreateNotifyIcon()
+        {
+            // Create the notify icon
+            notify_icon = new NotifyIcon();
+            notify_icon.Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
+            notify_icon.Text = "Save Win Size/Pos"; // Set the tooltip text
+            notify_icon.Visible = true;
+
+            notify_icon.MouseDoubleClick += (sender, e) =>
+            {
+                if (this.WindowState == FormWindowState.Minimized)
+                {
+
+                    this.WindowState = FormWindowState.Normal;
+                    this.Focus();
+                    this.ShowInTaskbar = true;
+                    Thread.Sleep(200); // Slight delay to prevent a bunch of flickering as form reloads
+                    this.Show();
+                }
+                else if (this.WindowState != FormWindowState.Minimized)
+                    this.WindowState = FormWindowState.Minimized;
+            };
+
+            // Add a context menu to the notify icon
+            ContextMenuStrip contextMenu = new ContextMenuStrip();
+
+            // Create menu items with the desired text and image size
+            int imageSize = 32;
+            contextMenu.Items.Add(CreateMenuItem("Show Gui", Properties.Resources.pin, OnShowGui, imageSize));
+            contextMenu.Items.Add(CreateMenuItem("Start Auto Moving", Properties.Resources.play_button, OnStartAuto, imageSize));
+            contextMenu.Items.Add(CreateMenuItem("Stop Auto Moving", Properties.Resources.stop_button, OnStopAuto, imageSize));
+            contextMenu.Items.Add(CreateMenuItem("Exit", Properties.Resources.exit_button, OnExit, imageSize));
+
+            // Set the image scaling to None to prevent automatic resizing
+            contextMenu.ImageScalingSize = new Size(imageSize, imageSize); // Set the desired size
+
+            notify_icon.ContextMenuStrip = contextMenu;
+        }
+        private ToolStripMenuItem CreateMenuItem(string text, Image image, EventHandler onClick, int imageSize)
+        {
+            var resizedImage = new Bitmap(image, new Size(imageSize, imageSize));
+            var item = new ToolStripMenuItem(text, resizedImage, onClick);
+            item.Font = new Font("Arial", 10, FontStyle.Regular);
+            return item;
+        }
+        private void OnExit(object sender, EventArgs e)
+        {
+            CloseApp();
+        }
+        private void OnStopAuto(object sender, EventArgs e)
+        {
+            refreshTimer.Stop();
+        }
+        private void OnStartAuto(object sender, EventArgs e)
+        {
+            refreshTimer.Start();
+        }
+        private void OnShowGui(object sender, EventArgs e)
+        {
+            this.WindowState = FormWindowState.Normal;
+            this.Show();
+            this.Focus();
+            this.ShowInTaskbar = true;
         }
         #endregion
 
@@ -286,12 +342,12 @@ namespace Save_Window_Position_and_Size
         private void AppsSaved_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (AppsSaved.SelectedIndex == -1 && AppsSaved.Items.Count > 0) return;
-            
+
             AllRunningApps.SelectedIndex = -1;
 
             // Get the id and set it to gui
             Window selectedWindow = AppsSaved.SelectedItem as Window;
-            
+
             if (selectedWindow != null)
             {
                 if (selectedWindow != null)
@@ -738,6 +794,10 @@ namespace Save_Window_Position_and_Size
                 }
             }
         }
+
+
+
+        // Manage saved windows list
         private Window GetSavedWindowById(string id)
         {
             var saved = savedWindows.Find(s => s.Id.Equals(id));
@@ -748,7 +808,55 @@ namespace Save_Window_Position_and_Size
             var saved = savedWindows.Find(w => w.TitleName.Equals(mainWindowTitle));
             return saved;
         }
+        private Windows LoadAllSavedProfiles()
+        {
+            string json = AppSettings.Load("SavedWindows");
+
+            if (string.IsNullOrWhiteSpace(json))
+                return new Windows();
+
+            Windows allSavedWindows = JsonConvert.DeserializeObject<Windows>(json);
+
+            if (allSavedWindows == null || allSavedWindows.Profiles.Count() == 0)
+                return new Windows();
+
+            return allSavedWindows;
+        }
+        private void LoadSavedWindows(int profileIndex)
+        {
+            // Clear current window settings
+            AppsSaved.Items.Clear();
+            savedWindows.Clear();
+
+            Windows allSavedProfiles = LoadAllSavedProfiles();
+
+            if (allSavedProfiles.Profiles[profileIndex] == null) return;
+
+            savedWindows = allSavedProfiles.Profiles[profileIndex];
+
+            // Add each saved window to GUI
+            foreach (Window window in savedWindows)
+            {
+                window.hWnd = IntPtr.Zero; // clear to ensure latest window is used
+                AppsSaved.Items.Add(window);
+            }
+        }
+        private void SaveWindows()
+        {
+            Windows allSavedProfiles = LoadAllSavedProfiles();
+
+            // Get current profile index
+            int profileIndex = profileComboBox.SelectedIndex;
+
+            // Save window settings to selected profile
+            allSavedProfiles.Profiles[profileIndex] = savedWindows;
+
+            // Save all window settings
+            string json = JsonConvert.SerializeObject(allSavedProfiles);
+            AppSettings.Save("SavedWindows", json);
+        }
         #endregion
+
 
 
 
