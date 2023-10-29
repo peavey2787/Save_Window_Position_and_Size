@@ -46,12 +46,7 @@ namespace Save_Window_Position_and_Size
                         minutes = 1;
 
                     // Timer elapsed perform window restores
-
-                    LogOutput.AppendText("Checking window positions...");
-
                     await Task.Run(() => { RestoreAllWindows(); });
-
-                    LogOutput.AppendText("Window positions are all set.");
                 }
             }
         }
@@ -131,6 +126,8 @@ namespace Save_Window_Position_and_Size
             toolTip1.SetToolTip(RefreshWindowButton, "Refresh and get the selected app's current window size/location");
             toolTip1.SetToolTip(Restore, "Restore the selected app's saved window size/location");
         }
+
+        // Shutdown
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
             // If user presses the X (exit) button
@@ -145,8 +142,6 @@ namespace Save_Window_Position_and_Size
             else
                 CloseApp();
         }
-
-        // Shutdown
         private void CloseApp()
         {
             // Remove notify icon
@@ -577,8 +572,6 @@ namespace Save_Window_Position_and_Size
                     minutes = refreshTime;
                     seconds = 60;
                 }
-                else
-                    LogOutput.AppendText($"Auto Position Interval {UpdateTimerInterval.Text} must be an integer, timer not updated.");
             }
         }
         private void WindowDisplayName_KeyDown(object sender, KeyEventArgs e)

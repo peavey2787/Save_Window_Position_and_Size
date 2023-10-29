@@ -33,7 +33,6 @@
             Save = new Button();
             lbl_Window_Title = new Label();
             Restore = new Button();
-            LogOutput = new TextBox();
             AppsSaved = new ListBox();
             WindowPosX = new TextBox();
             lblWindowPosX = new Label();
@@ -103,17 +102,6 @@
             Restore.TabIndex = 3;
             Restore.UseVisualStyleBackColor = true;
             Restore.Click += Restore_Click;
-            // 
-            // LogOutput
-            // 
-            LogOutput.Location = new Point(0, 412);
-            LogOutput.Multiline = true;
-            LogOutput.Name = "LogOutput";
-            LogOutput.ReadOnly = true;
-            LogOutput.ScrollBars = ScrollBars.Vertical;
-            LogOutput.Size = new Size(958, 67);
-            LogOutput.TabIndex = 4;
-            LogOutput.Text = "Output Log:";
             // 
             // AppsSaved
             // 
@@ -500,10 +488,9 @@
             AutoSize = true;
             BackgroundImage = Properties.Resources.blue_mesh_background;
             BackgroundImageLayout = ImageLayout.Center;
-            ClientSize = new Size(958, 393);
+            ClientSize = new Size(958, 397);
             Controls.Add(UpdateTimerInterval);
             Controls.Add(panel1);
-            Controls.Add(LogOutput);
             Controls.Add(Time);
             Controls.Add(lblTime);
             Controls.Add(lblUpdateTimerInterval);
@@ -525,7 +512,6 @@
         private Button Save;
         private Label lbl_Window_Title;
         private Button Restore;
-        private TextBox LogOutput;
         private ListBox AppsSaved;
         private TextBox WindowPosX;
         private Label lblWindowPosX;
