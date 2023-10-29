@@ -442,7 +442,7 @@ namespace Save_Window_Position_and_Size
                 window = GetSavedWindowById(id.ToString());
             }
 
-            if (!string.IsNullOrWhiteSpace(window.DisplayName))
+            if (string.IsNullOrWhiteSpace(window.DisplayName))
             {
                 window = GetWindowFromGui();
                 savedWindows.Add(window);
@@ -456,7 +456,7 @@ namespace Save_Window_Position_and_Size
         private void KeepWindowOnTop_CheckedChanged(object sender, EventArgs e)
         {
             // Do nothing if no app selected
-            if (String.IsNullOrWhiteSpace(this.hWnd.Text))
+            if (String.IsNullOrWhiteSpace(this.hWnd.Text) && AppsSaved.SelectedItems.Count == 0 && AllRunningApps.SelectedItems.Count == 0)
             {
                 KeepWindowOnTop.Checked = false;
                 return;
@@ -472,7 +472,7 @@ namespace Save_Window_Position_and_Size
             }
 
             // If no saved app, create and add one
-            if (!string.IsNullOrWhiteSpace(window.DisplayName))
+            if (string.IsNullOrWhiteSpace(window.DisplayName))
             {
                 window = GetWindowFromGui();
                 savedWindows.Add(window);
@@ -506,7 +506,7 @@ namespace Save_Window_Position_and_Size
             }
 
             // If no saved app, create and add one
-            if (!string.IsNullOrWhiteSpace(window.DisplayName))
+            if (string.IsNullOrWhiteSpace(window.DisplayName))
             {
                 window = GetWindowFromGui();
                 savedWindows.Add(window);
@@ -527,7 +527,7 @@ namespace Save_Window_Position_and_Size
             }
 
             // If no saved app, create and add one
-            if (!string.IsNullOrWhiteSpace(window.DisplayName))
+            if (string.IsNullOrWhiteSpace(window.DisplayName))
             {
                 window = GetWindowFromGui();
                 savedWindows.Add(window);
