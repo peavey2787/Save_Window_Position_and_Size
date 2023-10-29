@@ -496,13 +496,8 @@ namespace Save_Window_Position_and_Size
         {
             if (e.KeyCode == Keys.Delete && AppsSaved.SelectedIndex > -1)
             {
-                Window window = null;
-
-                if (!String.IsNullOrWhiteSpace(WindowId.Text))
-                {
-                    int id = int.TryParse(WindowId.Text, out int value) ? value : 0;
-                    window = GetSavedWindowById(id.ToString());
-                }
+                int id = int.TryParse(WindowId.Text, out int value) ? value : 0;
+                Window window = GetSavedWindowByTitle(AppsSaved.Text);
 
                 if (window == null) return;
 
