@@ -31,6 +31,9 @@ namespace Save_Window_Position_and_Size.Classes
         public Window()
         {
             WindowPosAndSize = new WindowPosAndSize();
+            ProcessName = string.Empty;
+            TitleName = string.Empty;
+            DisplayName = string.Empty;            
         }
         public override string ToString()
         {

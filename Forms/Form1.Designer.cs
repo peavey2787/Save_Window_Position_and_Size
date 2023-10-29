@@ -55,7 +55,6 @@
             WindowTitle = new Label();
             ProcessName = new Label();
             label3 = new Label();
-            hWnd = new Label();
             RefreshWindowButton = new Button();
             WindowId = new Label();
             WindowDisplayName = new TextBox();
@@ -68,6 +67,7 @@
             lblAllRunningApps = new Label();
             lblSavedApps = new Label();
             toolTip1 = new ToolTip(components);
+            hWnd = new Label();
             panel1.SuspendLayout();
             SuspendLayout();
             // 
@@ -354,16 +354,6 @@
             label3.TabIndex = 35;
             label3.Text = "Process Name";
             // 
-            // hWnd
-            // 
-            hWnd.AutoSize = true;
-            hWnd.Location = new Point(636, 58);
-            hWnd.Name = "hWnd";
-            hWnd.Size = new Size(39, 15);
-            hWnd.TabIndex = 34;
-            hWnd.Text = "hWnd";
-            hWnd.Visible = false;
-            // 
             // RefreshWindowButton
             // 
             RefreshWindowButton.BackgroundImage = Properties.Resources.refresh_blue_arrows;
@@ -481,6 +471,16 @@
             // 
             toolTip1.ToolTipIcon = ToolTipIcon.Info;
             // 
+            // hWnd
+            // 
+            hWnd.AutoSize = true;
+            hWnd.Location = new Point(636, 58);
+            hWnd.Name = "hWnd";
+            hWnd.Size = new Size(39, 15);
+            hWnd.TabIndex = 34;
+            hWnd.Text = "hWnd";
+            hWnd.Visible = false;
+            // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
@@ -538,7 +538,6 @@
         private Label label1;
         private Label WindowId;
         private Button RefreshWindowButton;
-        private Label hWnd;
         private Label ProcessName;
         private Label label3;
         private Label WindowTitle;
@@ -547,5 +546,6 @@
         private RadioButton WinTitleRadioButton;
         private RadioButton ProcNameRadioButton;
         private ComboBox profileComboBox;
+        private Label hWnd;
     }
 }

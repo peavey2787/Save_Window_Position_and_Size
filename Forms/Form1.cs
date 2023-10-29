@@ -12,7 +12,7 @@ namespace Save_Window_Position_and_Size
     public partial class Form1 : Form
     {
         #region Variables
-        NotifyIcon notify_icon;
+        NotifyIcon notify_icon = new NotifyIcon();
         List<Window> savedWindows = new List<Window>();
         List<string> ignoreList = new List<string>();
         Dictionary<IntPtr, String> runningApps = new Dictionary<IntPtr, String>();
@@ -172,11 +172,10 @@ namespace Save_Window_Position_and_Size
             {
                 if (this.WindowState == FormWindowState.Minimized)
                 {
-
                     this.WindowState = FormWindowState.Normal;
                     this.Focus();
                     this.ShowInTaskbar = true;
-                    Thread.Sleep(200); // Slight delay to prevent a bunch of flickering as form reloads
+                    Thread.Sleep(250); // Slight delay to prevent a bunch of flickering as form reloads
                     this.Show();
                 }
                 else if (this.WindowState != FormWindowState.Minimized)
@@ -187,7 +186,7 @@ namespace Save_Window_Position_and_Size
             ContextMenuStrip contextMenu = new ContextMenuStrip();
 
             // Create menu items with the desired text and image size
-            int imageSize = 32;
+            int imageSize = 24;
             contextMenu.Items.Add(CreateMenuItem("Show Gui", Properties.Resources.pin, OnShowGui, imageSize));
             contextMenu.Items.Add(CreateMenuItem("Start Auto Moving", Properties.Resources.play_button, OnStartAuto, imageSize));
             contextMenu.Items.Add(CreateMenuItem("Stop Auto Moving", Properties.Resources.stop_button, OnStopAuto, imageSize));
@@ -205,19 +204,19 @@ namespace Save_Window_Position_and_Size
             item.Font = new Font("Arial", 10, FontStyle.Regular);
             return item;
         }
-        private void OnExit(object sender, EventArgs e)
+        private void OnExit(object? sender, EventArgs e)
         {
             CloseApp();
         }
-        private void OnStopAuto(object sender, EventArgs e)
+        private void OnStopAuto(object? sender, EventArgs e)
         {
             refreshTimer.Stop();
         }
-        private void OnStartAuto(object sender, EventArgs e)
+        private void OnStartAuto(object? sender, EventArgs e)
         {
             refreshTimer.Start();
         }
-        private void OnShowGui(object sender, EventArgs e)
+        private void OnShowGui(object? sender, EventArgs e)
         {
             this.WindowState = FormWindowState.Normal;
             this.Show();
@@ -338,16 +337,13 @@ namespace Save_Window_Position_and_Size
         {
             if (AppsSaved.SelectedIndex == -1 && AppsSaved.Items.Count > 0) return;
 
+            // Deselect any selected items from running apps
             AllRunningApps.SelectedIndex = -1;
 
-            // Get the id and set it to gui
-            Window selectedWindow = AppsSaved.SelectedItem as Window;
-
+            // Show the window info
+            Window? selectedWindow = AppsSaved.SelectedItem as Window;
             if (selectedWindow != null)
-            {
-                if (selectedWindow != null)
-                    SetWindowGui(selectedWindow);
-            }
+                SetWindowGui(selectedWindow);
         }
         private void AllRunningApps_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -356,7 +352,8 @@ namespace Save_Window_Position_and_Size
 
             AppsSaved.SelectedIndex = -1; // Deselect any saved apps
 
-            string selected = AllRunningApps.SelectedItem.ToString();
+            string? selected = AllRunningApps.SelectedItem.ToString();
+            if (string.IsNullOrWhiteSpace(selected)) return;
 
             // Handle File explorer windows
             if (selected.StartsWith("FileExplorer: "))
@@ -386,7 +383,7 @@ namespace Save_Window_Position_and_Size
             {
                 // Check if we have a saved window for this running app
                 var window = GetSavedWindowByTitle(mainWindowTitle);
-                if (window == null)
+                if (string.IsNullOrWhiteSpace(window.DisplayName))
                 {
                     // Create a new window if not
                     window = new Window();
@@ -438,7 +435,7 @@ namespace Save_Window_Position_and_Size
         {
             if (String.IsNullOrWhiteSpace(this.hWnd.Text)) return;
 
-            Window window = null;
+            Window window = new Window();
 
             if (!String.IsNullOrWhiteSpace(WindowId.Text))
             {
@@ -446,7 +443,7 @@ namespace Save_Window_Position_and_Size
                 window = GetSavedWindowById(id.ToString());
             }
 
-            if (window == null)
+            if (!string.IsNullOrWhiteSpace(window.DisplayName))
             {
                 window = GetWindowFromGui();
                 savedWindows.Add(window);
@@ -467,7 +464,7 @@ namespace Save_Window_Position_and_Size
             }
 
             // Try getting the saved app
-            Window window = null;
+            Window window = new Window();
 
             if (!String.IsNullOrWhiteSpace(WindowId.Text))
             {
@@ -476,7 +473,7 @@ namespace Save_Window_Position_and_Size
             }
 
             // If no saved app, create and add one
-            if (window == null)
+            if (!string.IsNullOrWhiteSpace(window.DisplayName))
             {
                 window = GetWindowFromGui();
                 savedWindows.Add(window);
@@ -501,7 +498,7 @@ namespace Save_Window_Position_and_Size
         private void ProcNameRadioButton_CheckedChanged(object sender, EventArgs e)
         {
             // Try getting the saved app
-            Window window = null;
+            Window window = new Window();
 
             if (!String.IsNullOrWhiteSpace(WindowId.Text))
             {
@@ -510,7 +507,7 @@ namespace Save_Window_Position_and_Size
             }
 
             // If no saved app, create and add one
-            if (window == null)
+            if (!string.IsNullOrWhiteSpace(window.DisplayName))
             {
                 window = GetWindowFromGui();
                 savedWindows.Add(window);
@@ -522,7 +519,7 @@ namespace Save_Window_Position_and_Size
         private void WinTitleRadioButton_CheckedChanged(object sender, EventArgs e)
         {
             // Try getting the saved app
-            Window window = null;
+            Window window = new Window();
 
             if (!String.IsNullOrWhiteSpace(WindowId.Text))
             {
@@ -531,7 +528,7 @@ namespace Save_Window_Position_and_Size
             }
 
             // If no saved app, create and add one
-            if (window == null)
+            if (!string.IsNullOrWhiteSpace(window.DisplayName))
             {
                 window = GetWindowFromGui();
                 savedWindows.Add(window);
@@ -550,7 +547,7 @@ namespace Save_Window_Position_and_Size
                 int id = int.TryParse(WindowId.Text, out int value) ? value : 0;
                 Window window = GetSavedWindowByTitle(AppsSaved.Text);
 
-                if (window == null) return;
+                if (string.IsNullOrWhiteSpace(window.DisplayName)) return;
 
                 savedWindows.Remove(window);
                 AppsSaved.Items.RemoveAt(AppsSaved.SelectedIndex);
@@ -689,7 +686,7 @@ namespace Save_Window_Position_and_Size
         }
         private void SetWindowGui(Window window)
         {
-            if (window == null)
+            if ( (window != null && string.IsNullOrWhiteSpace(window.DisplayName)) || window == null)
             {
                 ClearWindowGUI();
                 return;
@@ -793,12 +790,14 @@ namespace Save_Window_Position_and_Size
         // Manage saved windows list
         private Window GetSavedWindowById(string id)
         {
-            var saved = savedWindows.Find(s => s.Id.Equals(id));
+            Window? saved = savedWindows.Find(s => s.Id.Equals(id));
+            if (saved == null) { saved = new Window(); }
             return saved;
         }
         private Window GetSavedWindowByTitle(string mainWindowTitle)
         {
-            var saved = savedWindows.Find(w => w.TitleName.Equals(mainWindowTitle));
+            Window? saved = savedWindows.Find(w => w.TitleName.Equals(mainWindowTitle));
+            if(saved == null) { saved = new Window(); }
             return saved;
         }
         private Windows LoadAllSavedProfiles()
@@ -808,7 +807,7 @@ namespace Save_Window_Position_and_Size
             if (string.IsNullOrWhiteSpace(json))
                 return new Windows();
 
-            Windows allSavedWindows = JsonConvert.DeserializeObject<Windows>(json);
+            Windows? allSavedWindows = JsonConvert.DeserializeObject<Windows>(json);
 
             if (allSavedWindows == null || allSavedWindows.Profiles.Count() == 0)
                 return new Windows();
