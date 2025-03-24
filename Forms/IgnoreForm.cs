@@ -1,4 +1,5 @@
 ﻿using Microsoft.VisualBasic;
+using Save_Window_Position_and_Size.Classes;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -13,16 +14,14 @@ namespace Save_Window_Position_and_Size
 {
     public partial class IgnoreForm : Form
     {
-        List<string> IgnoreList { get; set; }
-        public IgnoreForm(List<string> ignoreList)
+        private IgnoreListManager _ignoreListManager;
+
+        public IgnoreForm(IgnoreListManager ignoreListManager)
         {
             InitializeComponent();
-            IgnoreList = ignoreList;
+            _ignoreListManager = ignoreListManager;
         }
-        public List<string> GetIgnoreList()
-        {
-            return IgnoreList;
-        }
+
         private void IgnoreListBox_DoubleClick(object sender, EventArgs e)
         {
             if (IgnoreListBox.SelectedIndex == 0)
@@ -30,35 +29,69 @@ namespace Save_Window_Position_and_Size
                 string newItem = Interaction.InputBox("Enter a new item:", "Add New Item");
                 if (!string.IsNullOrEmpty(newItem))
                 {
+                    // Add to listbox for UI
                     IgnoreListBox.Items.Insert(1, newItem);
+
+                    // Add to manager (which will auto-save)
+                    _ignoreListManager.AddToIgnoreList(newItem);
                 }
             }
         }
 
         private void IgnoreListBox_KeyDown(object sender, KeyEventArgs e)
         {
-            if (IgnoreListBox.SelectedIndex >= 0 && e.KeyCode == Keys.Delete)
+            if (IgnoreListBox.SelectedIndex > 0 && e.KeyCode == Keys.Delete)
             {
+                string itemToRemove = IgnoreListBox.Items[IgnoreListBox.SelectedIndex].ToString();
+
+                // Remove from listbox for UI
                 IgnoreListBox.Items.RemoveAt(IgnoreListBox.SelectedIndex);
+
+                // Remove from manager (which will auto-save)
+                _ignoreListManager.RemoveFromIgnoreList(itemToRemove);
             }
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
-
+            // Save changes and close
+            SaveChangesToManager();
         }
 
         private void IgnoreForm_FormClosing(object sender, FormClosingEventArgs e)
         {
-            IgnoreList = new List<string>();
-            foreach (string item in IgnoreListBox.Items)
-                if (item != "Add item...")
-                    IgnoreList.Add(item);
+            // Save changes on form close
+            SaveChangesToManager();
         }
 
         private void IgnoreForm_Load(object sender, EventArgs e)
         {
-            foreach (string item in IgnoreList) IgnoreListBox.Items.Add(item);
+            // Clear any existing items except the "Add item..." entry
+            IgnoreListBox.Items.Clear();
+            IgnoreListBox.Items.Add("Add item...");
+
+            // Add all items from the ignore list manager
+            foreach (string item in _ignoreListManager.GetIgnoreList())
+            {
+                IgnoreListBox.Items.Add(item);
+            }
+        }
+
+        private void SaveChangesToManager()
+        {
+            // Create a new list from the items in the listbox (excluding "Add item...")
+            List<string> updatedList = new List<string>();
+            foreach (var item in IgnoreListBox.Items)
+            {
+                string itemText = item.ToString();
+                if (itemText != "Add item...")
+                {
+                    updatedList.Add(itemText);
+                }
+            }
+
+            // Update the ignore list manager with the new list
+            _ignoreListManager.UpdateIgnoreList(updatedList);
         }
     }
 }

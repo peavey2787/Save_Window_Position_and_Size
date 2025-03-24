@@ -7,18 +7,6 @@
         /// </summary>
         private System.ComponentModel.IContainer components = null;
 
-        /// <summary>
-        ///  Clean up any resources being used.
-        /// </summary>
-        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing && (components != null))
-            {
-                components.Dispose();
-            }
-            base.Dispose(disposing);
-        }
 
         #region Windows Form Designer generated code
 
@@ -46,15 +34,14 @@
             UpdateTimerInterval = new TextBox();
             lblUpdateTimerInterval = new Label();
             lblTime = new Label();
-            Time = new Label();
             panel1 = new Panel();
+            UsePercentagesCheckBox = new CheckBox();
             profileComboBox = new ComboBox();
-            WinTitleRadioButton = new RadioButton();
-            ProcNameRadioButton = new RadioButton();
             label2 = new Label();
             WindowTitle = new Label();
             ProcessName = new Label();
             label3 = new Label();
+            hWnd = new Label();
             RefreshWindowButton = new Button();
             WindowId = new Label();
             WindowDisplayName = new TextBox();
@@ -66,8 +53,9 @@
             KeepWindowOnTop = new CheckBox();
             lblAllRunningApps = new Label();
             lblSavedApps = new Label();
+            SkipConfirmationCheckbox = new CheckBox();
             toolTip1 = new ToolTip(components);
-            hWnd = new Label();
+            Time = new Label();
             panel1.SuspendLayout();
             SuspendLayout();
             // 
@@ -86,7 +74,7 @@
             // 
             lbl_Window_Title.AutoSize = true;
             lbl_Window_Title.Font = new Font("Segoe UI", 12F, FontStyle.Bold, GraphicsUnit.Point);
-            lbl_Window_Title.Location = new Point(442, 143);
+            lbl_Window_Title.Location = new Point(521, 89);
             lbl_Window_Title.Name = "lbl_Window_Title";
             lbl_Window_Title.Size = new Size(112, 21);
             lbl_Window_Title.TabIndex = 2;
@@ -119,7 +107,7 @@
             // 
             // WindowPosX
             // 
-            WindowPosX.Location = new Point(412, 206);
+            WindowPosX.Location = new Point(347, 195);
             WindowPosX.Name = "WindowPosX";
             WindowPosX.Size = new Size(50, 23);
             WindowPosX.TabIndex = 6;
@@ -128,7 +116,7 @@
             // lblWindowPosX
             // 
             lblWindowPosX.AutoSize = true;
-            lblWindowPosX.Location = new Point(341, 209);
+            lblWindowPosX.Location = new Point(276, 198);
             lblWindowPosX.Name = "lblWindowPosX";
             lblWindowPosX.Size = new Size(63, 15);
             lblWindowPosX.TabIndex = 7;
@@ -137,7 +125,7 @@
             // lblWindowPosY
             // 
             lblWindowPosY.AutoSize = true;
-            lblWindowPosY.Location = new Point(341, 243);
+            lblWindowPosY.Location = new Point(276, 232);
             lblWindowPosY.Name = "lblWindowPosY";
             lblWindowPosY.Size = new Size(63, 15);
             lblWindowPosY.TabIndex = 8;
@@ -145,7 +133,7 @@
             // 
             // WindowPosY
             // 
-            WindowPosY.Location = new Point(411, 240);
+            WindowPosY.Location = new Point(346, 229);
             WindowPosY.Name = "WindowPosY";
             WindowPosY.Size = new Size(49, 23);
             WindowPosY.TabIndex = 9;
@@ -153,7 +141,7 @@
             // 
             // WindowWidth
             // 
-            WindowWidth.Location = new Point(568, 206);
+            WindowWidth.Location = new Point(503, 195);
             WindowWidth.Name = "WindowWidth";
             WindowWidth.Size = new Size(50, 23);
             WindowWidth.TabIndex = 10;
@@ -162,7 +150,7 @@
             // lblWindowWidth
             // 
             lblWindowWidth.AutoSize = true;
-            lblWindowWidth.Location = new Point(521, 209);
+            lblWindowWidth.Location = new Point(456, 198);
             lblWindowWidth.Name = "lblWindowWidth";
             lblWindowWidth.Size = new Size(42, 15);
             lblWindowWidth.TabIndex = 11;
@@ -171,7 +159,7 @@
             // lblWindowHeight
             // 
             lblWindowHeight.AutoSize = true;
-            lblWindowHeight.Location = new Point(516, 243);
+            lblWindowHeight.Location = new Point(451, 232);
             lblWindowHeight.Name = "lblWindowHeight";
             lblWindowHeight.Size = new Size(46, 15);
             lblWindowHeight.TabIndex = 12;
@@ -179,7 +167,7 @@
             // 
             // WindowHeight
             // 
-            WindowHeight.Location = new Point(568, 240);
+            WindowHeight.Location = new Point(503, 229);
             WindowHeight.Name = "WindowHeight";
             WindowHeight.Size = new Size(50, 23);
             WindowHeight.TabIndex = 13;
@@ -201,7 +189,7 @@
             // 
             // UpdateTimerInterval
             // 
-            UpdateTimerInterval.Location = new Point(205, 366);
+            UpdateTimerInterval.Location = new Point(171, 364);
             UpdateTimerInterval.Name = "UpdateTimerInterval";
             UpdateTimerInterval.Size = new Size(25, 23);
             UpdateTimerInterval.TabIndex = 15;
@@ -213,7 +201,7 @@
             lblUpdateTimerInterval.AutoSize = true;
             lblUpdateTimerInterval.BackColor = Color.Transparent;
             lblUpdateTimerInterval.ForeColor = SystemColors.ControlLightLight;
-            lblUpdateTimerInterval.Location = new Point(41, 369);
+            lblUpdateTimerInterval.Location = new Point(12, 368);
             lblUpdateTimerInterval.Name = "lblUpdateTimerInterval";
             lblUpdateTimerInterval.Size = new Size(164, 15);
             lblUpdateTimerInterval.TabIndex = 16;
@@ -224,32 +212,24 @@
             lblTime.AutoSize = true;
             lblTime.BackColor = Color.Transparent;
             lblTime.ForeColor = SystemColors.ControlLightLight;
-            lblTime.Location = new Point(454, 372);
+            lblTime.Location = new Point(417, 374);
             lblTime.Name = "lblTime";
             lblTime.Size = new Size(65, 15);
             lblTime.TabIndex = 17;
             lblTime.Text = "Refresh in: ";
             // 
-            // Time
-            // 
-            Time.AutoSize = true;
-            Time.BackColor = Color.Transparent;
-            Time.ForeColor = SystemColors.ControlLightLight;
-            Time.Location = new Point(517, 372);
-            Time.Name = "Time";
-            Time.Size = new Size(22, 15);
-            Time.TabIndex = 18;
-            Time.Text = "0   ";
-            // 
             // panel1
             // 
             panel1.AutoSize = true;
             panel1.BackColor = Color.Transparent;
+            panel1.Controls.Add(UpdateTimerInterval);
+            panel1.Controls.Add(lblTime);
+            panel1.Controls.Add(UsePercentagesCheckBox);
             panel1.Controls.Add(profileComboBox);
-            panel1.Controls.Add(WinTitleRadioButton);
-            panel1.Controls.Add(ProcNameRadioButton);
+            panel1.Controls.Add(Time);
             panel1.Controls.Add(label2);
             panel1.Controls.Add(WindowTitle);
+            panel1.Controls.Add(lblUpdateTimerInterval);
             panel1.Controls.Add(ProcessName);
             panel1.Controls.Add(label3);
             panel1.Controls.Add(hWnd);
@@ -277,10 +257,22 @@
             panel1.Controls.Add(lblWindowPosY);
             panel1.Controls.Add(WindowWidth);
             panel1.Controls.Add(WindowPosY);
+            panel1.Controls.Add(SkipConfirmationCheckbox);
             panel1.Location = new Point(0, 0);
             panel1.Name = "panel1";
-            panel1.Size = new Size(958, 366);
+            panel1.Size = new Size(958, 393);
             panel1.TabIndex = 19;
+            // 
+            // UsePercentagesCheckBox
+            // 
+            UsePercentagesCheckBox.AutoSize = true;
+            UsePercentagesCheckBox.Location = new Point(577, 267);
+            UsePercentagesCheckBox.Name = "UsePercentagesCheckBox";
+            UsePercentagesCheckBox.Size = new Size(112, 19);
+            UsePercentagesCheckBox.TabIndex = 42;
+            UsePercentagesCheckBox.Text = "Use Percentages";
+            UsePercentagesCheckBox.UseVisualStyleBackColor = true;
+            UsePercentagesCheckBox.CheckedChanged += UsePercentagesCheckBox_CheckedChanged;
             // 
             // profileComboBox
             // 
@@ -291,28 +283,6 @@
             profileComboBox.Size = new Size(103, 23);
             profileComboBox.TabIndex = 41;
             profileComboBox.SelectedIndexChanged += profileComboBox_SelectedIndexChanged;
-            // 
-            // WinTitleRadioButton
-            // 
-            WinTitleRadioButton.AutoSize = true;
-            WinTitleRadioButton.Checked = true;
-            WinTitleRadioButton.Location = new Point(422, 149);
-            WinTitleRadioButton.Name = "WinTitleRadioButton";
-            WinTitleRadioButton.Size = new Size(14, 13);
-            WinTitleRadioButton.TabIndex = 40;
-            WinTitleRadioButton.TabStop = true;
-            WinTitleRadioButton.UseVisualStyleBackColor = true;
-            WinTitleRadioButton.CheckedChanged += WinTitleRadioButton_CheckedChanged;
-            // 
-            // ProcNameRadioButton
-            // 
-            ProcNameRadioButton.AutoSize = true;
-            ProcNameRadioButton.Location = new Point(422, 95);
-            ProcNameRadioButton.Name = "ProcNameRadioButton";
-            ProcNameRadioButton.Size = new Size(14, 13);
-            ProcNameRadioButton.TabIndex = 39;
-            ProcNameRadioButton.UseVisualStyleBackColor = true;
-            ProcNameRadioButton.CheckedChanged += ProcNameRadioButton_CheckedChanged;
             // 
             // label2
             // 
@@ -326,21 +296,19 @@
             // 
             // WindowTitle
             // 
-            WindowTitle.AutoSize = true;
             WindowTitle.Font = new Font("Segoe UI", 9F, FontStyle.Regular, GraphicsUnit.Point);
-            WindowTitle.Location = new Point(442, 171);
+            WindowTitle.Location = new Point(516, 110);
             WindowTitle.Name = "WindowTitle";
-            WindowTitle.Size = new Size(139, 15);
+            WindowTitle.Size = new Size(159, 66);
             WindowTitle.TabIndex = 37;
             WindowTitle.Text = "Window Title Name Here";
             // 
             // ProcessName
             // 
-            ProcessName.AutoSize = true;
             ProcessName.Font = new Font("Segoe UI", 9F, FontStyle.Regular, GraphicsUnit.Point);
-            ProcessName.Location = new Point(442, 117);
+            ProcessName.Location = new Point(279, 110);
             ProcessName.Name = "ProcessName";
-            ProcessName.Size = new Size(110, 15);
+            ProcessName.Size = new Size(136, 66);
             ProcessName.TabIndex = 36;
             ProcessName.Text = "Process Name Here";
             // 
@@ -348,11 +316,21 @@
             // 
             label3.AutoSize = true;
             label3.Font = new Font("Segoe UI", 12F, FontStyle.Bold, GraphicsUnit.Point);
-            label3.Location = new Point(442, 89);
+            label3.Location = new Point(298, 89);
             label3.Name = "label3";
             label3.Size = new Size(117, 21);
             label3.TabIndex = 35;
             label3.Text = "Process Name";
+            // 
+            // hWnd
+            // 
+            hWnd.AutoSize = true;
+            hWnd.Location = new Point(636, 58);
+            hWnd.Name = "hWnd";
+            hWnd.Size = new Size(39, 15);
+            hWnd.TabIndex = 34;
+            hWnd.Text = "hWnd";
+            hWnd.Visible = false;
             // 
             // RefreshWindowButton
             // 
@@ -395,7 +373,7 @@
             // AutoPosition
             // 
             AutoPosition.AutoSize = true;
-            AutoPosition.Location = new Point(354, 286);
+            AutoPosition.Location = new Point(577, 199);
             AutoPosition.Name = "AutoPosition";
             AutoPosition.Size = new Size(98, 19);
             AutoPosition.TabIndex = 20;
@@ -439,7 +417,7 @@
             // KeepWindowOnTop
             // 
             KeepWindowOnTop.AutoSize = true;
-            KeepWindowOnTop.Location = new Point(523, 286);
+            KeepWindowOnTop.Location = new Point(577, 233);
             KeepWindowOnTop.Name = "KeepWindowOnTop";
             KeepWindowOnTop.Size = new Size(91, 19);
             KeepWindowOnTop.TabIndex = 24;
@@ -467,19 +445,30 @@
             lblSavedApps.TabIndex = 21;
             lblSavedApps.Text = "Saved Apps";
             // 
+            // SkipConfirmationCheckbox
+            // 
+            SkipConfirmationCheckbox.AutoSize = true;
+            SkipConfirmationCheckbox.Location = new Point(740, 371);
+            SkipConfirmationCheckbox.Name = "SkipConfirmationCheckbox";
+            SkipConfirmationCheckbox.Size = new Size(161, 19);
+            SkipConfirmationCheckbox.TabIndex = 30;
+            SkipConfirmationCheckbox.Text = "Skip confirmation dialogs";
+            SkipConfirmationCheckbox.UseVisualStyleBackColor = true;
+            // 
             // toolTip1
             // 
             toolTip1.ToolTipIcon = ToolTipIcon.Info;
             // 
-            // hWnd
+            // Time
             // 
-            hWnd.AutoSize = true;
-            hWnd.Location = new Point(636, 58);
-            hWnd.Name = "hWnd";
-            hWnd.Size = new Size(39, 15);
-            hWnd.TabIndex = 34;
-            hWnd.Text = "hWnd";
-            hWnd.Visible = false;
+            Time.AutoSize = true;
+            Time.BackColor = Color.Transparent;
+            Time.ForeColor = SystemColors.ControlLightLight;
+            Time.Location = new Point(488, 374);
+            Time.Name = "Time";
+            Time.Size = new Size(22, 15);
+            Time.TabIndex = 18;
+            Time.Text = "0   ";
             // 
             // Form1
             // 
@@ -489,11 +478,7 @@
             BackgroundImage = Properties.Resources.blue_mesh_background;
             BackgroundImageLayout = ImageLayout.Center;
             ClientSize = new Size(958, 397);
-            Controls.Add(UpdateTimerInterval);
             Controls.Add(panel1);
-            Controls.Add(Time);
-            Controls.Add(lblTime);
-            Controls.Add(lblUpdateTimerInterval);
             DoubleBuffered = true;
             Icon = (Icon)resources.GetObject("$this.Icon");
             Name = "Form1";
@@ -525,7 +510,6 @@
         private TextBox UpdateTimerInterval;
         private Label lblUpdateTimerInterval;
         private Label lblTime;
-        private Label Time;
         private Panel panel1;
         private CheckBox AutoPosition;
         private Label lblAllRunningApps;
@@ -543,9 +527,10 @@
         private Label WindowTitle;
         private Label label2;
         private ToolTip toolTip1;
-        private RadioButton WinTitleRadioButton;
-        private RadioButton ProcNameRadioButton;
         private ComboBox profileComboBox;
         private Label hWnd;
+        private CheckBox SkipConfirmationCheckbox;
+        private CheckBox UsePercentagesCheckBox;
+        private Label Time;
     }
 }

@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(IgnoreForm));
             IgnoreListBox = new ListBox();
             button1 = new Button();
             label1 = new Label();
@@ -78,6 +79,8 @@
             Controls.Add(label1);
             Controls.Add(button1);
             Controls.Add(IgnoreListBox);
+            Icon = (Icon)resources.GetObject("$this.Icon");
+            MaximizeBox = false;
             Name = "IgnoreForm";
             Text = "Ignore List";
             FormClosing += IgnoreForm_FormClosing;

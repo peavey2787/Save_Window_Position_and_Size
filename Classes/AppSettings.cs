@@ -1,4 +1,5 @@
 ﻿using System.Configuration;
+using Newtonsoft.Json;
 
 namespace Save_Window_Position_and_Size.Classes
 {
@@ -39,6 +40,27 @@ namespace Save_Window_Position_and_Size.Classes
             {
                 return key_config.Value;
             }
+        }
+    }
+
+    public static class AppSettings<T>
+    {
+        public static void Save(string key, T value)
+        {
+            string jsonValue = JsonConvert.SerializeObject(value);
+            AppSettings.Save(key, jsonValue);
+        }
+
+        public static T Load(string key)
+        {
+            string jsonValue = AppSettings.Load(key);
+
+            if (string.IsNullOrEmpty(jsonValue))
+            {
+                return default;
+            }
+
+            return JsonConvert.DeserializeObject<T>(jsonValue);
         }
     }
 }
