@@ -400,8 +400,7 @@ namespace Save_Window_Position_and_Size
             // Get current profile index
             int profileIndex = windowManager.GetCurrentProfileIndex();
 
-            // Clear existing windows in the current profile (first switch to it to ensure it's loaded)
-            windowManager.SwitchToProfile(profileIndex);
+            // Clear existing windows in the current profile
             windowManager.ClearCurrentProfileWindows();
 
             // Make sure the ignore list is up-to-date
@@ -418,9 +417,17 @@ namespace Save_Window_Position_and_Size
                 windowManager.AddOrUpdateWindow(window);
             }
 
+            // Save changes explicitly to ensure they're persisted
+            windowManager.SaveChanges();
+
             // Update UI if the main form is visible
             if (this.Visible)
             {
+                // Update the profile combobox to show the current profile
+                if (profileComboBox.SelectedIndex != profileIndex)
+                {
+                    profileComboBox.SelectedIndex = profileIndex;
+                }
                 RefreshSavedWindowsListBox();
             }
         }
