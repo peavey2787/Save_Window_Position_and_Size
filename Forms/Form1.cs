@@ -264,7 +264,7 @@ namespace Save_Window_Position_and_Size
             contextMenu.Items.Add(profileSwitcherMenu);
 
             // Add settings menu item
-            contextMenu.Items.Add(CreateMenuItem("Settings", Properties.Resources.pin, OnOpenSettings, imageSize));
+            contextMenu.Items.Add(CreateMenuItem("Settings", Properties.Resources.settings, OnOpenSettings, imageSize));
 
             // Add a separator before Exit
             contextMenu.Items.Add(new ToolStripSeparator());

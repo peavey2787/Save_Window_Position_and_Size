@@ -133,6 +133,16 @@ namespace Save_Window_Position_and_Size.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        public static System.Drawing.Bitmap redo_all {
+            get {
+                object obj = ResourceManager.GetObject("redo-all", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         public static System.Drawing.Bitmap refresh_blue_arrows {
             get {
                 object obj = ResourceManager.GetObject("refresh-blue-arrows", resourceCulture);
@@ -143,9 +153,29 @@ namespace Save_Window_Position_and_Size.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        public static System.Drawing.Bitmap settings {
+            get {
+                object obj = ResourceManager.GetObject("settings", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         public static System.Drawing.Bitmap stop_button {
             get {
                 object obj = ResourceManager.GetObject("stop-button", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap trash_can {
+            get {
+                object obj = ResourceManager.GetObject("trash-can", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
