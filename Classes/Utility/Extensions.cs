@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Save_Window_Position_and_Size.Classes;
 
 namespace Save_Window_Position_and_Size.Classes
 {

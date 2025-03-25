@@ -1,82 +1,27 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using System.IO;
+using System.Diagnostics;
 
 namespace Save_Window_Position_and_Size.Classes
 {
     /// <summary>
-    /// Represents a profile containing a collection of windows
-    /// </summary>
-    internal class Profile
-    {
-        public string Name { get; set; }
-        public List<Window> Windows { get; set; } = new List<Window>();
-
-        public Profile(string name)
-        {
-            Name = name;
-        }
-
-        public Profile Clone()
-        {
-            Profile clone = new Profile(this.Name);
-            foreach (Window window in this.Windows.Where(w => w.IsValid()))
-            {
-                clone.Windows.Add(window.Clone());
-            }
-            return clone;
-        }
-    }
-
-    /// <summary>
-    /// Collection of profiles with active profile tracking
-    /// </summary>
-    internal class ProfileCollection
-    {
-        public List<Profile> Profiles { get; set; } = new List<Profile>();
-        public Profile SelectedProfile { get; set; }
-        public int SelectedProfileIndex
-        {
-            get
-            {
-                return Profiles.IndexOf(SelectedProfile);
-            }
-            set
-            {
-                if (value >= 0 && value < Profiles.Count)
-                {
-                    SelectedProfile = Profiles[value];
-                }
-            }
-        }
-
-        public ProfileCollection(int maxProfiles)
-        {
-            // Initialize with default profiles
-            for (int i = 0; i < maxProfiles; i++)
-            {
-                Profiles.Add(new Profile($"Profile {i + 1}"));
-            }
-
-            // Set first profile as selected by default
-            SelectedProfile = Profiles.FirstOrDefault();
-        }
-    }
-
-    /// <summary>
     /// Manages window saving, loading and profile management
+    /// This is the central class for all window-related operations
     /// </summary>
     internal class WindowManager
     {
         private ProfileCollection profileCollection;
-        private Random random;
+        private IgnoreListManager ignoreListManager;
 
-        public WindowManager()
+        public WindowManager(IgnoreListManager ignoreListManager)
         {
-            random = new Random();
+            this.ignoreListManager = ignoreListManager;
 
             // Initialize profiles
             profileCollection = new ProfileCollection(Constants.Defaults.MaxProfiles);
@@ -93,6 +38,8 @@ namespace Save_Window_Position_and_Size.Classes
                 profileCollection.SelectedProfileIndex = savedIndex;
             }
         }
+
+        #region Public Profile Management Methods
 
         /// <summary>
         /// Gets all windows in the current profile
@@ -145,6 +92,10 @@ namespace Save_Window_Position_and_Size.Classes
             SaveAllProfiles();
             return true;
         }
+
+        #endregion
+
+        #region Public Window Management Methods
 
         /// <summary>
         /// Adds or updates a window in the current profile
@@ -200,63 +151,271 @@ namespace Save_Window_Position_and_Size.Classes
         }
 
         /// <summary>
-        /// Gets a window by title from the current profile
-        /// </summary>
-        public Window GetWindowByTitle(string title)
-        {
-            if (string.IsNullOrWhiteSpace(title) || profileCollection.SelectedProfile == null)
-                return new Window();
-
-            // Look for the window in the current profile's saved windows
-            return profileCollection.SelectedProfile.Windows.FirstOrDefault(w => w.TitleName == title) ?? new Window();
-        }
-
-        /// <summary>
-        /// Gets a window by display name from the current profile
-        /// </summary>
-        public Window GetWindowByName(string displayName)
-        {
-            if (string.IsNullOrWhiteSpace(displayName) || profileCollection.SelectedProfile == null)
-                return new Window();
-
-            // Look for the window in the current profile's saved windows by DisplayName
-            return profileCollection.SelectedProfile.Windows.FirstOrDefault(w => w.DisplayName == displayName) ?? new Window();
-        }
-
-        /// <summary>
-        /// Creates a new window with a random ID
-        /// </summary>
-        public Window CreateWindow()
-        {
-            return Window.CreateWithRandomId(random);
-        }
-
-        /// <summary>
         /// Restores all windows in the current profile
         /// </summary>
-        public void RestoreAllWindows(IgnoreListManager ignoreListManager, List<Window> allWindows,  bool useAutoPositionFlag = true)
+        public void RestoreAllWindows()
         {
             if (profileCollection.SelectedProfile == null)
                 return;
 
             foreach (Window window in profileCollection.SelectedProfile.Windows)
             {
-                if (useAutoPositionFlag && !window.AutoPosition)
+                if (!window.AutoPosition)
                     continue;
 
-                InteractWithWindow.RestoreWindow(window, allWindows);
+                RestoreWindow(window);
             }
         }
 
         /// <summary>
-        /// Saves any pending changes to the current profile
+        /// Restores a specific window to its saved position and size
         /// </summary>
-        public void SavePendingChanges()
+        public void RestoreWindow(Window window)
+        {
+            if (window == null || !window.IsValid())
+                return;
+
+            // Get window handle
+            IntPtr hWnd = GetWindowHandle(window);
+            if (hWnd == IntPtr.Zero)
+                return;
+
+            // Check if the window is minimized
+            if (InteractWithWindow.IsIconic(hWnd) || InteractWithWindow.IsWindowMinimized(window))
+            {
+                // Restore the window from minimized state
+                InteractWithWindow.ShowWindow(hWnd, 9); // SW_RESTORE = 9
+
+                // Give the window time to restore
+                System.Threading.Thread.Sleep(100);
+            }
+
+            // Set window position and size
+            UpdateWindowPositionAndSize(window);
+
+            // Set always on top if needed
+            if (window.KeepOnTop)
+            {
+                SetWindowAlwaysOnTop(window, true);
+            }
+        }
+
+        /// <summary>
+        /// Updates the window position and size
+        /// </summary>
+        public void UpdateWindowPositionAndSize(Window window)
+        {
+            if (window == null || !window.IsValid())
+                return;
+
+            InteractWithWindow.SetWindowPositionAndSize(window, window.WindowPosAndSize);
+        }
+
+        /// <summary>
+        /// Gets running applications with option to filter for only visible ones
+        /// </summary>
+        public List<Window> GetRunningApps(bool onlyVisible = false)
+        {
+            var windows = new List<Window>();
+
+            // Get a list of window titles to ignore
+            var ignoreList = ignoreListManager?.GetIgnoreList() ?? new List<string>();
+
+            // Get all application windows using the exact original approach
+            var appWindows = InteractWithWindow.GetApplicationWindows(onlyVisible, ignoreList);
+
+            // Process each application window
+            foreach (var kvp in appWindows)
+            {
+                IntPtr handle = kvp.Key;
+                string title = kvp.Value;
+
+                // Create a Window object
+                Window window = new Window(handle, title, title);
+
+                // Get process information
+                try
+                {
+                    uint processId;
+                    InteractWithWindow.GetWindowThreadProcessId(handle, out processId);
+                    if (processId > 0)
+                    {
+                        Process process = Process.GetProcessById((int)processId);
+                        window.ProcessName = process.ProcessName;
+
+                        // Check if this is a file explorer window
+                        if (process.ProcessName.Equals("explorer", StringComparison.OrdinalIgnoreCase) &&
+                            (title.StartsWith("File Explorer", StringComparison.OrdinalIgnoreCase) ||
+                            title.StartsWith("This PC", StringComparison.OrdinalIgnoreCase) ||
+                            title.Contains(":\\") || title.Contains("Explorer")))
+                        {
+                            window.IsFileExplorer = true;
+                        }
+                    }
+                }
+                catch
+                {
+                    window.ProcessName = "Unknown";
+                }
+
+                // Get window position and size
+                window.WindowPosAndSize = GetWindowPositionAndSize(window);
+
+                windows.Add(window);
+            }
+
+            // Add file explorer windows from the special File Explorer handler
+            var fileExplorerWindows = GetFileExplorerWindows();
+
+            // Add them to the result if they're not already in the list
+            foreach (var explorerWindow in fileExplorerWindows)
+            {
+                // Skip if already in the result (to avoid duplicates)
+                if (windows.Any(w => w.TitleName == explorerWindow.TitleName))
+                {
+                    continue;
+                }
+
+                windows.Add(explorerWindow);
+            }
+
+            return windows;
+        }
+
+        /// <summary>
+        /// Gets all visible running applications - convenience method that calls GetRunningApps(true)
+        /// </summary>
+        public List<Window> GetVisibleRunningApps()
+        {
+            return GetRunningApps(true);
+        }
+
+        /// <summary>
+        /// Gets all running applications - convenience method that calls GetRunningApps(false)
+        /// </summary>
+        public List<Window> GetAllRunningApps()
+        {
+            return GetRunningApps(false);
+        }
+
+        /// <summary>
+        /// Gets the File Explorer windows
+        /// </summary>
+        private List<Window> GetFileExplorerWindows()
+        {
+            var windows = new List<Window>();
+
+            // Get file explorer windows from InteractWithWindow
+            var fileExplorerWindows = InteractWithWindow.GetFileExplorerWindows();
+
+            foreach (var explorerWindow in fileExplorerWindows)
+            {
+                var (handle, title, processName, isFileExplorer, position) = explorerWindow;
+
+                // Create a window object
+                Window window = new Window();
+                window.IsFileExplorer = true;
+                window.TitleName = title;
+                window.DisplayName = Path.GetFileName(title.Split(new[] { " - " }, StringSplitOptions.RemoveEmptyEntries).LastOrDefault() ?? "");
+                window.ProcessName = processName;
+                window.WindowPosAndSize = position;
+
+                // Skip windows in the ignore list
+                if (ignoreListManager != null && ignoreListManager.ShouldIgnoreWindow(window))
+                {
+                    continue;
+                }
+
+                windows.Add(window);
+            }
+
+            return windows;
+        }
+
+        /// <summary>
+        /// Gets the current position and size of a window
+        /// </summary>
+        public WindowPosAndSize GetWindowPositionAndSize(Window window)
+        {
+            return InteractWithWindow.GetWindowPositionAndSize(window);
+        }
+
+        /// <summary>
+        /// Sets the always-on-top state for a window
+        /// </summary>
+        public void SetWindowAlwaysOnTop(Window window, bool keepOnTop)
+        {
+            if (window == null || !window.IsValid())
+                return;
+
+            IntPtr hWnd = GetWindowHandle(window);
+
+            if (hWnd == IntPtr.Zero)
+                return;
+
+            if (keepOnTop)
+                InteractWithWindow.SetWindowAlwaysOnTop(hWnd);
+            else
+                InteractWithWindow.UnsetWindowAlwaysOnTop(hWnd);
+        }
+
+        /// <summary>
+        /// Gets screen dimensions
+        /// </summary>
+        public (int Width, int Height) GetScreenDimensions()
+        {
+            return InteractWithWindow.GetScreenDimensions();
+        }
+
+        /// <summary>
+        /// Sets the foreground window (brings window to front)
+        /// </summary>
+        public void SetForegroundWindow(IntPtr hWnd)
+        {
+            InteractWithWindow.SetForegroundWindow(hWnd);
+        }
+
+        /// <summary>
+        /// Save any pending changes
+        /// </summary>
+        public void SaveChanges()
         {
             SaveAllProfiles();
         }
 
+        #endregion
+
         #region Private Methods
+
+        /// <summary>
+        /// Gets the saved window position and size
+        /// </summary>
+        private WindowPosAndSize GetSavedWindowPosAndSize(Window window)
+        {
+            var windowPosAndSize = new WindowPosAndSize();
+
+            var currentWindows = GetCurrentProfileWindows();
+
+            foreach (var currentWindow in currentWindows)
+            {
+                if (currentWindow.Id == window.Id)
+                    windowPosAndSize = window.WindowPosAndSize;
+            }
+
+            return windowPosAndSize;
+        }
+
+        /// <summary>
+        /// Gets the window handle using window title or process name
+        /// </summary>
+        private IntPtr GetWindowHandle(Window window)
+        {
+            if (window.IsFileExplorer)
+                return InteractWithWindow.FindWindowByTitle(window.TitleName);
+            else
+                return InteractWithWindow.GetWindowHandleByWindowAndProcess(window, ignoreListManager);
+        }
+
         private void LoadAllProfiles()
         {
             try
@@ -277,10 +436,8 @@ namespace Save_Window_Position_and_Size.Classes
                     }
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                System.Diagnostics.Debug.WriteLine($"Error loading profiles: {ex.Message}");
-
                 // Initialize with defaults in case of error
                 profileCollection = new ProfileCollection(Constants.Defaults.MaxProfiles);
             }
@@ -293,9 +450,9 @@ namespace Save_Window_Position_and_Size.Classes
                 // Save the entire ProfileCollection directly
                 AppSettings<ProfileCollection>.Save(Constants.AppSettingsConstants.SavedWindowsKey, profileCollection);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                System.Diagnostics.Debug.WriteLine($"Error saving profiles: {ex.Message}");
+                // Error saving profiles - silently handle
             }
         }
         #endregion

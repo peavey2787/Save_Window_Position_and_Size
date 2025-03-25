@@ -1,7 +1,6 @@
 using Newtonsoft.Json;
 using Save_Window_Position_and_Size.Classes;
 using System;
-using System.Diagnostics;
 using System.Drawing;
 using System.Windows.Forms;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
@@ -51,8 +50,7 @@ namespace Save_Window_Position_and_Size
                         minutes = 1;
 
                     // Timer elapsed perform window restores
-                    var allWindows = windowManager.GetCurrentProfileWindows();
-                    await Task.Run(() => { windowManager.RestoreAllWindows(ignoreListManager, allWindows, true); });
+                    await Task.Run(() => { windowManager.RestoreAllWindows(); });
                 }
             }
         }
@@ -66,11 +64,11 @@ namespace Save_Window_Position_and_Size
         {
             InitializeComponent();
 
-            // Initialize the window manager
-            windowManager = new WindowManager();
-
-            // Initialize the ignore list manager
+            // Initialize the ignore list manager first
             ignoreListManager = new IgnoreListManager();
+
+            // Initialize the window manager with the ignore list manager
+            windowManager = new WindowManager(ignoreListManager);
 
             // Initialize the window highlighter
             InitializeHighlighter();
@@ -129,10 +127,6 @@ namespace Save_Window_Position_and_Size
                         ClearWindowGUI();
                     }
                 }
-                else
-                {
-                    Debug.WriteLine($"Invalid item type in context menu handler: {AllRunningApps.SelectedItem?.GetType().Name ?? "null"}");
-                }
             };
             contextMenuStrip.Items.Add(ignoreMenuItem);
             AllRunningApps.ContextMenuStrip = contextMenuStrip;
@@ -154,6 +148,9 @@ namespace Save_Window_Position_and_Size
             toolTip1.SetToolTip(RefreshWindowButton, "Refresh and get the selected app's current window size/location");
             toolTip1.SetToolTip(Restore, "Restore the selected app's saved window size/location");
             toolTip1.SetToolTip(SkipConfirmationCheckbox, "When checked, capture layout actions will be performed without confirmation prompts");
+
+            // Handle the UsePercentagesCheckBox changes
+            UsePercentagesCheckBox.CheckedChanged += UsePercentagesCheckBox_CheckedChanged;
         }
 
         // Shutdown
@@ -181,11 +178,10 @@ namespace Save_Window_Position_and_Size
             try
             {
                 // Save any pending changes before hiding
-                windowManager.SavePendingChanges();
+                windowManager.SaveChanges();
 
-                // Stop any active highlighting and save any pending changes
+                // Stop any active highlighting
                 windowHighlighter.StopHighlighting();
-                windowManager.SavePendingChanges();
 
                 // Clean up notify icon (make invisible first to prevent ghost icons)
                 if (notify_icon != null)
@@ -215,9 +211,8 @@ namespace Save_Window_Position_and_Size
                 Application.Exit();
                 Environment.Exit(0);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                Debug.WriteLine($"Error closing app: {ex.Message}");
                 Environment.Exit(1); // Force exit
             }
         }
@@ -410,19 +405,14 @@ namespace Save_Window_Position_and_Size
             // Make sure the ignore list is up-to-date
             ignoreListManager.LoadIgnoreList();
 
-            Debug.WriteLine("=== Capturing Current Layout ===");
-            Debug.WriteLine($"Current ignore list contains {ignoreListManager.GetIgnoreList().Count} items:");
-            foreach (var item in ignoreListManager.GetIgnoreList())
-            {
-                Debug.WriteLine($"- \"{item}\"");
-            }
-
-            // Get all windows for layout capture using centralized method
-            var windowsForCapture = InteractWithWindow.GetVisibleRunningApps(ignoreListManager);
+            // Get all windows for layout capture using window manager
+            var windowsForCapture = windowManager.GetVisibleRunningApps();
 
             // Add each window to current profile
             foreach (var window in windowsForCapture)
             {
+                // Set each window's Auto Position to true
+                window.AutoPosition = true;
                 windowManager.AddOrUpdateWindow(window);
             }
 
@@ -451,6 +441,8 @@ namespace Save_Window_Position_and_Size
 
             // Save window to current profile
             windowManager.AddOrUpdateWindow(window);
+
+            RefreshSavedWindowsListBox();
         }
 
         private void Restore_Click(object sender, EventArgs e)
@@ -465,13 +457,12 @@ namespace Save_Window_Position_and_Size
                 var saved = windowManager.GetWindowById(window.Id);
                 if (saved.IsValid())
                 {
-                    window.UpdatePositionAndSize(saved);
+                    windowManager.UpdateWindowPositionAndSize(saved);
                 }
             }
 
             // Restore the window
-            var allWindows = windowManager.GetCurrentProfileWindows();
-            InteractWithWindow.RestoreWindow(window, allWindows);
+            windowManager.RestoreWindow(window);
 
             // Update the UI
             SetWindowGui(window);
@@ -479,8 +470,7 @@ namespace Save_Window_Position_and_Size
 
         private void RestoreAll_Click(object sender, EventArgs e)
         {
-            var allWindows = windowManager.GetCurrentProfileWindows();
-            windowManager.RestoreAllWindows(ignoreListManager, allWindows, false);
+            windowManager.RestoreAllWindows();
         }
 
         private void IgnoreButton_Click(object sender, EventArgs e)
@@ -497,19 +487,8 @@ namespace Save_Window_Position_and_Size
             Window window = GetWindowFromGui();
             if (!window.IsValid()) return;
 
-            // Handle File Explorer windows
-            if (window.IsFileExplorer)
-            {
-                window.WindowPosAndSize = InteractWithWindow.GetFileExplorerPosAndSize(window);
-                SetWindowGui(window);
-                return;
-            }
-
-            // Get handle and position for normal windows
-            var hWnd = InteractWithWindow.GetWindowHandleByWindowAndProcess(window);
-            if (hWnd == IntPtr.Zero) return;
-
-            window.WindowPosAndSize = InteractWithWindow.GetWindowPositionAndSize(hWnd);
+            // Get current window position and size using the window manager
+            window.WindowPosAndSize = windowManager.GetWindowPositionAndSize(window);
             SetWindowGui(window);
         }
 
@@ -547,13 +526,9 @@ namespace Save_Window_Position_and_Size
             SetWindowGUIState(true);
 
             // Try to highlight the window if it's currently running
-            IntPtr hWnd = window.IsFileExplorer
-                ? InteractWithWindow.FindWindowByTitle(window.TitleName)
-                : InteractWithWindow.GetWindowHandleByWindowAndProcess(window);
-
-            if (hWnd != IntPtr.Zero)
+            if (window.hWnd != IntPtr.Zero)
             {
-                HighlightWindow(hWnd);
+                HighlightWindow(window.hWnd);
             }
         }
 
@@ -571,8 +546,8 @@ namespace Save_Window_Position_and_Size
                     return;
                 }
 
-                // Get current window pos and size
-                window.GetWindowPosAndSize();
+                // Get current window position and size
+                window.WindowPosAndSize = windowManager.GetWindowPositionAndSize(window);
 
                 // Fill GUI with window data using the helper method
                 SetWindowGui(window);
@@ -585,7 +560,6 @@ namespace Save_Window_Position_and_Size
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Error in AllRunningApps_SelectedIndexChanged: {ex.Message}");
                 MessageBox.Show($"Error processing selected window: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
@@ -683,14 +657,7 @@ namespace Save_Window_Position_and_Size
             window.KeepOnTop = KeepWindowOnTop.Checked;
 
             // Apply keep on top setting to actual window
-            var hWnd = InteractWithWindow.GetWindowHandleByWindowAndProcess(window);
-            if (hWnd != IntPtr.Zero)
-            {
-                if (window.KeepOnTop)
-                    InteractWithWindow.SetWindowAlwaysOnTop(hWnd);
-                else
-                    InteractWithWindow.UnsetWindowAlwaysOnTop(hWnd);
-            }
+            windowManager.SetWindowAlwaysOnTop(window, window.KeepOnTop);
 
             // Save the window
             windowManager.AddOrUpdateWindow(window);
@@ -711,24 +678,22 @@ namespace Save_Window_Position_and_Size
             if (!window.IsValid()) return;
 
             // Get screen dimensions
-            var (screenWidth, screenHeight) = InteractWithWindow.GetScreenDimensions();
+            var (screenWidth, screenHeight) = windowManager.GetScreenDimensions();
 
             // Update the window's percentage setting
             window.UsePercentages = UsePercentagesCheckBox.Checked;
             window.WindowPosAndSize.IsPercentageBased = UsePercentagesCheckBox.Checked;
 
-            var allWindows = windowManager.GetCurrentProfileWindows();
-
             // Convert values as needed
             if (UsePercentagesCheckBox.Checked)
             {
                 // Convert current pixel values to percentages for display
-                window.WindowPosAndSize.ConvertToPercentages(screenWidth, screenHeight, allWindows);
+                window.WindowPosAndSize.ConvertToPercentages(screenWidth, screenHeight);
             }
             else
             {
                 // Convert current percentage values to pixels for display
-                window.WindowPosAndSize.ConvertToPixels(screenWidth, screenHeight, allWindows);
+                window.WindowPosAndSize.ConvertToPixels(screenWidth, screenHeight);
             }
 
             // Update the UI with the new values
@@ -822,29 +787,13 @@ namespace Save_Window_Position_and_Size
         {
             AllRunningApps.Items.Clear();
 
-            var taskbarApps = InteractWithWindow.GetAllRunningApps(ignoreListManager);
+            var taskbarApps = windowManager.GetAllRunningApps();
 
             // Add each application to the listbox
             foreach (var app in taskbarApps)
             {
                 AllRunningApps.Items.Add(app);
             }
-
-            // Add File Explorer windows, also checking ignore list
-            var fileExplorers = InteractWithWindow.GetFileExplorerWindows(ignoreListManager);
-            foreach (var explorer in fileExplorers)
-            {
-                // Check if this explorer window should be ignored
-                if (ignoreListManager.ShouldIgnoreWindow(explorer))
-                {
-                    Debug.WriteLine($"Ignoring File Explorer in background task: \"{explorer.TitleName}\"");
-                    continue;
-                }
-
-                AllRunningApps.Items.Add(explorer);
-            }
-
-            Debug.WriteLine($"UpdateRunningApps added {AllRunningApps.Items.Count} items");
         }
 
         private Window GetWindowFromGui()
@@ -865,7 +814,7 @@ namespace Save_Window_Position_and_Size
             }
 
             // Create a new window
-            window = windowManager.CreateWindow();
+            window = new Window();
             UpdateWindowFromUI(window);
 
             return window;
@@ -882,8 +831,6 @@ namespace Save_Window_Position_and_Size
             // Update DisplayName
             if (!string.IsNullOrWhiteSpace(WindowDisplayName.Text))
                 window.DisplayName = WindowDisplayName.Text;
-            else
-                window.EnsureValidDisplayName();
 
             window.TitleName = WindowTitle.Text;
 
@@ -921,7 +868,7 @@ namespace Save_Window_Position_and_Size
 
             ProcessName.Text = !string.IsNullOrWhiteSpace(window.ProcessName)
                 ? window.ProcessName
-                : InteractWithWindow.GetProcessNameByWindowTitle(window.TitleName);
+                : "";
 
             WindowDisplayName.Text = !string.IsNullOrWhiteSpace(window.DisplayName)
                 ? window.DisplayName
@@ -929,7 +876,7 @@ namespace Save_Window_Position_and_Size
 
             WindowTitle.Text = !string.IsNullOrWhiteSpace(window.TitleName)
                 ? window.TitleName
-                : InteractWithWindow.GetWindowTitleByProcessName(window.ProcessName);
+                : "";
 
             // Adjust the label's size to fit the wrapped text:
             WindowTitle.Size = new System.Drawing.Size(WindowTitle.MaximumSize.Width,
@@ -940,11 +887,7 @@ namespace Save_Window_Position_and_Size
 
             if (window.WindowPosAndSize == null)
             {
-                window.GetWindowPosAndSize();
-                if (window.WindowPosAndSize == null)
-                {
-                    return;
-                }
+                return;
             }
 
             string suffix = window.UsePercentages ? "%" : "";
@@ -952,25 +895,6 @@ namespace Save_Window_Position_and_Size
             WindowPosY.Text = window.WindowPosAndSize.Y.ToString() + suffix;
             WindowWidth.Text = window.WindowPosAndSize.Width.ToString() + suffix;
             WindowHeight.Text = window.WindowPosAndSize.Height.ToString() + suffix;
-
-            // Percentages
-            var (screenWidth, screenHeight) = InteractWithWindow.GetScreenDimensions();
-            var allWindows = windowManager.GetCurrentProfileWindows();
-
-            if (window.UsePercentages)
-            {
-                // Create a copy to avoid modifying the original
-                var tempPos = window.WindowPosAndSize;
-
-                // Convert to percentages
-                tempPos.ConvertToPercentages(screenWidth, screenHeight, allWindows);
-
-                // Display the converted values
-                WindowPosX.Text = tempPos.X.ToString() + suffix;
-                WindowPosY.Text = tempPos.Y.ToString() + suffix;
-                WindowWidth.Text = tempPos.Width.ToString() + suffix;
-                WindowHeight.Text = tempPos.Height.ToString() + suffix;
-            }
 
             // Set the percentage checkbox
             UsePercentagesCheckBox.Checked = window.UsePercentages;
@@ -1024,9 +948,9 @@ namespace Save_Window_Position_and_Size
                     windowHighlighter.BorderColor = customColor;
                     windowHighlighter.InnerBorderColor = customColor;
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
-                    Debug.WriteLine($"Error parsing highlighter color: {ex.Message}");
+                    // Silently handle exception
                 }
             }
         }
@@ -1040,25 +964,18 @@ namespace Save_Window_Position_and_Size
                     // Clear the listbox safely
                     AllRunningApps.ClearItemsThreadSafe();
 
-                    // Get taskbar application windows (this already includes filtering by the ignore list)
-                    var taskbarApps = InteractWithWindow.GetAllRunningApps(ignoreListManager);
+                    // Get running applications through window manager (which already includes filtering by the ignore list)
+                    var allApps = windowManager.GetAllRunningApps();
 
                     // Add each application to the listbox safely
-                    foreach (var app in taskbarApps)
+                    foreach (var app in allApps)
                     {
                         AllRunningApps.AddItemThreadSafe(app);
                     }
-
-                    // Add File Explorer windows also checking ignore list
-                    var fileExplorers = InteractWithWindow.GetFileExplorerWindows(ignoreListManager);
-                    foreach (var explorer in fileExplorers)
-                    {
-                        // Add Window object to list
-                        AllRunningApps.AddItemThreadSafe(explorer);
-                    }
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
+                    // Silently handle exception
                 }
             });
         }
@@ -1070,7 +987,7 @@ namespace Save_Window_Position_and_Size
                 if (windowHighlighter != null && hWnd != IntPtr.Zero)
                 {
                     // Bring window to front first
-                    InteractWithWindow.SetForegroundWindow(hWnd);
+                    windowManager.SetForegroundWindow(hWnd);
 
                     // Highlight the window
                     windowHighlighter.HighlightWindow(hWnd);
@@ -1080,14 +997,14 @@ namespace Save_Window_Position_and_Size
                     {
                         this.Invoke(new Action(() =>
                         {
-                            InteractWithWindow.SetForegroundWindow(this.Handle);
+                            windowManager.SetForegroundWindow(this.Handle);
                         }));
                     });
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                Debug.WriteLine($"Error highlighting window: {ex.Message}");
+                // Silently handle exception
             }
         }
 

@@ -1,4 +1,4 @@
-﻿# Save Window Position and Size
+# Save Window Position and Size
 
 ![Save_Window_Position_and_Size App Screen Shot](Resources/Screenshot.png)
 

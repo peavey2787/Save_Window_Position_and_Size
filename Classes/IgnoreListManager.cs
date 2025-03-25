@@ -1,9 +1,11 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Newtonsoft.Json;
+using Save_Window_Position_and_Size.Classes;
+using Save_Window_Position_and_Size.Classes;
 
 namespace Save_Window_Position_and_Size.Classes
 {
@@ -96,7 +98,7 @@ namespace Save_Window_Position_and_Size.Classes
             // Add the item to the list
             _ignoreList.Add(windowTitle);
             Debug.WriteLine($"Added to ignore list: {windowTitle}");
-
+            
             // Save the updated list
             SaveIgnoreList();
             return true;
@@ -112,14 +114,14 @@ namespace Save_Window_Position_and_Size.Classes
             if (string.IsNullOrWhiteSpace(windowTitle)) return false;
 
             // Find and remove the item
-            var itemToRemove = _ignoreList.FirstOrDefault(item =>
+            var itemToRemove = _ignoreList.FirstOrDefault(item => 
                 string.Equals(item, windowTitle, StringComparison.OrdinalIgnoreCase));
 
             if (itemToRemove != null)
             {
                 _ignoreList.Remove(itemToRemove);
                 Debug.WriteLine($"Removed from ignore list: {windowTitle}");
-
+                
                 // Save the updated list
                 SaveIgnoreList();
                 return true;
@@ -139,7 +141,7 @@ namespace Save_Window_Position_and_Size.Classes
 
             _ignoreList = new List<string>(newList);
             Debug.WriteLine($"Updated ignore list with {_ignoreList.Count} items");
-
+            
             // Save the updated list
             SaveIgnoreList();
         }
@@ -152,7 +154,7 @@ namespace Save_Window_Position_and_Size.Classes
         internal bool ShouldIgnoreWindow(Window window)
         {
             if (window == null) return false;
-
+            
             // Check the window's title name
             return ShouldIgnoreWindow(window.TitleName);
         }
@@ -178,23 +180,23 @@ namespace Save_Window_Position_and_Size.Classes
                 }
 
                 // Check if any ignore list entry is a substring of the window title
-                if (_ignoreList.Any(ignored =>
-                    !string.IsNullOrEmpty(ignored) &&
+                if (_ignoreList.Any(ignored => 
+                    !string.IsNullOrEmpty(ignored) && 
                     windowTitle.IndexOf(ignored, StringComparison.OrdinalIgnoreCase) >= 0))
                 {
                     Debug.WriteLine($"Ignore list substring match: \"{windowTitle}\"");
                     return true;
                 }
-
+                
                 // Check if window title is a substring of any ignore list entry
-                if (_ignoreList.Any(ignored =>
-                    !string.IsNullOrEmpty(windowTitle) &&
+                if (_ignoreList.Any(ignored => 
+                    !string.IsNullOrEmpty(windowTitle) && 
                     ignored.IndexOf(windowTitle, StringComparison.OrdinalIgnoreCase) >= 0))
                 {
                     Debug.WriteLine($"Window title is substring of ignore list item: \"{windowTitle}\"");
                     return true;
                 }
-
+                
                 return false;
             }
             catch (Exception ex)
@@ -211,7 +213,7 @@ namespace Save_Window_Position_and_Size.Classes
         {
             _ignoreList.Clear();
             Debug.WriteLine("Cleared ignore list");
-
+            
             // Save the updated list
             SaveIgnoreList();
         }
@@ -257,9 +259,9 @@ namespace Save_Window_Position_and_Size.Classes
             {
                 _ignoreList = new List<string>(list);
             }
-
+            
             Debug.WriteLine($"Set ignore list with {_ignoreList.Count} items");
             SaveIgnoreList();
         }
     }
-}
+} 

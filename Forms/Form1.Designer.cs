@@ -34,6 +34,7 @@
             UpdateTimerInterval = new TextBox();
             lblUpdateTimerInterval = new Label();
             lblTime = new Label();
+            Time = new Label();
             panel1 = new Panel();
             UsePercentagesCheckBox = new CheckBox();
             profileComboBox = new ComboBox();
@@ -55,7 +56,6 @@
             lblSavedApps = new Label();
             SkipConfirmationCheckbox = new CheckBox();
             toolTip1 = new ToolTip(components);
-            Time = new Label();
             panel1.SuspendLayout();
             SuspendLayout();
             // 
@@ -189,7 +189,7 @@
             // 
             // UpdateTimerInterval
             // 
-            UpdateTimerInterval.Location = new Point(171, 364);
+            UpdateTimerInterval.Location = new Point(176, 367);
             UpdateTimerInterval.Name = "UpdateTimerInterval";
             UpdateTimerInterval.Size = new Size(25, 23);
             UpdateTimerInterval.TabIndex = 15;
@@ -201,7 +201,7 @@
             lblUpdateTimerInterval.AutoSize = true;
             lblUpdateTimerInterval.BackColor = Color.Transparent;
             lblUpdateTimerInterval.ForeColor = SystemColors.ControlLightLight;
-            lblUpdateTimerInterval.Location = new Point(12, 368);
+            lblUpdateTimerInterval.Location = new Point(12, 370);
             lblUpdateTimerInterval.Name = "lblUpdateTimerInterval";
             lblUpdateTimerInterval.Size = new Size(164, 15);
             lblUpdateTimerInterval.TabIndex = 16;
@@ -212,24 +212,35 @@
             lblTime.AutoSize = true;
             lblTime.BackColor = Color.Transparent;
             lblTime.ForeColor = SystemColors.ControlLightLight;
-            lblTime.Location = new Point(417, 374);
+            lblTime.Location = new Point(433, 370);
             lblTime.Name = "lblTime";
             lblTime.Size = new Size(65, 15);
             lblTime.TabIndex = 17;
             lblTime.Text = "Refresh in: ";
+            // 
+            // Time
+            // 
+            Time.AutoSize = true;
+            Time.BackColor = Color.Transparent;
+            Time.ForeColor = SystemColors.ControlLightLight;
+            Time.Location = new Point(496, 370);
+            Time.Name = "Time";
+            Time.Size = new Size(22, 15);
+            Time.TabIndex = 18;
+            Time.Text = "0   ";
             // 
             // panel1
             // 
             panel1.AutoSize = true;
             panel1.BackColor = Color.Transparent;
             panel1.Controls.Add(UpdateTimerInterval);
-            panel1.Controls.Add(lblTime);
             panel1.Controls.Add(UsePercentagesCheckBox);
             panel1.Controls.Add(profileComboBox);
+            panel1.Controls.Add(lblUpdateTimerInterval);
             panel1.Controls.Add(Time);
             panel1.Controls.Add(label2);
+            panel1.Controls.Add(lblTime);
             panel1.Controls.Add(WindowTitle);
-            panel1.Controls.Add(lblUpdateTimerInterval);
             panel1.Controls.Add(ProcessName);
             panel1.Controls.Add(label3);
             panel1.Controls.Add(hWnd);
@@ -272,7 +283,6 @@
             UsePercentagesCheckBox.TabIndex = 42;
             UsePercentagesCheckBox.Text = "Use Percentages";
             UsePercentagesCheckBox.UseVisualStyleBackColor = true;
-            UsePercentagesCheckBox.CheckedChanged += UsePercentagesCheckBox_CheckedChanged;
             // 
             // profileComboBox
             // 
@@ -448,7 +458,7 @@
             // SkipConfirmationCheckbox
             // 
             SkipConfirmationCheckbox.AutoSize = true;
-            SkipConfirmationCheckbox.Location = new Point(740, 371);
+            SkipConfirmationCheckbox.Location = new Point(741, 369);
             SkipConfirmationCheckbox.Name = "SkipConfirmationCheckbox";
             SkipConfirmationCheckbox.Size = new Size(161, 19);
             SkipConfirmationCheckbox.TabIndex = 30;
@@ -458,17 +468,6 @@
             // toolTip1
             // 
             toolTip1.ToolTipIcon = ToolTipIcon.Info;
-            // 
-            // Time
-            // 
-            Time.AutoSize = true;
-            Time.BackColor = Color.Transparent;
-            Time.ForeColor = SystemColors.ControlLightLight;
-            Time.Location = new Point(488, 374);
-            Time.Name = "Time";
-            Time.Size = new Size(22, 15);
-            Time.TabIndex = 18;
-            Time.Text = "0   ";
             // 
             // Form1
             // 
@@ -510,6 +509,7 @@
         private TextBox UpdateTimerInterval;
         private Label lblUpdateTimerInterval;
         private Label lblTime;
+        private Label Time;
         private Panel panel1;
         private CheckBox AutoPosition;
         private Label lblAllRunningApps;
@@ -531,6 +531,5 @@
         private Label hWnd;
         private CheckBox SkipConfirmationCheckbox;
         private CheckBox UsePercentagesCheckBox;
-        private Label Time;
     }
 }

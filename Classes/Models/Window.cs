@@ -25,18 +25,20 @@ namespace Save_Window_Position_and_Size.Classes
             ProcessName = string.Empty;
             TitleName = string.Empty;
             DisplayName = string.Empty;
+            this.Id = GenerateRandomId();
         }
 
         public Window(IntPtr hWnd, string windowTitle, string displayName)
         {
+            WindowPosAndSize = new WindowPosAndSize();
             this.hWnd = hWnd;
             this.TitleName = windowTitle;
             this.DisplayName = displayName;
+            this.ProcessName = string.Empty;
+            this.Id = GenerateRandomId();
+            EnsureValidDisplayName();
         }
 
-        /// <summary>
-        /// Creates a deep copy of this window
-        /// </summary>
         public Window Clone()
         {
             return new Window
@@ -61,9 +63,6 @@ namespace Save_Window_Position_and_Size.Classes
             };
         }
 
-        /// <summary>
-        /// Checks if the window is valid
-        /// </summary>
         public bool IsValid()
         {
             if (string.IsNullOrWhiteSpace(DisplayName) && string.IsNullOrWhiteSpace(TitleName) && string.IsNullOrWhiteSpace(ProcessName))
@@ -80,35 +79,12 @@ namespace Save_Window_Position_and_Size.Classes
             return true;
         }
 
-        /// <summary>
-        /// Creates a window with a random ID
-        /// </summary>
-        public static Window CreateWithRandomId(Random random)
+        private static int GenerateRandomId()
         {
-            var window = new Window
-            {
-                Id = random.Next(300, 32034)
-            };
-            return window;
+            Random _random = new Random();
+            return _random.Next(Constants.Defaults.DefaultRandomIdMin, Constants.Defaults.DefaultRandomIdMax);
         }
 
-        /// <summary>
-        /// Updates this window's position and size based on another window
-        /// </summary>
-        public void UpdatePositionAndSize(Window source)
-        {
-            if (source == null || source.WindowPosAndSize == null)
-                return;
-
-            WindowPosAndSize.X = source.WindowPosAndSize.X;
-            WindowPosAndSize.Y = source.WindowPosAndSize.Y;
-            WindowPosAndSize.Width = source.WindowPosAndSize.Width;
-            WindowPosAndSize.Height = source.WindowPosAndSize.Height;
-        }
-
-        /// <summary>
-        /// Ensures the window has a valid display name
-        /// </summary>
         public void EnsureValidDisplayName()
         {
             if (string.IsNullOrWhiteSpace(DisplayName))
@@ -118,7 +94,7 @@ namespace Save_Window_Position_and_Size.Classes
                 else if (!string.IsNullOrWhiteSpace(ProcessName))
                     DisplayName = ProcessName;
                 else
-                    DisplayName = $"Window {Id}";
+                    DisplayName = string.Format(Constants.UI.UnnamedWindowFormat, Id);
             }
         }
 
@@ -139,44 +115,6 @@ namespace Save_Window_Position_and_Size.Classes
                 // Fallback to a safe representation if anything fails
                 return $"Window #{Id}";
             }
-        }
-
-        /// <summary>
-        /// Validates window position and size, correcting any invalid values
-        /// </summary>
-        public void ValidatePositionAndSize()
-        {
-            if (WindowPosAndSize == null)
-                WindowPosAndSize = new WindowPosAndSize();
-
-            // Ensure width and height are positive
-            if (WindowPosAndSize.Width <= 0)
-                WindowPosAndSize.Width = 100;
-
-            if (WindowPosAndSize.Height <= 0)
-                WindowPosAndSize.Height = 100;
-
-            // Ensure position is within reasonable bounds
-            if (WindowPosAndSize.X < -10000 || WindowPosAndSize.X > 10000)
-                WindowPosAndSize.X = 0;
-
-            if (WindowPosAndSize.Y < -10000 || WindowPosAndSize.Y > 10000)
-                WindowPosAndSize.Y = 0;
-        }
-
-        public WindowPosAndSize GetWindowPosAndSize()
-        {
-            var windowPosAndSize = new WindowPosAndSize();
-            if (IsFileExplorer)
-            {
-                windowPosAndSize = InteractWithWindow.GetFileExplorerPosAndSize(TitleName);
-            }
-            else
-            {
-                windowPosAndSize = InteractWithWindow.GetWindowPositionAndSize(hWnd);
-            }
-            WindowPosAndSize = windowPosAndSize ?? new WindowPosAndSize();
-            return WindowPosAndSize;
         }
     }
 }

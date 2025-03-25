@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
@@ -267,8 +267,8 @@ namespace Save_Window_Position_and_Size.Classes
                         return new Rectangle(
                             clientPoint.X - borderWidth,
                             clientPoint.Y - borderWidth,
-                            (clientRect.Right - clientRect.Left) + (borderWidth * 2),
-                            (clientRect.Bottom - clientRect.Top) + borderWidth + borderHeight
+                            clientRect.Right - clientRect.Left + borderWidth * 2,
+                            clientRect.Bottom - clientRect.Top + borderWidth + borderHeight
                         );
                     }
                     catch (Exception ex)
@@ -394,12 +394,12 @@ namespace Save_Window_Position_and_Size.Classes
                 try
                 {
                     // Configure form
-                    this.FormBorderStyle = FormBorderStyle.None;
-                    this.ShowInTaskbar = false;
-                    this.StartPosition = FormStartPosition.Manual;
-                    this.TopMost = true;
-                    this.BackColor = Color.Magenta; // Will be made transparent
-                    this.TransparencyKey = Color.Magenta;
+                    FormBorderStyle = FormBorderStyle.None;
+                    ShowInTaskbar = false;
+                    StartPosition = FormStartPosition.Manual;
+                    TopMost = true;
+                    BackColor = Color.Magenta; // Will be made transparent
+                    TransparencyKey = Color.Magenta;
 
                     // Set location and size to cover the target window plus space for outer border
                     int padding = Math.Max(_owner._borderWidth, _owner._innerBorderWidth) * 2;
@@ -407,14 +407,14 @@ namespace Save_Window_Position_and_Size.Classes
                     // Ensure valid form size and position
                     int left = Math.Max(0, _owner._windowRect.Left - padding);
                     int top = Math.Max(0, _owner._windowRect.Top - padding);
-                    int width = Math.Min(Screen.PrimaryScreen.Bounds.Width, _owner._windowRect.Width + (padding * 2));
-                    int height = Math.Min(Screen.PrimaryScreen.Bounds.Height, _owner._windowRect.Height + (padding * 2));
+                    int width = Math.Min(Screen.PrimaryScreen.Bounds.Width, _owner._windowRect.Width + padding * 2);
+                    int height = Math.Min(Screen.PrimaryScreen.Bounds.Height, _owner._windowRect.Height + padding * 2);
 
-                    this.Location = new Point(left, top);
-                    this.Size = new Size(width, height);
+                    Location = new Point(left, top);
+                    Size = new Size(width, height);
 
                     // Handle paint event to draw borders
-                    this.Paint += HighlighterForm_Paint;
+                    Paint += HighlighterForm_Paint;
                 }
                 catch (Exception ex)
                 {
@@ -438,8 +438,8 @@ namespace Save_Window_Position_and_Size.Classes
                     // Coordinates of the target window relative to this form
                     int windowX = outerPadding;
                     int windowY = outerPadding;
-                    int windowWidth = Math.Max(1, this.Width - (outerPadding * 2));
-                    int windowHeight = Math.Max(1, this.Height - (outerPadding * 2));
+                    int windowWidth = Math.Max(1, Width - outerPadding * 2);
+                    int windowHeight = Math.Max(1, Height - outerPadding * 2);
 
                     // Draw outer border if visible
                     if (_owner._outerBorderVisible && _owner._borderWidth > 0)
@@ -450,8 +450,8 @@ namespace Save_Window_Position_and_Size.Classes
                             Rectangle outerRect = new Rectangle(
                                 outerPadding / 2,
                                 outerPadding / 2,
-                                Math.Max(1, this.Width - outerPadding),
-                                Math.Max(1, this.Height - outerPadding));
+                                Math.Max(1, Width - outerPadding),
+                                Math.Max(1, Height - outerPadding));
                             g.DrawRectangle(outerPen, outerRect);
                         }
                     }

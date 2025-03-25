@@ -15,13 +15,13 @@ namespace Save_Window_Position_and_Size
     public partial class IgnoreForm : Form
     {
         private IgnoreListManager _ignoreListManager;
-
+        
         public IgnoreForm(IgnoreListManager ignoreListManager)
         {
             InitializeComponent();
             _ignoreListManager = ignoreListManager;
         }
-
+        
         private void IgnoreListBox_DoubleClick(object sender, EventArgs e)
         {
             if (IgnoreListBox.SelectedIndex == 0)
@@ -31,7 +31,7 @@ namespace Save_Window_Position_and_Size
                 {
                     // Add to listbox for UI
                     IgnoreListBox.Items.Insert(1, newItem);
-
+                    
                     // Add to manager (which will auto-save)
                     _ignoreListManager.AddToIgnoreList(newItem);
                 }
@@ -43,10 +43,10 @@ namespace Save_Window_Position_and_Size
             if (IgnoreListBox.SelectedIndex > 0 && e.KeyCode == Keys.Delete)
             {
                 string itemToRemove = IgnoreListBox.Items[IgnoreListBox.SelectedIndex].ToString();
-
+                
                 // Remove from listbox for UI
                 IgnoreListBox.Items.RemoveAt(IgnoreListBox.SelectedIndex);
-
+                
                 // Remove from manager (which will auto-save)
                 _ignoreListManager.RemoveFromIgnoreList(itemToRemove);
             }
@@ -69,14 +69,14 @@ namespace Save_Window_Position_and_Size
             // Clear any existing items except the "Add item..." entry
             IgnoreListBox.Items.Clear();
             IgnoreListBox.Items.Add("Add item...");
-
+            
             // Add all items from the ignore list manager
             foreach (string item in _ignoreListManager.GetIgnoreList())
             {
                 IgnoreListBox.Items.Add(item);
             }
         }
-
+        
         private void SaveChangesToManager()
         {
             // Create a new list from the items in the listbox (excluding "Add item...")
@@ -89,7 +89,7 @@ namespace Save_Window_Position_and_Size
                     updatedList.Add(itemText);
                 }
             }
-
+            
             // Update the ignore list manager with the new list
             _ignoreListManager.UpdateIgnoreList(updatedList);
         }
