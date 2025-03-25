@@ -23,6 +23,7 @@ namespace Save_Window_Position_and_Size.Classes
         const uint SWP_NOMOVE = 0x0002;
         const uint SWP_NOACTIVATE = 0x0010;
         const int SW_RESTORE = 9;
+        const int SW_MINIMIZE = 6;
         static readonly IntPtr HWND_TOPMOST = new IntPtr(-1);
         static readonly IntPtr HWND_TOP = new IntPtr(0);
         static readonly IntPtr HWND_BOTTOM = new IntPtr(1);
@@ -586,6 +587,20 @@ namespace Save_Window_Position_and_Size.Classes
         public static (int Width, int Height) GetScreenDimensions()
         {
             return (Screen.PrimaryScreen.Bounds.Width, Screen.PrimaryScreen.Bounds.Height);
+        }
+        #endregion
+
+        #region Window Operations
+        /// <summary>
+        /// Minimizes a window
+        /// </summary>
+        /// <param name="hWnd">Window handle to minimize</param>
+        public static void MinimizeWindow(IntPtr hWnd)
+        {
+            if (hWnd != IntPtr.Zero && IsWindow(hWnd))
+            {
+                ShowWindow(hWnd, SW_MINIMIZE);
+            }
         }
         #endregion
     }

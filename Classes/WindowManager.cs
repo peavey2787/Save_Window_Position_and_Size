@@ -69,6 +69,31 @@ namespace Save_Window_Position_and_Size.Classes
             profileCollection.SelectedProfileIndex = profileIndex;
             AppSettings<int>.Save(Constants.AppSettingsConstants.SelectedProfileKey, profileIndex);
 
+            // Get all running application windows
+            var runningWindows = GetAllRunningApps();
+
+            // Minimize all running windows first
+            foreach (var window in runningWindows)
+            {
+                IntPtr hWnd = GetWindowHandle(window);
+                if (hWnd != IntPtr.Zero)
+                {
+                    InteractWithWindow.MinimizeWindow(hWnd);
+                }
+            }
+
+            // Get the windows for the selected profile
+            var profileWindows = profileCollection.SelectedProfile.Windows;
+
+            // Restore only the windows in the profile
+            foreach (var window in profileWindows)
+            {
+                if (window.AutoPosition)
+                {
+                    RestoreWindow(window);
+                }
+            }
+
             return profileCollection.SelectedProfile.Windows;
         }
 
@@ -170,7 +195,7 @@ namespace Save_Window_Position_and_Size.Classes
         {
             if (profileCollection.SelectedProfile == null)
                 return;
-            
+
             foreach (Window window in profileCollection.SelectedProfile.Windows)
             {
                 if (!window.AutoPosition)
@@ -214,7 +239,7 @@ namespace Save_Window_Position_and_Size.Classes
 
             // Set always on top if needed
             if (window.KeepOnTop)
-            {             
+            {
                 SetWindowAlwaysOnTop(window, true);
             }
         }
@@ -258,7 +283,7 @@ namespace Save_Window_Position_and_Size.Classes
 
             // Try to set the window position and size
             try
-            {                
+            {
                 InteractWithWindow.SetWindowPositionAndSize(window, posAndSize);
             }
             catch (Exception ex)
