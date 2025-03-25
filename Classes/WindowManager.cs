@@ -69,16 +69,22 @@ namespace Save_Window_Position_and_Size.Classes
             profileCollection.SelectedProfileIndex = profileIndex;
             AppSettings<int>.Save(Constants.AppSettingsConstants.SelectedProfileKey, profileIndex);
 
-            // Get all running application windows
-            var runningWindows = GetAllRunningApps();
+            // Check if we should minimize other windows
+            bool minimizeOtherWindows = AppSettings.Load(Constants.AppSettingsConstants.MinimizeOtherWindowsKey) == "true";
 
-            // Minimize all running windows first
-            foreach (var window in runningWindows)
+            if (minimizeOtherWindows)
             {
-                IntPtr hWnd = GetWindowHandle(window);
-                if (hWnd != IntPtr.Zero)
+                // Get all running application windows
+                var runningWindows = GetAllRunningApps();
+
+                // Minimize all running windows first
+                foreach (var window in runningWindows)
                 {
-                    InteractWithWindow.MinimizeWindow(hWnd);
+                    IntPtr hWnd = GetWindowHandle(window);
+                    if (hWnd != IntPtr.Zero)
+                    {
+                        InteractWithWindow.MinimizeWindow(hWnd);
+                    }
                 }
             }
 
@@ -174,6 +180,22 @@ namespace Save_Window_Position_and_Size.Classes
                 SaveAllProfiles();
             }
             return removed;
+        }
+
+        /// <summary>
+        /// Clears all windows from the current profile
+        /// </summary>
+        public bool ClearCurrentProfileWindows()
+        {
+            if (profileCollection.SelectedProfile == null)
+                return false;
+
+            // Clear all windows in the current profile
+            profileCollection.SelectedProfile.Windows.Clear();
+
+            // Save changes
+            SaveAllProfiles();
+            return true;
         }
 
         /// <summary>

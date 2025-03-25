@@ -31,11 +31,10 @@
             lblWindowHeight = new Label();
             WindowHeight = new TextBox();
             AllRunningApps = new ListBox();
-            UpdateTimerInterval = new TextBox();
-            lblUpdateTimerInterval = new Label();
             lblTime = new Label();
             Time = new Label();
             panel1 = new Panel();
+            SettingsButton = new Button();
             UsePercentagesCheckBox = new CheckBox();
             profileComboBox = new ComboBox();
             label2 = new Label();
@@ -52,9 +51,9 @@
             RestoreAll = new Button();
             RefreshAllRunningApps = new Button();
             KeepWindowOnTop = new CheckBox();
+            ClearAllButton = new Button();
             lblAllRunningApps = new Label();
             lblSavedApps = new Label();
-            SkipConfirmationCheckbox = new CheckBox();
             toolTip1 = new ToolTip(components);
             panel1.SuspendLayout();
             SuspendLayout();
@@ -63,7 +62,7 @@
             // 
             Save.BackgroundImage = Properties.Resources.floppy_disk;
             Save.BackgroundImageLayout = ImageLayout.Zoom;
-            Save.Location = new Point(476, 324);
+            Save.Location = new Point(482, 324);
             Save.Name = "Save";
             Save.Size = new Size(36, 34);
             Save.TabIndex = 0;
@@ -84,7 +83,7 @@
             // 
             Restore.BackgroundImage = Properties.Resources.redo;
             Restore.BackgroundImageLayout = ImageLayout.Zoom;
-            Restore.Location = new Point(619, 324);
+            Restore.Location = new Point(610, 10);
             Restore.Name = "Restore";
             Restore.Size = new Size(36, 34);
             Restore.TabIndex = 3;
@@ -187,26 +186,6 @@
             AllRunningApps.SelectedIndexChanged += AllRunningApps_SelectedIndexChanged;
             AllRunningApps.MouseDown += AllRunningApps_MouseDown;
             // 
-            // UpdateTimerInterval
-            // 
-            UpdateTimerInterval.Location = new Point(176, 367);
-            UpdateTimerInterval.Name = "UpdateTimerInterval";
-            UpdateTimerInterval.Size = new Size(25, 23);
-            UpdateTimerInterval.TabIndex = 15;
-            UpdateTimerInterval.Text = "1";
-            UpdateTimerInterval.KeyDown += UpdateTimerInterval_KeyDown;
-            // 
-            // lblUpdateTimerInterval
-            // 
-            lblUpdateTimerInterval.AutoSize = true;
-            lblUpdateTimerInterval.BackColor = Color.Transparent;
-            lblUpdateTimerInterval.ForeColor = SystemColors.ControlLightLight;
-            lblUpdateTimerInterval.Location = new Point(12, 370);
-            lblUpdateTimerInterval.Name = "lblUpdateTimerInterval";
-            lblUpdateTimerInterval.Size = new Size(164, 15);
-            lblUpdateTimerInterval.TabIndex = 16;
-            lblUpdateTimerInterval.Text = "Auto Position Interval (mins): ";
-            // 
             // lblTime
             // 
             lblTime.AutoSize = true;
@@ -233,10 +212,9 @@
             // 
             panel1.AutoSize = true;
             panel1.BackColor = Color.Transparent;
-            panel1.Controls.Add(UpdateTimerInterval);
+            panel1.Controls.Add(SettingsButton);
             panel1.Controls.Add(UsePercentagesCheckBox);
             panel1.Controls.Add(profileComboBox);
-            panel1.Controls.Add(lblUpdateTimerInterval);
             panel1.Controls.Add(Time);
             panel1.Controls.Add(label2);
             panel1.Controls.Add(lblTime);
@@ -255,6 +233,7 @@
             panel1.Controls.Add(RestoreAll);
             panel1.Controls.Add(RefreshAllRunningApps);
             panel1.Controls.Add(KeepWindowOnTop);
+            panel1.Controls.Add(ClearAllButton);
             panel1.Controls.Add(lblAllRunningApps);
             panel1.Controls.Add(lblSavedApps);
             panel1.Controls.Add(AllRunningApps);
@@ -268,11 +247,21 @@
             panel1.Controls.Add(lblWindowPosY);
             panel1.Controls.Add(WindowWidth);
             panel1.Controls.Add(WindowPosY);
-            panel1.Controls.Add(SkipConfirmationCheckbox);
             panel1.Location = new Point(0, 0);
             panel1.Name = "panel1";
-            panel1.Size = new Size(958, 393);
+            panel1.Size = new Size(958, 397);
             panel1.TabIndex = 19;
+            // 
+            // SettingsButton
+            // 
+            SettingsButton.BackgroundImage = (Image)resources.GetObject("SettingsButton.BackgroundImage");
+            SettingsButton.BackgroundImageLayout = ImageLayout.Zoom;
+            SettingsButton.Location = new Point(910, 8);
+            SettingsButton.Name = "SettingsButton";
+            SettingsButton.Size = new Size(36, 34);
+            SettingsButton.TabIndex = 40;
+            SettingsButton.UseVisualStyleBackColor = true;
+            SettingsButton.Click += SettingsButton_Click;
             // 
             // UsePercentagesCheckBox
             // 
@@ -346,7 +335,7 @@
             // 
             RefreshWindowButton.BackgroundImage = Properties.Resources.refresh_blue_arrows;
             RefreshWindowButton.BackgroundImageLayout = ImageLayout.Zoom;
-            RefreshWindowButton.Location = new Point(328, 324);
+            RefreshWindowButton.Location = new Point(346, 10);
             RefreshWindowButton.Name = "RefreshWindowButton";
             RefreshWindowButton.Size = new Size(36, 34);
             RefreshWindowButton.TabIndex = 33;
@@ -395,7 +384,7 @@
             // 
             IgnoreButton.BackgroundImage = Properties.Resources.ignore_list;
             IgnoreButton.BackgroundImageLayout = ImageLayout.Stretch;
-            IgnoreButton.Location = new Point(231, 8);
+            IgnoreButton.Location = new Point(158, 360);
             IgnoreButton.Name = "IgnoreButton";
             IgnoreButton.Size = new Size(36, 34);
             IgnoreButton.TabIndex = 27;
@@ -404,9 +393,9 @@
             // 
             // RestoreAll
             // 
-            RestoreAll.BackgroundImage = Properties.Resources.redo;
+            RestoreAll.BackgroundImage = (Image)resources.GetObject("RestoreAll.BackgroundImage");
             RestoreAll.BackgroundImageLayout = ImageLayout.Zoom;
-            RestoreAll.Location = new Point(911, 8);
+            RestoreAll.Location = new Point(910, 360);
             RestoreAll.Name = "RestoreAll";
             RestoreAll.Size = new Size(36, 34);
             RestoreAll.TabIndex = 26;
@@ -417,7 +406,7 @@
             // 
             RefreshAllRunningApps.BackgroundImage = Properties.Resources.refresh_blue_arrows;
             RefreshAllRunningApps.BackgroundImageLayout = ImageLayout.Zoom;
-            RefreshAllRunningApps.Location = new Point(12, 8);
+            RefreshAllRunningApps.Location = new Point(77, 360);
             RefreshAllRunningApps.Name = "RefreshAllRunningApps";
             RefreshAllRunningApps.Size = new Size(36, 34);
             RefreshAllRunningApps.TabIndex = 25;
@@ -434,6 +423,17 @@
             KeepWindowOnTop.Text = "Keep on Top";
             KeepWindowOnTop.UseVisualStyleBackColor = true;
             KeepWindowOnTop.CheckedChanged += KeepWindowOnTop_CheckedChanged;
+            // 
+            // ClearAllButton
+            // 
+            ClearAllButton.BackgroundImage = (Image)resources.GetObject("ClearAllButton.BackgroundImage");
+            ClearAllButton.BackgroundImageLayout = ImageLayout.Zoom;
+            ClearAllButton.Location = new Point(814, 360);
+            ClearAllButton.Name = "ClearAllButton";
+            ClearAllButton.Size = new Size(36, 34);
+            ClearAllButton.TabIndex = 43;
+            ClearAllButton.UseVisualStyleBackColor = true;
+            ClearAllButton.Click += ClearAllButton_Click;
             // 
             // lblAllRunningApps
             // 
@@ -454,16 +454,6 @@
             lblSavedApps.Size = new Size(98, 21);
             lblSavedApps.TabIndex = 21;
             lblSavedApps.Text = "Saved Apps";
-            // 
-            // SkipConfirmationCheckbox
-            // 
-            SkipConfirmationCheckbox.AutoSize = true;
-            SkipConfirmationCheckbox.Location = new Point(741, 369);
-            SkipConfirmationCheckbox.Name = "SkipConfirmationCheckbox";
-            SkipConfirmationCheckbox.Size = new Size(161, 19);
-            SkipConfirmationCheckbox.TabIndex = 30;
-            SkipConfirmationCheckbox.Text = "Skip confirmation dialogs";
-            SkipConfirmationCheckbox.UseVisualStyleBackColor = true;
             // 
             // toolTip1
             // 
@@ -506,8 +496,6 @@
         private Label lblWindowHeight;
         private TextBox WindowHeight;
         private ListBox AllRunningApps;
-        private TextBox UpdateTimerInterval;
-        private Label lblUpdateTimerInterval;
         private Label lblTime;
         private Label Time;
         private Panel panel1;
@@ -529,7 +517,8 @@
         private ToolTip toolTip1;
         private ComboBox profileComboBox;
         private Label hWnd;
-        private CheckBox SkipConfirmationCheckbox;
         private CheckBox UsePercentagesCheckBox;
+        private Button SettingsButton;
+        private Button ClearAllButton;
     }
 }

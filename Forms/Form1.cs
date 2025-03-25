@@ -44,7 +44,8 @@ namespace Save_Window_Position_and_Size
                 minutes--;
                 if (minutes < 0)
                 {
-                    if (int.TryParse(UpdateTimerInterval.Text, out var mins))
+                    // Get the saved refresh time from settings
+                    if (int.TryParse(AppSettings.Load(Constants.AppSettingsConstants.RefreshTimeKey), out var mins))
                         minutes = mins - 1;
                     else
                         minutes = 1;
@@ -99,19 +100,11 @@ namespace Save_Window_Position_and_Size
 
             profileComboBox.SelectedIndex = profileIndex;
 
-            // Load saved refresh time
+            // Load saved refresh time from settings
             if (int.TryParse(AppSettings.Load(Constants.AppSettingsConstants.RefreshTimeKey), out int refreshTime))
             {
-                UpdateTimerInterval.Text = refreshTime.ToString();
                 minutes = refreshTime;
             }
-
-            // Load skip confirmation setting
-            string skipConfirmation = AppSettings.Load(Constants.AppSettingsConstants.SkipConfirmationKey);
-            SkipConfirmationCheckbox.Checked = skipConfirmation == "true";
-
-            // Add handler for skip confirmation checkbox
-            SkipConfirmationCheckbox.CheckedChanged += SkipConfirmationCheckbox_CheckedChanged;
 
             // Allow user to right click running app and ignore it
             ContextMenuStrip contextMenuStrip = new ContextMenuStrip();
@@ -144,10 +137,11 @@ namespace Save_Window_Position_and_Size
             toolTip1.SetToolTip(RefreshAllRunningApps, "Refresh running apps and their locations/sizes");
             toolTip1.SetToolTip(IgnoreButton, "List of apps to hide from showing in the running apps list");
             toolTip1.SetToolTip(RestoreAll, "Restore all saved apps' window sizes/locations");
+            toolTip1.SetToolTip(ClearAllButton, "Clear all saved windows in current profile");
             toolTip1.SetToolTip(Save, "Save/Update the selected app's window settings");
             toolTip1.SetToolTip(RefreshWindowButton, "Refresh and get the selected app's current window size/location");
             toolTip1.SetToolTip(Restore, "Restore the selected app's saved window size/location");
-            toolTip1.SetToolTip(SkipConfirmationCheckbox, "When checked, capture layout actions will be performed without confirmation prompts");
+            toolTip1.SetToolTip(SettingsButton, "Open application settings");
 
             // Handle the UsePercentagesCheckBox changes
             UsePercentagesCheckBox.CheckedChanged += UsePercentagesCheckBox_CheckedChanged;
@@ -268,6 +262,9 @@ namespace Save_Window_Position_and_Size
 
             contextMenu.Items.Add(profileSwitcherMenu);
 
+            // Add settings menu item
+            contextMenu.Items.Add(CreateMenuItem("Settings", Properties.Resources.pin, OnOpenSettings, imageSize));
+
             // Add a separator before Exit
             contextMenu.Items.Add(new ToolStripSeparator());
 
@@ -309,6 +306,11 @@ namespace Save_Window_Position_and_Size
             this.Show();
             this.Focus();
             this.ShowInTaskbar = true;
+        }
+
+        private void OnOpenSettings(object? sender, EventArgs e)
+        {
+            OpenSettingsForm();
         }
 
         private void ProfileSwitcherMenu_DropDownOpening(object sender, EventArgs e)
@@ -379,8 +381,11 @@ namespace Save_Window_Position_and_Size
 
         private void OnCaptureCurrentLayout(object sender, EventArgs e)
         {
+            // Check skip confirmation setting from AppSettings
+            bool skipConfirmation = AppSettings.Load(Constants.AppSettingsConstants.SkipConfirmationKey) == "true";
+
             // Ask for confirmation if not configured to skip
-            if (!SkipConfirmationCheckbox.Checked)
+            if (!skipConfirmation)
             {
                 DialogResult result = MessageBox.Show(
                     "This will replace all windows in the current profile with the current window layout. Continue?",
@@ -396,11 +401,7 @@ namespace Save_Window_Position_and_Size
 
             // Clear existing windows in the current profile (first switch to it to ensure it's loaded)
             windowManager.SwitchToProfile(profileIndex);
-            List<Window> existingWindows = windowManager.GetCurrentProfileWindows().ToList();
-            foreach (var window in existingWindows)
-            {
-                windowManager.RemoveWindow(window);
-            }
+            windowManager.ClearCurrentProfileWindows();
 
             // Make sure the ignore list is up-to-date
             ignoreListManager.LoadIgnoreList();
@@ -495,6 +496,31 @@ namespace Save_Window_Position_and_Size
         private void RefreshButton_Click(object sender, EventArgs e)
         {
             UpdateAllRunningAppsTask().ConfigureAwait(false);
+        }
+
+        private void SettingsButton_Click(object sender, EventArgs e)
+        {
+            OpenSettingsForm();
+        }
+
+        private void ClearAllButton_Click(object sender, EventArgs e)
+        {
+            // Ask for confirmation
+            DialogResult result = MessageBox.Show(
+                "Are you sure you want to clear all saved windows in the current profile?",
+                "Confirm Clear All",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Warning);
+
+            if (result != DialogResult.Yes)
+                return;
+
+            // Clear all windows in the current profile
+            windowManager.ClearCurrentProfileWindows();
+
+            // Refresh the UI
+            RefreshSavedWindowsListBox();
+            ClearWindowGUI();
         }
 
 
@@ -663,13 +689,6 @@ namespace Save_Window_Position_and_Size
             windowManager.AddOrUpdateWindow(window);
         }
 
-        private void SkipConfirmationCheckbox_CheckedChanged(object sender, EventArgs e)
-        {
-            // Save the skip confirmation setting
-            AppSettings.Save(Constants.AppSettingsConstants.SkipConfirmationKey,
-                SkipConfirmationCheckbox.Checked ? "true" : "false");
-        }
-
         private void UsePercentagesCheckBox_CheckedChanged(object sender, EventArgs e)
         {
             if (loading) return;
@@ -705,21 +724,6 @@ namespace Save_Window_Position_and_Size
 
 
         // TextBoxes
-        private void UpdateTimerInterval_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (e.KeyCode == Keys.Enter)
-            {
-                if (int.TryParse(UpdateTimerInterval.Text, out int refreshTime))
-                {
-                    refreshTime = Math.Max(1, refreshTime);
-                    AppSettings.Save(Constants.AppSettingsConstants.RefreshTimeKey, refreshTime.ToString());
-
-                    minutes = refreshTime - 1;
-                    seconds = 60;
-                }
-            }
-        }
-
         private void WindowDisplayName_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Enter)
@@ -1032,6 +1036,28 @@ namespace Save_Window_Position_and_Size
             ProcessName.Text = "";
             WindowTitle.Text = "";
             AutoPosition.Checked = false;
+        }
+
+        private void OpenSettingsForm()
+        {
+            // Create and show settings form
+            var settingsForm = new SettingsForm();
+
+            // Subscribe to settings changed event
+            settingsForm.SettingsChanged += SettingsForm_SettingsChanged;
+
+            // Show the form as a dialog to prevent interaction with the main form until closed
+            settingsForm.ShowDialog(this);
+        }
+
+        private void SettingsForm_SettingsChanged(object sender, EventArgs e)
+        {
+            // Update timer values from settings when settings change
+            if (int.TryParse(AppSettings.Load(Constants.AppSettingsConstants.RefreshTimeKey), out int refreshTime))
+            {
+                minutes = refreshTime - 1;
+                seconds = 60;
+            }
         }
         #endregion
 

@@ -21,6 +21,7 @@ namespace Save_Window_Position_and_Size.Classes
             public const string HighlighterEnabledKey = "HighlighterEnabled";
             public const string HighlighterColorKey = "HighlighterColor";
             public const string SkipConfirmationKey = "SkipConfirmation";
+            public const string MinimizeOtherWindowsKey = "MinimizeOtherWindows";
         }
 
         // Default values
