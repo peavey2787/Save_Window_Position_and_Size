@@ -332,6 +332,10 @@ namespace Save_Window_Position_and_Size.Classes
                 IntPtr handle = kvp.Key;
                 string title = kvp.Value;
 
+                // Skip entries ending with "(explorer)" as these are typically drives without actual windows
+                if (title.EndsWith("(explorer)", StringComparison.OrdinalIgnoreCase))
+                    continue;
+
                 // Create a Window object
                 Window window = new Window(handle, title, title);
 
@@ -366,21 +370,6 @@ namespace Save_Window_Position_and_Size.Classes
                 windows.Add(window);
             }
 
-            // Add file explorer windows from the special File Explorer handler
-            var fileExplorerWindows = GetFileExplorerWindows();
-
-            // Add them to the result if they're not already in the list
-            foreach (var explorerWindow in fileExplorerWindows)
-            {
-                // Skip if we already have a file explorer window with the same title
-                if (windows.Any(w => w.IsFileExplorer && w.TitleName == explorerWindow.TitleName))
-                {
-                    continue;
-                }
-
-                windows.Add(explorerWindow);
-            }
-
             return windows;
         }
 
@@ -398,40 +387,6 @@ namespace Save_Window_Position_and_Size.Classes
         public List<Window> GetAllRunningApps()
         {
             return GetRunningApps(false);
-        }
-
-        /// <summary>
-        /// Gets the File Explorer windows
-        /// </summary>
-        private List<Window> GetFileExplorerWindows()
-        {
-            var windows = new List<Window>();
-
-            // Get file explorer windows from InteractWithWindow
-            var fileExplorerWindows = InteractWithWindow.GetFileExplorerWindows();
-
-            foreach (var explorerWindow in fileExplorerWindows)
-            {
-                var (handle, title, processName, isFileExplorer, position) = explorerWindow;
-
-                // Create a window object
-                Window window = new Window();
-                window.IsFileExplorer = true;
-                window.TitleName = title;
-                window.DisplayName = Path.GetFileName(title.Split(new[] { " - " }, StringSplitOptions.RemoveEmptyEntries).LastOrDefault() ?? "");
-                window.ProcessName = processName;
-                window.WindowPosAndSize = position;
-
-                // Skip windows in the ignore list
-                if (ignoreListManager != null && ignoreListManager.ShouldIgnoreWindow(window))
-                {
-                    continue;
-                }
-
-                windows.Add(window);
-            }
-
-            return windows;
         }
 
         /// <summary>

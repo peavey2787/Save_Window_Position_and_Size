@@ -126,56 +126,43 @@ namespace Save_Window_Position_and_Size.Classes
             // Initialize the exceptions list if null
             exceptions = exceptions ?? new List<string>();
 
-            // First, get all window handles 
-            var windowHandles = new Dictionary<string, IntPtr>();
+            // Create the result dictionary with window handles as keys and titles as values
+            var allWindows = new Dictionary<IntPtr, string>();           
 
+            // Now, get all regular application windows
             EnumWindows(delegate (IntPtr hWnd, IntPtr lParam)
             {
                 StringBuilder title = new StringBuilder(256);
                 GetWindowText(hWnd, title, title.Capacity);
                 string windowTitle = title.ToString();
 
-                if (!string.IsNullOrWhiteSpace(windowTitle))
-                {
-                    windowHandles[windowTitle] = hWnd;
-                }
-
-                return true;
-            }, IntPtr.Zero);
-
-            // Now create the result dictionary with window handles as keys and titles as values
-            var allWindows = new Dictionary<IntPtr, string>();
-
-            // Filter windows based on window API properties
-            foreach (var dicWin in windowHandles)
-            {
-                string windowTitle = dicWin.Key;
-                IntPtr hWnd = dicWin.Value;
+                if (string.IsNullOrWhiteSpace(windowTitle))
+                    return true;
 
                 // Skip based on exceptions list
                 if (exceptions.Contains(windowTitle))
-                    continue;
+                    return true;
 
                 // Get window info to check its properties
                 WINDOWINFO winInfo = new WINDOWINFO();
                 winInfo.cbSize = (uint)Marshal.SizeOf(typeof(WINDOWINFO));
                 if (!GetWindowInfo(hWnd, ref winInfo))
-                    continue;
+                    return true;
 
                 // Skip windows that are too small to be real application windows
                 int width = winInfo.rcWindow.Right - winInfo.rcWindow.Left;
                 int height = winInfo.rcWindow.Bottom - winInfo.rcWindow.Top;
                 if (width < 50 || height < 50)
-                    continue;
+                    return true;
 
                 // Skip system tray windows and toolbars
                 // We only want windows with app window style or those that don't have tool window style
                 if ((winInfo.dwExStyle & WS_EX_TOOLWINDOW) != 0 && (winInfo.dwExStyle & WS_EX_APPWINDOW) == 0)
-                    continue;
+                    return true;
 
                 // Skip child windows since top-level application windows aren't children
                 if ((winInfo.dwStyle & WS_CHILD) != 0)
-                    continue;
+                    return true;
 
                 // Get class name - many system windows have specific class names
                 StringBuilder className = new StringBuilder(256);
@@ -184,7 +171,7 @@ namespace Save_Window_Position_and_Size.Classes
 
                 // Skip common system window classes
                 if (IsSystemWindowClass(windowClass))
-                    continue;
+                    return true;
 
                 // Check window owner - real apps usually don't have owners
                 IntPtr owner = GetWindow(hWnd, GW_OWNER);
@@ -193,7 +180,7 @@ namespace Save_Window_Position_and_Size.Classes
                     // It has an owner, check if the owner is visible
                     // If the owner is invisible, this is likely a system window
                     if (!IsWindowVisible(owner))
-                        continue;
+                        return true;
                 }
 
                 // Check process details - see if this is a background service
@@ -205,15 +192,31 @@ namespace Save_Window_Position_and_Size.Classes
                     {
                         using (Process process = Process.GetProcessById((int)processId))
                         {
-                            // Check main window handle
-                            // If the process has a different main window, this might be a supporting window
-                            if (process.MainWindowHandle != IntPtr.Zero &&
+                            // Skip explorer windows as we've already handled them separately
+                            if (process.ProcessName.ToLowerInvariant() == "explorer")
+                            {
+                                // Check if this is a file explorer window 
+                                if (windowTitle.Contains(":\\") || windowTitle.Contains("This PC") ||
+                                    windowTitle.StartsWith("File Explorer", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    // Skip as we've already collected File Explorer windows through Shell32
+                                    return true;
+                                }
+                            }
+
+                            // For browsers and other multi-window applications, don't skip windows
+                            // that aren't the main window
+                            bool isKnownMultiWindowApp = IsMultiWindowApplication(process.ProcessName);
+
+                            // If it's not a multi-window app, apply the main window check
+                            if (!isKnownMultiWindowApp &&
+                                process.MainWindowHandle != IntPtr.Zero &&
                                 process.MainWindowHandle != hWnd &&
                                 process.ProcessName.ToLowerInvariant() != "explorer")
                             {
                                 // Skip if the window style suggests it's not a main window
                                 if ((winInfo.dwExStyle & WS_EX_APPWINDOW) == 0)
-                                    continue;
+                                    return true;
                             }
                         }
                     }
@@ -226,9 +229,15 @@ namespace Save_Window_Position_and_Size.Classes
                 // Check visibility if required
                 if (!onlyVisible || (winInfo.dwStyle & WS_VISIBLE) != 0)
                 {
-                    allWindows[hWnd] = windowTitle;
+                    // Make sure we don't already have this window from the file explorer collection
+                    if (!allWindows.ContainsKey(hWnd))
+                    {
+                        allWindows[hWnd] = windowTitle;
+                    }
                 }
-            }
+
+                return true;
+            }, IntPtr.Zero);
 
             return allWindows;
         }
@@ -259,6 +268,44 @@ namespace Save_Window_Position_and_Size.Classes
                 "Windows.UI.Core.CoreWindow", // UWP core window
             };
             return systemClasses.Contains(className);
+        }
+
+        /// <summary>
+        /// Determines if a process name belongs to an application known to support multiple windows
+        /// </summary>
+        private static bool IsMultiWindowApplication(string processName)
+        {
+            if (string.IsNullOrEmpty(processName))
+                return false;
+
+            processName = processName.ToLowerInvariant();
+
+            // List of applications known to support multiple windows
+            string[] multiWindowApps = {
+                "firefox",
+                "chrome",
+                "msedge",
+                "iexplore",
+                "brave",
+                "opera",
+                "vivaldi",
+                "safari",
+                "notepad++",
+                "code",          // VS Code
+                "devenv",        // Visual Studio
+                "rider",         // JetBrains Rider
+                "pycharm",       // JetBrains PyCharm
+                "intellij",      // JetBrains IntelliJ
+                "webstorm",      // JetBrains WebStorm
+                "atom",          // Atom Editor
+                "sublime_text",  // Sublime Text
+                "windowsterminal", // Windows Terminal
+                "powershell",
+                "cmd",
+                "putty"
+            };
+
+            return multiWindowApps.Contains(processName);
         }
         #endregion
 
@@ -297,6 +344,15 @@ namespace Save_Window_Position_and_Size.Classes
                 {
                     return allWindowHandles[window.TitleName];
                 }
+
+                // Look for partial matches for applications like Firefox
+                foreach (var entry in allWindowHandles)
+                {
+                    if (entry.Key.Contains(window.TitleName))
+                    {
+                        return entry.Value;
+                    }
+                }
             }
 
             // Try to find by process name if window title search failed
@@ -315,11 +371,73 @@ namespace Save_Window_Position_and_Size.Classes
                         }
                     }
 
-                    // If no exact match, try to find a window with this process name
+                    // For multi-window applications (like browsers), enumerate all windows
+                    // belonging to this process and find matching titles
                     if (processes.Length > 0)
                     {
-                        var firstWindow = processes[0].MainWindowHandle;
-                        return firstWindow;
+                        var windowsByProcess = new Dictionary<IntPtr, string>();
+
+                        EnumWindows(delegate (IntPtr hWnd, IntPtr lParam)
+                        {
+                            uint processId;
+                            GetWindowThreadProcessId(hWnd, out processId);
+
+                            if (processes.Any(p => p.Id == processId))
+                            {
+                                // This window belongs to our target process
+                                if (IsWindowVisible(hWnd))
+                                {
+                                    StringBuilder title = new StringBuilder(256);
+                                    GetWindowText(hWnd, title, title.Capacity);
+                                    string windowTitle = title.ToString();
+
+                                    if (!string.IsNullOrWhiteSpace(windowTitle))
+                                    {
+                                        windowsByProcess[hWnd] = windowTitle;
+                                    }
+                                }
+                            }
+
+                            return true;
+                        }, IntPtr.Zero);
+
+                        // Try to match with window title if specified
+                        if (!string.IsNullOrWhiteSpace(window.TitleName))
+                        {
+                            foreach (var pair in windowsByProcess)
+                            {
+                                // Check for exact title match
+                                if (pair.Value == window.TitleName)
+                                {
+                                    return pair.Key;
+                                }
+
+                                // Check for partial title match
+                                if (pair.Value.Contains(window.TitleName))
+                                {
+                                    return pair.Key;
+                                }
+
+                                // For browser windows, the title might be "Page Title - Browser Name"
+                                if (window.TitleName.Contains(pair.Value))
+                                {
+                                    return pair.Key;
+                                }
+                            }
+                        }
+
+                        // If we have windows for this process but none match the title,
+                        // return the first visible one
+                        if (windowsByProcess.Count > 0)
+                        {
+                            return windowsByProcess.Keys.First();
+                        }
+
+                        // If all else fails, try the main window handle
+                        if (processes[0].MainWindowHandle != IntPtr.Zero)
+                        {
+                            return processes[0].MainWindowHandle;
+                        }
                     }
                 }
                 catch
@@ -461,61 +579,6 @@ namespace Save_Window_Position_and_Size.Classes
 
 
         #region File Explorer Specific Methods
-        public static List<(IntPtr Handle, string Title, string ProcessName, bool IsFileExplorer, WindowPosAndSize Position)> GetFileExplorerWindows()
-        {
-            List<(IntPtr Handle, string Title, string ProcessName, bool IsFileExplorer, WindowPosAndSize Position)> fileExplorers = new List<(IntPtr Handle, string Title, string ProcessName, bool IsFileExplorer, WindowPosAndSize Position)>();
-
-            try
-            {
-                // Use the Shell32 COM object to get all open Explorer windows
-                SHDocVw.ShellWindows shellWindows = new SHDocVw.ShellWindows();
-
-                foreach (SHDocVw.InternetExplorer window in shellWindows)
-                {
-                    try
-                    {
-                        if (Path.GetFileNameWithoutExtension(window.FullName).ToLowerInvariant() == "explorer")
-                        {
-                            // Skip minimized windows
-                            if (window.Left == -32000) continue;
-
-                            // Get the location name (folder path being shown)
-                            string locationName = window.LocationName;
-                            string displayName = Path.GetFileName(locationName);
-
-                            // Skip empty or invalid titles
-                            if (string.IsNullOrWhiteSpace(displayName)) continue;
-
-                            // Format the window title
-                            string windowTitle = $"FileExplorer: {window.Name} - {window.LocationName}";
-
-                            // Create position and size info
-                            WindowPosAndSize posAndSize = new WindowPosAndSize
-                            {
-                                X = window.Left,
-                                Y = window.Top,
-                                Width = window.Width,
-                                Height = window.Height
-                            };
-
-                            // Add to the list with null handle (FileExplorer windows are handled differently)
-                            fileExplorers.Add((IntPtr.Zero, windowTitle, "explorer", true, posAndSize));
-                        }
-                    }
-                    catch
-                    {
-                        // Silently handle exceptions
-                    }
-                }
-            }
-            catch
-            {
-                // Silently handle exceptions in case COM components aren't available
-            }
-
-            return fileExplorers;
-        }
-
         private static WindowPosAndSize GetFileExplorerWindowPosAndSize(Window window)
         {
             string windowTitle = window.TitleName;
