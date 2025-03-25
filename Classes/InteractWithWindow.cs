@@ -258,27 +258,7 @@ namespace Save_Window_Position_and_Size.Classes
                 "MSTaskSwWClass",       // Task Switcher
                 "Windows.UI.Core.CoreWindow", // UWP core window
             };
-
             return systemClasses.Contains(className);
-        }
-
-        // These methods are deprecated and will be removed in a future version
-        [Obsolete("This method is deprecated. Use GetApplicationWindows() instead.")]
-        public static List<Window> GetAllRunningApps(IgnoreListManager ignoreListManager)
-        {
-            throw new NotImplementedException("This method is deprecated. Use WindowManager.GetRunningApps() instead.");
-        }
-
-        [Obsolete("This method is deprecated. Use GetApplicationWindows() instead.")]
-        public static List<Window> GetVisibleRunningApps(IgnoreListManager ignoreListManager)
-        {
-            throw new NotImplementedException("This method is deprecated. Use WindowManager.GetRunningApps(true) instead.");
-        }
-
-        [Obsolete("This method is deprecated. Use GetApplicationWindows() instead.")]
-        public static Dictionary<string, IntPtr> GetAllMainWindowHandles()
-        {
-            throw new NotImplementedException("This method is deprecated. Use GetApplicationWindows() instead.");
         }
         #endregion
 
