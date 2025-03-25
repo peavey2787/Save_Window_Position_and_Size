@@ -1,6 +1,6 @@
 # Save Window Position and Size
 
-![Save_Window_Position_and_Size App Screen Shot](Resources/Screenshot.png)
+![SAVE_WINDOW_SIZE_AND_POS](https://github.com/user-attachments/assets/44913d45-f634-4d56-83d2-02bf4cfbaff3)
 
 A Windows utility that saves and restores window positions and sizes for your applications.
 
