@@ -170,11 +170,13 @@ namespace Save_Window_Position_and_Size.Classes
         {
             if (profileCollection.SelectedProfile == null)
                 return;
-
+            
             foreach (Window window in profileCollection.SelectedProfile.Windows)
             {
                 if (!window.AutoPosition)
+                {
                     continue;
+                }
 
                 RestoreWindow(window);
             }
@@ -186,12 +188,16 @@ namespace Save_Window_Position_and_Size.Classes
         public void RestoreWindow(Window window)
         {
             if (window == null || !window.IsValid())
+            {
                 return;
+            }
 
             // Get window handle
             IntPtr hWnd = GetWindowHandle(window);
             if (hWnd == IntPtr.Zero)
+            {
                 return;
+            }
 
             // Check if the window is minimized
             if (InteractWithWindow.IsIconic(hWnd) || InteractWithWindow.IsWindowMinimized(window))
@@ -203,12 +209,12 @@ namespace Save_Window_Position_and_Size.Classes
                 System.Threading.Thread.Sleep(100);
             }
 
-            // Set window position and size
+            // Set window position and size            
             UpdateWindowPositionAndSize(window);
 
             // Set always on top if needed
             if (window.KeepOnTop)
-            {
+            {             
                 SetWindowAlwaysOnTop(window, true);
             }
         }
@@ -219,9 +225,45 @@ namespace Save_Window_Position_and_Size.Classes
         public void UpdateWindowPositionAndSize(Window window)
         {
             if (window == null || !window.IsValid())
+            {
                 return;
+            }
 
-            InteractWithWindow.SetWindowPositionAndSize(window, window.WindowPosAndSize);
+            // Get a copy of the position and size values
+            WindowPosAndSize posAndSize = window.WindowPosAndSize;
+
+            // If the position is percentage-based, convert to pixels first
+            if (posAndSize.IsPercentageBased)
+            {
+                var (screenWidth, screenHeight) = GetScreenDimensions();
+
+                // Create a copy with pixel values
+                posAndSize = new WindowPosAndSize
+                {
+                    X = (int)(posAndSize.X * screenWidth / 100),
+                    Y = (int)(posAndSize.Y * screenHeight / 100),
+                    Width = (int)(posAndSize.Width * screenWidth / 100),
+                    Height = (int)(posAndSize.Height * screenHeight / 100),
+                    IsPercentageBased = false
+                };
+
+            }
+
+            // Get the window handle
+            IntPtr hWnd = GetWindowHandle(window);
+            if (hWnd == IntPtr.Zero)
+            {
+                return;
+            }
+
+            // Try to set the window position and size
+            try
+            {                
+                InteractWithWindow.SetWindowPositionAndSize(window, posAndSize);
+            }
+            catch (Exception ex)
+            {
+            }
         }
 
         /// <summary>
@@ -423,10 +465,36 @@ namespace Save_Window_Position_and_Size.Classes
         /// </summary>
         private IntPtr GetWindowHandle(Window window)
         {
+            // For File Explorer windows, always search by title
             if (window.IsFileExplorer)
                 return InteractWithWindow.FindWindowByTitle(window.TitleName);
+
+            // For regular windows, first try the stored handle (it might still be valid)
+            if (window.hWnd != IntPtr.Zero)
+            {
+                // Check if the handle is still valid
+                if (InteractWithWindow.IsWindow(window.hWnd))
+                {
+                    System.Diagnostics.Debug.WriteLine($"Using existing handle for {window.DisplayName}: {window.hWnd}");
+                    return window.hWnd;
+                }
+            }
+
+            // If the stored handle isn't valid, try to find the window by title and process
+            IntPtr newHandle = InteractWithWindow.GetWindowHandleByWindowAndProcess(window, ignoreListManager);
+
+            if (newHandle != IntPtr.Zero)
+            {
+                // Update the window's handle with the new one we found
+                window.hWnd = newHandle;
+                System.Diagnostics.Debug.WriteLine($"Found new handle for {window.DisplayName}: {newHandle}");
+            }
             else
-                return InteractWithWindow.GetWindowHandleByWindowAndProcess(window, ignoreListManager);
+            {
+                System.Diagnostics.Debug.WriteLine($"Could not find handle for {window.DisplayName} using title or process");
+            }
+
+            return newHandle;
         }
 
         private void LoadAllProfiles()
