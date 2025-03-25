@@ -136,7 +136,6 @@ namespace Save_Window_Position_and_Size.Classes
             {
                 if (hWnd == IntPtr.Zero)
                 {
-                    Debug.WriteLine("Cannot highlight null window handle");
                     return;
                 }
 
@@ -148,9 +147,9 @@ namespace Save_Window_Position_and_Size.Classes
 
                 // Validate window size
                 if (_windowRect.Width <= 10 || _windowRect.Height <= 10 ||
-                    _windowRect.Width > 3000 || _windowRect.Height > 3000)
+                    _windowRect.Width > SystemInformation.VirtualScreen.Width ||
+                    _windowRect.Height > SystemInformation.VirtualScreen.Height)
                 {
-                    Debug.WriteLine($"Window size invalid: {_windowRect.Width}x{_windowRect.Height}");
                     return;
                 }
 
@@ -165,9 +164,8 @@ namespace Save_Window_Position_and_Size.Classes
                 _autoStopTimer.Interval = Math.Max(500, _highlightDurationMs); // Ensure minimum duration
                 _autoStopTimer.Start();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                Debug.WriteLine($"Error in HighlightWindow: {ex.Message}");
                 StopHighlighting(); // Clean up in case of partial initialization
             }
         }
@@ -240,9 +238,9 @@ namespace Save_Window_Position_and_Size.Classes
                             }
                         }
                     }
-                    catch (Exception ex)
+                    catch (Exception)
                     {
-                        Debug.WriteLine($"Error getting DWM window bounds: {ex.Message}");
+                        // Silently handle exception
                     }
                 }
 
@@ -267,23 +265,21 @@ namespace Save_Window_Position_and_Size.Classes
                         return new Rectangle(
                             clientPoint.X - borderWidth,
                             clientPoint.Y - borderWidth,
-                            clientRect.Right - clientRect.Left + borderWidth * 2,
-                            clientRect.Bottom - clientRect.Top + borderWidth + borderHeight
+                            (clientRect.Right - clientRect.Left) + (borderWidth * 2),
+                            (clientRect.Bottom - clientRect.Top) + borderWidth + borderHeight
                         );
                     }
-                    catch (Exception ex)
+                    catch (Exception)
                     {
-                        Debug.WriteLine($"Error calculating client rect with adjustments: {ex.Message}");
+                        // Silently handle exception
                     }
                 }
 
                 // If all else fails, use the standard window rectangle
                 return standardRect;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                Debug.WriteLine($"Error in GetPreciseWindowRect: {ex.Message}");
-
                 // Last resort: standard GetWindowRect
                 RECT rect;
                 GetWindowRect(hWnd, out rect);
@@ -336,9 +332,8 @@ namespace Save_Window_Position_and_Size.Classes
 
                 _highlightedWindow = IntPtr.Zero;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                Debug.WriteLine($"Error in StopHighlighting: {ex.Message}");
                 // Reset state even if cleanup fails
                 _highlighterForm = null;
                 _highlightedWindow = IntPtr.Zero;
@@ -394,31 +389,30 @@ namespace Save_Window_Position_and_Size.Classes
                 try
                 {
                     // Configure form
-                    FormBorderStyle = FormBorderStyle.None;
-                    ShowInTaskbar = false;
-                    StartPosition = FormStartPosition.Manual;
-                    TopMost = true;
-                    BackColor = Color.Magenta; // Will be made transparent
-                    TransparencyKey = Color.Magenta;
+                    this.FormBorderStyle = FormBorderStyle.None;
+                    this.ShowInTaskbar = false;
+                    this.StartPosition = FormStartPosition.Manual;
+                    this.TopMost = true;
+                    this.BackColor = Color.Magenta; // Will be made transparent
+                    this.TransparencyKey = Color.Magenta;
 
                     // Set location and size to cover the target window plus space for outer border
                     int padding = Math.Max(_owner._borderWidth, _owner._innerBorderWidth) * 2;
 
                     // Ensure valid form size and position
-                    int left = Math.Max(0, _owner._windowRect.Left - padding);
-                    int top = Math.Max(0, _owner._windowRect.Top - padding);
-                    int width = Math.Min(Screen.PrimaryScreen.Bounds.Width, _owner._windowRect.Width + padding * 2);
-                    int height = Math.Min(Screen.PrimaryScreen.Bounds.Height, _owner._windowRect.Height + padding * 2);
+                    int left = _owner._windowRect.Left - padding;
+                    int top = _owner._windowRect.Top - padding;
+                    int width = Math.Min(SystemInformation.VirtualScreen.Width, _owner._windowRect.Width + (padding * 2));
+                    int height = Math.Min(SystemInformation.VirtualScreen.Height, _owner._windowRect.Height + (padding * 2));
 
-                    Location = new Point(left, top);
-                    Size = new Size(width, height);
+                    this.Location = new Point(left, top);
+                    this.Size = new Size(width, height);
 
                     // Handle paint event to draw borders
-                    Paint += HighlighterForm_Paint;
+                    this.Paint += HighlighterForm_Paint;
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
-                    Debug.WriteLine($"Error initializing HighlighterForm: {ex.Message}");
                     throw; // Re-throw to allow parent to handle cleanup
                 }
             }
@@ -438,8 +432,8 @@ namespace Save_Window_Position_and_Size.Classes
                     // Coordinates of the target window relative to this form
                     int windowX = outerPadding;
                     int windowY = outerPadding;
-                    int windowWidth = Math.Max(1, Width - outerPadding * 2);
-                    int windowHeight = Math.Max(1, Height - outerPadding * 2);
+                    int windowWidth = Math.Max(1, this.Width - (outerPadding * 2));
+                    int windowHeight = Math.Max(1, this.Height - (outerPadding * 2));
 
                     // Draw outer border if visible
                     if (_owner._outerBorderVisible && _owner._borderWidth > 0)
@@ -450,8 +444,8 @@ namespace Save_Window_Position_and_Size.Classes
                             Rectangle outerRect = new Rectangle(
                                 outerPadding / 2,
                                 outerPadding / 2,
-                                Math.Max(1, Width - outerPadding),
-                                Math.Max(1, Height - outerPadding));
+                                Math.Max(1, this.Width - outerPadding),
+                                Math.Max(1, this.Height - outerPadding));
                             g.DrawRectangle(outerPen, outerRect);
                         }
                     }
@@ -471,9 +465,8 @@ namespace Save_Window_Position_and_Size.Classes
                         }
                     }
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
-                    Debug.WriteLine($"Error in HighlighterForm_Paint: {ex.Message}");
                     // Continue execution - don't crash on paint errors
                 }
             }

@@ -105,14 +105,27 @@ namespace Save_Window_Position_and_Size.Classes
             if (window == null || !window.IsValid() || profileCollection.SelectedProfile == null)
                 return false;
 
-            // Check if the window already exists in the current profile
-            var existingWindow = profileCollection.SelectedProfile.Windows
-                .FirstOrDefault(w => w.TitleName == window.TitleName && w.hWnd == window.hWnd);
+            // For File Explorer windows, check if the window already exists based on title only
+            // For regular windows, check based on both title and handle
+            Window existingWindow = null;
+            if (window.IsFileExplorer)
+            {
+                existingWindow = profileCollection.SelectedProfile.Windows
+                    .FirstOrDefault(w => w.IsFileExplorer && w.TitleName == window.TitleName);
+            }
+            else
+            {
+                existingWindow = profileCollection.SelectedProfile.Windows
+                    .FirstOrDefault(w => w.TitleName == window.TitleName && w.hWnd == window.hWnd);
+            }
 
             if (existingWindow != null)
             {
                 // Update existing window by removing it first
                 profileCollection.SelectedProfile.Windows.Remove(existingWindow);
+
+                // Preserve the existing window ID for continuity
+                window.Id = existingWindow.Id;
             }
 
             // Add the window to the current profile
@@ -270,8 +283,8 @@ namespace Save_Window_Position_and_Size.Classes
             // Add them to the result if they're not already in the list
             foreach (var explorerWindow in fileExplorerWindows)
             {
-                // Skip if already in the result (to avoid duplicates)
-                if (windows.Any(w => w.TitleName == explorerWindow.TitleName))
+                // Skip if we already have a file explorer window with the same title
+                if (windows.Any(w => w.IsFileExplorer && w.TitleName == explorerWindow.TitleName))
                 {
                     continue;
                 }
