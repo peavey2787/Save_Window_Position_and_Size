@@ -103,7 +103,8 @@ namespace Save_Window_Position_and_Size
             // Load saved refresh time from settings
             if (int.TryParse(AppSettings.Load(Constants.AppSettingsConstants.RefreshTimeKey), out int refreshTime))
             {
-                minutes = refreshTime;
+                minutes = refreshTime - 1;
+                seconds = 60;
             }
 
             // Allow user to right click running app and ignore it

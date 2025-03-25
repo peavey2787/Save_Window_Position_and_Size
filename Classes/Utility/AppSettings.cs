@@ -23,6 +23,7 @@ namespace Save_Window_Position_and_Size.Classes
             }
 
             config.Save(ConfigurationSaveMode.Modified);
+            ConfigurationManager.RefreshSection(Constants.Defaults.ConfigManagerAppSettingsKey);
         }
 
         public static string Load(string key)

@@ -47,6 +47,7 @@ namespace Save_Window_Position_and_Size.Classes
             public const string DefaultProfileName = "Default";
             public const string LastUsedProfileKey = "LastUsedProfile";
             public const string SettingsFileName = "settings.json";
+            public const string ConfigManagerAppSettingsKey = "appSettings";
 
             public const int RefreshTimerInterval = 1000;  // 1 second
             public const int AutoSaveInterval = 30000;     // 30 seconds
