@@ -1,5 +1,6 @@
 using Newtonsoft.Json;
 using Save_Window_Position_and_Size.Classes;
+using Save_Window_Position_and_Size.Forms;
 using System;
 using System.Drawing;
 using System.Windows.Forms;
@@ -22,6 +23,7 @@ namespace Save_Window_Position_and_Size
         // Manager classes
         private WindowManager windowManager;
         private WindowHighlighter windowHighlighter;
+        private QuickLayoutManager quickLayoutManager;
 
         // Timer
         private int minutes = 0;
@@ -73,6 +75,9 @@ namespace Save_Window_Position_and_Size
 
             // Initialize the window highlighter
             InitializeHighlighter();
+
+            // Initialize the quick layout manager
+            quickLayoutManager = new QuickLayoutManager(windowManager);
 
             // Create notify icon
             CreateNotifyIcon();
@@ -143,6 +148,7 @@ namespace Save_Window_Position_and_Size
             toolTip1.SetToolTip(RefreshWindowButton, "Refresh and get the selected app's current window size/location");
             toolTip1.SetToolTip(Restore, "Restore the selected app's saved window size/location");
             toolTip1.SetToolTip(SettingsButton, "Open application settings");
+            toolTip1.SetToolTip(CreateQuickLayoutButton, "Create a minimized form in the taskbar that saves the current window layout and can restore it with a single click");
 
             // Handle the UsePercentagesCheckBox changes
             UsePercentagesCheckBox.CheckedChanged += UsePercentagesCheckBox_CheckedChanged;
@@ -177,6 +183,12 @@ namespace Save_Window_Position_and_Size
 
                 // Stop any active highlighting
                 windowHighlighter.StopHighlighting();
+
+                // Close all quick layout forms
+                if (quickLayoutManager != null)
+                {
+                    quickLayoutManager.CloseAll();
+                }
 
                 // Clean up notify icon (make invisible first to prevent ghost icons)
                 if (notify_icon != null)
@@ -252,6 +264,9 @@ namespace Save_Window_Position_and_Size
 
             // Add Capture Current Layout menu item
             contextMenu.Items.Add(CreateMenuItem("Capture Current Layout", Properties.Resources.refresh_blue_arrows, OnCaptureCurrentLayout, imageSize));
+
+            // Add Create Quick Layout menu item
+            contextMenu.Items.Add(CreateMenuItem("Create Quick Layout", Properties.Resources.magic_wand, OnCreateQuickLayout, imageSize));
 
             // Add profile switcher submenu
             ToolStripMenuItem profileSwitcherMenu = new ToolStripMenuItem("Switch Profile");
@@ -432,6 +447,22 @@ namespace Save_Window_Position_and_Size
             }
         }
 
+        private void OnCreateQuickLayout(object sender, EventArgs e)
+        {
+            // Create a quick layout form
+            var form = quickLayoutManager.CreateQuickLayoutForm();
+
+            // Form will automatically minimize itself when shown
+        }
+
+        private void CreateQuickLayoutButton_Click(object sender, EventArgs e)
+        {
+            // Create a quick layout form
+            var form = quickLayoutManager.CreateQuickLayoutForm();
+
+            // Form will automatically minimize itself when shown
+        }
+
         #endregion
 
 
@@ -530,7 +561,6 @@ namespace Save_Window_Position_and_Size
             RefreshSavedWindowsListBox();
             ClearWindowGUI();
         }
-
 
         // ListBoxes
         private void AppsSaved_SelectedIndexChanged(object sender, EventArgs e)

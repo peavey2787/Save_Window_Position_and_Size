@@ -18,6 +18,7 @@ namespace Save_Window_Position_and_Size.Classes
     {
         private ProfileCollection profileCollection;
         private IgnoreListManager ignoreListManager;
+        private Dictionary<int, List<Window>> quickLayouts = new Dictionary<int, List<Window>>();
 
         public WindowManager(IgnoreListManager ignoreListManager)
         {
@@ -37,6 +38,9 @@ namespace Save_Window_Position_and_Size.Classes
             {
                 profileCollection.SelectedProfileIndex = savedIndex;
             }
+
+            // Load quick layouts
+            LoadQuickLayouts();
         }
 
         #region Public Profile Management Methods
@@ -438,6 +442,92 @@ namespace Save_Window_Position_and_Size.Classes
         public void SaveChanges()
         {
             SaveAllProfiles();
+        }
+
+        #endregion
+
+        #region Quick Layout Methods
+
+        /// <summary>
+        /// Saves a quick layout with the given index and windows
+        /// </summary>
+        public void SaveQuickLayout(int index, List<Window> windows)
+        {
+            // Create deep copies of windows to ensure they're not modified elsewhere
+            var windowsCopy = windows.Select(w => w.Clone()).ToList();
+
+            // Save to dictionary
+            quickLayouts[index] = windowsCopy;
+
+            // Persist changes
+            SaveQuickLayouts();
+        }
+
+        /// <summary>
+        /// Restores all windows in a quick layout
+        /// </summary>
+        public void RestoreQuickLayout(int index)
+        {
+            if (!quickLayouts.TryGetValue(index, out var windows))
+                return;
+
+            foreach (var window in windows)
+            {
+                if (!window.AutoPosition)
+                    continue;
+
+                try
+                {
+                    RestoreWindow(window);
+                }
+                catch
+                {
+                    // Continue with next window if there's an error
+                    continue;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets all windows from a quick layout
+        /// </summary>
+        public List<Window> GetQuickLayout(int index)
+        {
+            if (quickLayouts.TryGetValue(index, out var windows))
+                return new List<Window>(windows);
+
+            return new List<Window>();
+        }
+
+        private void LoadQuickLayouts()
+        {
+            string savedLayouts = AppSettings.Load(Constants.AppSettingsConstants.QuickLayoutsKey);
+
+            if (!string.IsNullOrEmpty(savedLayouts))
+            {
+                try
+                {
+                    quickLayouts = JsonConvert.DeserializeObject<Dictionary<int, List<Window>>>(savedLayouts)
+                        ?? new Dictionary<int, List<Window>>();
+                }
+                catch
+                {
+                    quickLayouts = new Dictionary<int, List<Window>>();
+                }
+            }
+        }
+
+        private void SaveQuickLayouts()
+        {
+            try
+            {
+                string json = JsonConvert.SerializeObject(quickLayouts);
+                AppSettings.Save(Constants.AppSettingsConstants.QuickLayoutsKey, json);
+            }
+            catch
+            {
+                // Silently handle exceptions
+            }
         }
 
         #endregion

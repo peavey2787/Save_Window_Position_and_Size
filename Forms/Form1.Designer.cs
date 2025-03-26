@@ -34,6 +34,7 @@
             lblTime = new Label();
             Time = new Label();
             panel1 = new Panel();
+            CreateQuickLayoutButton = new Button();
             SettingsButton = new Button();
             UsePercentagesCheckBox = new CheckBox();
             profileComboBox = new ComboBox();
@@ -212,6 +213,7 @@
             // 
             panel1.AutoSize = true;
             panel1.BackColor = Color.Transparent;
+            panel1.Controls.Add(CreateQuickLayoutButton);
             panel1.Controls.Add(SettingsButton);
             panel1.Controls.Add(UsePercentagesCheckBox);
             panel1.Controls.Add(profileComboBox);
@@ -251,6 +253,17 @@
             panel1.Name = "panel1";
             panel1.Size = new Size(958, 397);
             panel1.TabIndex = 19;
+            // 
+            // CreateQuickLayoutButton
+            // 
+            CreateQuickLayoutButton.BackgroundImage = Properties.Resources.magic_wand;
+            CreateQuickLayoutButton.BackgroundImageLayout = ImageLayout.Zoom;
+            CreateQuickLayoutButton.Location = new Point(228, 360);
+            CreateQuickLayoutButton.Name = "CreateQuickLayoutButton";
+            CreateQuickLayoutButton.Size = new Size(36, 34);
+            CreateQuickLayoutButton.TabIndex = 43;
+            CreateQuickLayoutButton.UseVisualStyleBackColor = true;
+            CreateQuickLayoutButton.Click += CreateQuickLayoutButton_Click;
             // 
             // SettingsButton
             // 
@@ -520,5 +533,6 @@
         private CheckBox UsePercentagesCheckBox;
         private Button SettingsButton;
         private Button ClearAllButton;
+        private Button CreateQuickLayoutButton;
     }
 }

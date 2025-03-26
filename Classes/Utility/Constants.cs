@@ -22,6 +22,7 @@ namespace Save_Window_Position_and_Size.Classes
             public const string HighlighterColorKey = "HighlighterColor";
             public const string SkipConfirmationKey = "SkipConfirmation";
             public const string MinimizeOtherWindowsKey = "MinimizeOtherWindows";
+            public const string QuickLayoutsKey = "QuickLayouts";
         }
 
         // Default values
@@ -32,6 +33,7 @@ namespace Save_Window_Position_and_Size.Classes
             public const int DefaultRandomIdMin = 300;
             public const int DefaultRandomIdMax = 32034;
             public const int TimerIntervalMs = 1000;
+            public const int MaxQuickLayouts = 25;
 
             // Window Highlighter defaults
             public const int HighlighterBorderThickness = 3;
@@ -65,6 +67,7 @@ namespace Save_Window_Position_and_Size.Classes
             public const string FileExplorerPrefix = "FileExplorer: ";
             public const string UnnamedWindowFormat = "Unnamed Window ({0})";
             public const string DefaultProfileNameFormat = "Profile {0}";
+            public const string QuickLayoutTitleFormat = "{0} Quick Layout";
         }
     }
 }
