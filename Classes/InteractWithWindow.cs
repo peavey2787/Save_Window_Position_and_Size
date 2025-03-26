@@ -27,6 +27,7 @@ namespace Save_Window_Position_and_Size.Classes
         static readonly IntPtr HWND_TOPMOST = new IntPtr(-1);
         static readonly IntPtr HWND_TOP = new IntPtr(0);
         static readonly IntPtr HWND_BOTTOM = new IntPtr(1);
+        static readonly IntPtr HWND_NOTOPMOST = new IntPtr(-2);
 
         // P/Invoke declarations.
         internal const int GWL_STYLE = -16;
@@ -127,7 +128,7 @@ namespace Save_Window_Position_and_Size.Classes
             exceptions = exceptions ?? new List<string>();
 
             // Create the result dictionary with window handles as keys and titles as values
-            var allWindows = new Dictionary<IntPtr, string>();           
+            var allWindows = new Dictionary<IntPtr, string>();
 
             // Now, get all regular application windows
             EnumWindows(delegate (IntPtr hWnd, IntPtr lParam)
@@ -476,7 +477,7 @@ namespace Save_Window_Position_and_Size.Classes
         #endregion
 
 
-        #region Get Window Title
+        #region Get Window Title/Process Name
         public static string GetProcessNameByWindowTitle(string windowTitle)
         {
             IntPtr hWnd = FindWindowByTitle(windowTitle);
@@ -559,6 +560,247 @@ namespace Save_Window_Position_and_Size.Classes
                 SetWindowPos(window.hWnd, IntPtr.Zero, posAndSize.X, posAndSize.Y,
                     posAndSize.Width, posAndSize.Height, SWP_NOZORDER | SWP_SHOWWINDOW);
             }
+        }
+
+        /// <summary>
+        /// Attempts to move windows that resist standard movement methods (like D3D applications)
+        /// </summary>
+        private static bool MoveStubornWindow(Window window, WindowPosAndSize posAndSize)
+        {
+            // First: Try using the direct approach with different combination of flags
+            for (int attempt = 0; attempt < 3; attempt++)
+            {
+                uint flags = SWP_SHOWWINDOW;
+                IntPtr insertAfter = IntPtr.Zero;
+
+                if (attempt == 1)
+                {
+                    // Second attempt: Make sure window is restored and has focus first
+                    ShowWindow(window.hWnd, SW_RESTORE);
+                    SetForegroundWindow(window.hWnd);
+                    insertAfter = HWND_TOP;
+                    flags = SWP_SHOWWINDOW;
+                }
+                else if (attempt == 2)
+                {
+                    // Third attempt: Try topmost
+                    insertAfter = HWND_TOPMOST;
+                    flags = SWP_SHOWWINDOW;
+
+                    // Wait a moment before trying (some apps need this)
+                    System.Threading.Thread.Sleep(50);
+                }
+
+                SetWindowPos(window.hWnd, insertAfter, posAndSize.X, posAndSize.Y,
+                    posAndSize.Width, posAndSize.Height, flags);
+
+                // Check if it moved
+                GetWindowRect(window.hWnd, out RECT rect);
+                if (rect.Left == posAndSize.X && rect.Top == posAndSize.Y)
+                {
+                    // Restore non-topmost state if necessary
+                    if (attempt == 2)
+                    {
+                        SetWindowPos(window.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0,
+                            SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+                    }
+                    return true;
+                }
+            }
+
+            // Second: Get window class to adapt strategy
+            StringBuilder className = new StringBuilder(256);
+            GetClassName(window.hWnd, className, className.Capacity);
+            string windowClass = className.ToString();
+
+            // Get process info
+            uint processId;
+            GetWindowThreadProcessId(window.hWnd, out processId);
+            string processName = "";
+
+            try
+            {
+                using (Process process = Process.GetProcessById((int)processId))
+                {
+                    processName = process.ProcessName.ToLower();
+                }
+            }
+            catch
+            {
+                // Process may have exited
+            }
+
+            // Try to find all windows with the same title
+            var windowsWithSameTitle = new Dictionary<IntPtr, string>();
+            EnumWindows(delegate (IntPtr hWnd, IntPtr lParam)
+            {
+                StringBuilder title = new StringBuilder(256);
+                GetWindowText(hWnd, title, title.Capacity);
+                string windowTitle = title.ToString();
+
+                if (windowTitle == window.TitleName)
+                {
+                    windowsWithSameTitle[hWnd] = windowTitle;
+                }
+                return true;
+            }, IntPtr.Zero);
+
+            // Try to move each window with the same title using different strategies
+            foreach (var hwnd in windowsWithSameTitle.Keys)
+            {
+                if (hwnd != window.hWnd && IsWindowVisible(hwnd))
+                {
+                    // First try to bring the window to the foreground
+                    ShowWindow(hwnd, SW_RESTORE);
+                    SetForegroundWindow(hwnd);
+
+                    // Try with different Z-orders and flags
+                    for (int i = 0; i < 3; i++)
+                    {
+                        IntPtr insertAfter = (i == 0) ? IntPtr.Zero : (i == 1) ? HWND_TOP : HWND_TOPMOST;
+                        uint flags = SWP_SHOWWINDOW;
+
+                        SetWindowPos(hwnd, insertAfter, posAndSize.X, posAndSize.Y,
+                            posAndSize.Width, posAndSize.Height, flags);
+
+                        // Check if it moved
+                        GetWindowRect(hwnd, out RECT rect);
+                        if (rect.Left == posAndSize.X && rect.Top == posAndSize.Y)
+                        {
+                            // Restore non-topmost state if necessary
+                            if (i == 2)
+                            {
+                                SetWindowPos(hwnd, HWND_NOTOPMOST, 0, 0, 0, 0,
+                                    SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+                            }
+                            return true; // Successfully moved a window
+                        }
+                    }
+                }
+            }
+
+            // If title-based approach failed, try by process relationships with broader criteria
+            if (!string.IsNullOrEmpty(window.ProcessName))
+            {
+                // Find all processes with similar names (base name or variants)
+                var relatedProcesses = new List<Process>();
+                try
+                {
+                    // Get the base name (without any potential suffixes)
+                    string baseName = window.ProcessName;
+                    const string win64Suffix = "-Win64-Shipping";
+
+                    if (baseName.EndsWith(win64Suffix, StringComparison.OrdinalIgnoreCase))
+                    {
+                        baseName = baseName.Substring(0, baseName.Length - win64Suffix.Length);
+                    }
+
+                    // Find all processes that might be related
+                    foreach (var process in Process.GetProcesses())
+                    {
+                        try
+                        {
+                            // Check if the process name starts with the base name OR
+                            // if the process is a known companion process
+                            if (process.ProcessName.StartsWith(baseName, StringComparison.OrdinalIgnoreCase) ||
+                                (process.ProcessName.EndsWith("-Win64-Shipping", StringComparison.OrdinalIgnoreCase) &&
+                                 process.ProcessName.StartsWith(baseName, StringComparison.OrdinalIgnoreCase)) ||
+                                process.ProcessName == baseName + "-Win64-Shipping" ||
+                                process.ProcessName == baseName.Replace("-Win64-Shipping", ""))
+                            {
+                                relatedProcesses.Add(process);
+                            }
+                        }
+                        catch
+                        {
+                            // Skip this process if we can't access its name
+                        }
+                    }
+
+                    // Try to move each related process's window using multiple techniques
+                    foreach (var process in relatedProcesses)
+                    {
+                        if (process.MainWindowHandle != IntPtr.Zero && IsWindowVisible(process.MainWindowHandle))
+                        {
+                            // First try to restore and focus the window
+                            ShowWindow(process.MainWindowHandle, SW_RESTORE);
+                            SetForegroundWindow(process.MainWindowHandle);
+
+                            // Try multiple approaches with different z-order
+                            for (int i = 0; i < 3; i++)
+                            {
+                                IntPtr insertAfter = (i == 0) ? IntPtr.Zero : (i == 1) ? HWND_TOP : HWND_TOPMOST;
+                                uint flags = SWP_SHOWWINDOW;
+
+                                // Try to move this window
+                                SetWindowPos(process.MainWindowHandle, insertAfter,
+                                    posAndSize.X, posAndSize.Y,
+                                    posAndSize.Width, posAndSize.Height, flags);
+
+                                // Check if it moved
+                                GetWindowRect(process.MainWindowHandle, out RECT rect);
+                                if (rect.Left == posAndSize.X && rect.Top == posAndSize.Y)
+                                {
+                                    // Restore non-topmost state if necessary
+                                    if (i == 2)
+                                    {
+                                        SetWindowPos(process.MainWindowHandle, HWND_NOTOPMOST, 0, 0, 0, 0,
+                                            SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+                                    }
+                                    return true; // Successfully moved a window
+                                }
+                            }
+
+                            // If the main window didn't move, try to find and move other windows of this process
+                            EnumWindows(delegate (IntPtr hWnd, IntPtr lParam)
+                            {
+                                uint windowProcessId;
+                                GetWindowThreadProcessId(hWnd, out windowProcessId);
+
+                                if (windowProcessId == process.Id && IsWindowVisible(hWnd) &&
+                                    hWnd != process.MainWindowHandle)
+                                {
+                                    // Try to move this alternate window with different z-order options
+                                    for (int j = 0; j < 3; j++)
+                                    {
+                                        IntPtr insertAfter = (j == 0) ? IntPtr.Zero : (j == 1) ? HWND_TOP : HWND_TOPMOST;
+                                        uint flags = SWP_SHOWWINDOW;
+
+                                        SetWindowPos(hWnd, insertAfter, posAndSize.X, posAndSize.Y,
+                                            posAndSize.Width, posAndSize.Height, flags);
+
+                                        // Check if it moved
+                                        GetWindowRect(hWnd, out RECT rect);
+                                        if (rect.Left == posAndSize.X && rect.Top == posAndSize.Y)
+                                        {
+                                            // Restore non-topmost state if necessary
+                                            if (j == 2)
+                                            {
+                                                SetWindowPos(hWnd, HWND_NOTOPMOST, 0, 0, 0, 0,
+                                                    SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+                                            }
+                                            return false; // Stop enumeration
+                                        }
+                                    }
+                                }
+                                return true; // Continue enumeration
+                            }, IntPtr.Zero);
+                        }
+                    }
+                }
+                catch
+                {
+                    // Silently handle exceptions
+                }
+
+                // Cleanup
+                foreach (var process in relatedProcesses)
+                {
+                    try { process.Dispose(); } catch { }
+                }
+            }
+
+            return false; // Failed to move any window
         }
         #endregion
 
