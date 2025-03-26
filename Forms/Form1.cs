@@ -85,7 +85,18 @@ namespace Save_Window_Position_and_Size
             // Initialize the timer
             refreshTimer.Interval = Constants.Defaults.TimerIntervalMs;
             refreshTimer.Tick += RefreshTimer_Tick;
-            refreshTimer.Start();
+
+            // Check if auto-start timer is enabled
+            string autoStartTimer = AppSettings.Load(Constants.AppSettingsConstants.AutoStartTimerKey);
+            if (autoStartTimer == "false")
+            {
+                refreshTimer.Stop();
+            }
+            else
+            {
+                // Default to start if setting is not found or set to true
+                refreshTimer.Start();
+            }
         }
 
         private async void Form1_Load(object sender, EventArgs e)
@@ -149,9 +160,13 @@ namespace Save_Window_Position_and_Size
             toolTip1.SetToolTip(Restore, "Restore the selected app's saved window size/location");
             toolTip1.SetToolTip(SettingsButton, "Open application settings");
             toolTip1.SetToolTip(CreateQuickLayoutButton, "Create a minimized form in the taskbar that saves the current window layout and can restore it with a single click");
+            toolTip1.SetToolTip(TimerToggleButton, "Start/Stop auto positioning timer");
 
             // Handle the UsePercentagesCheckBox changes
             UsePercentagesCheckBox.CheckedChanged += UsePercentagesCheckBox_CheckedChanged;
+
+            // Set initial timer button state
+            UpdateTimerButtonState();
         }
 
         // Shutdown
@@ -472,6 +487,34 @@ namespace Save_Window_Position_and_Size
         private void RefreshAllRunningApps_Click(object sender, EventArgs e)
         {
             UpdateRunningApps();
+        }
+
+        private void TimerToggleButton_Click(object sender, EventArgs e)
+        {
+            if (refreshTimer.Enabled)
+            {
+                refreshTimer.Stop();
+            }
+            else
+            {
+                refreshTimer.Start();
+            }
+
+            UpdateTimerButtonState();
+        }
+
+        private void UpdateTimerButtonState()
+        {
+            if (refreshTimer.Enabled)
+            {
+                TimerToggleButton.BackgroundImage = Properties.Resources.stop_button;
+                toolTip1.SetToolTip(TimerToggleButton, "Stop auto positioning timer");
+            }
+            else
+            {
+                TimerToggleButton.BackgroundImage = Properties.Resources.play_button;
+                toolTip1.SetToolTip(TimerToggleButton, "Start auto positioning timer");
+            }
         }
 
         private void Save_Click(object sender, EventArgs e)
@@ -1096,6 +1139,9 @@ namespace Save_Window_Position_and_Size
                 minutes = refreshTime - 1;
                 seconds = 60;
             }
+
+            // Update the timer button state
+            UpdateTimerButtonState();
         }
         #endregion
 

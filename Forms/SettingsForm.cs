@@ -26,6 +26,10 @@ namespace Save_Window_Position_and_Size
             string minimizeOtherWindows = AppSettings.Load(Constants.AppSettingsConstants.MinimizeOtherWindowsKey);
             MinimizeOtherWindowsCheckbox.Checked = minimizeOtherWindows == "true";
 
+            // Load auto-start timer setting
+            string autoStartTimer = AppSettings.Load(Constants.AppSettingsConstants.AutoStartTimerKey);
+            AutoStartTimerCheckbox.Checked = autoStartTimer == "true";
+
             // Load refresh timer interval
             if (int.TryParse(AppSettings.Load(Constants.AppSettingsConstants.RefreshTimeKey), out int refreshTime))
             {
@@ -46,6 +50,10 @@ namespace Save_Window_Position_and_Size
             // Save minimize other windows setting
             AppSettings.Save(Constants.AppSettingsConstants.MinimizeOtherWindowsKey,
                 MinimizeOtherWindowsCheckbox.Checked ? "true" : "false");
+
+            // Save auto-start timer setting
+            AppSettings.Save(Constants.AppSettingsConstants.AutoStartTimerKey,
+                AutoStartTimerCheckbox.Checked ? "true" : "false");
 
             // Save refresh timer interval
             if (int.TryParse(UpdateTimerInterval.Text, out int refreshTime))

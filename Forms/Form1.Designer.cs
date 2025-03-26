@@ -33,6 +33,7 @@
             AllRunningApps = new ListBox();
             lblTime = new Label();
             Time = new Label();
+            TimerToggleButton = new Button();
             panel1 = new Panel();
             CreateQuickLayoutButton = new Button();
             SettingsButton = new Button();
@@ -63,7 +64,7 @@
             // 
             Save.BackgroundImage = Properties.Resources.floppy_disk;
             Save.BackgroundImageLayout = ImageLayout.Zoom;
-            Save.Location = new Point(482, 324);
+            Save.Location = new Point(482, 305);
             Save.Name = "Save";
             Save.Size = new Size(36, 34);
             Save.TabIndex = 0;
@@ -209,10 +210,22 @@
             Time.TabIndex = 18;
             Time.Text = "0   ";
             // 
+            // TimerToggleButton
+            // 
+            TimerToggleButton.BackgroundImage = Properties.Resources.play_button;
+            TimerToggleButton.BackgroundImageLayout = ImageLayout.Zoom;
+            TimerToggleButton.Location = new Point(524, 365);
+            TimerToggleButton.Name = "TimerToggleButton";
+            TimerToggleButton.Size = new Size(24, 24);
+            TimerToggleButton.TabIndex = 19;
+            TimerToggleButton.UseVisualStyleBackColor = true;
+            TimerToggleButton.Click += TimerToggleButton_Click;
+            // 
             // panel1
             // 
             panel1.AutoSize = true;
             panel1.BackColor = Color.Transparent;
+            panel1.Controls.Add(TimerToggleButton);
             panel1.Controls.Add(CreateQuickLayoutButton);
             panel1.Controls.Add(SettingsButton);
             panel1.Controls.Add(UsePercentagesCheckBox);
@@ -511,6 +524,7 @@
         private ListBox AllRunningApps;
         private Label lblTime;
         private Label Time;
+        private Button TimerToggleButton;
         private Panel panel1;
         private CheckBox AutoPosition;
         private Label lblAllRunningApps;

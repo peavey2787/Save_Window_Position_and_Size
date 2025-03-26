@@ -1,6 +1,6 @@
 # Save Window Position and Size
 
-![SAVE_WINDOW_SIZE_AND_POS](https://github.com/user-attachments/assets/44913d45-f634-4d56-83d2-02bf4cfbaff3)
+![Save_Window_Position_and_Size App Screen Shot](Resources/Screenshot.png)
 
 A Windows utility that saves and restores window positions and sizes for your applications.
 
@@ -12,6 +12,7 @@ This application allows you to:
 - Manage multiple window layout profiles
 - Keep important windows always on top
 - Visually highlight windows for easy identification
+- Create quick layouts that can be restored with a single click
 
 ## Main Features
 
@@ -23,6 +24,7 @@ The application minimizes to the system tray. Double-click the tray icon to show
 - Show GUI - Opens the main interface
 - Start/Stop Auto Moving - Enables/disables automatic window positioning
 - Capture Current Layout - Saves all current window positions to the active profile
+- Create Quick Layout - Creates a minimized form in the taskbar that can restore the current layout with a single click
 - Switch Profile - Quickly change between saved profiles
 - Exit - Closes the application
 
@@ -32,15 +34,20 @@ Shows all currently running applications. Select an app to view or edit its posi
 ### Saved Apps List
 Shows all applications saved in the current profile. Select a saved app to view or edit its settings.
 
+### Quick Layouts
+Quick layouts allow you to save the current window layout to a minimized form in the taskbar. Clicking this form will restore all windows to their saved positions and sizes with a single click, making it easy to switch between different window arrangements.
+
 ## UI Elements and Controls
 
 ### Window Management Buttons
 - **Refresh All Apps** (↻) - Updates the list of running applications
 - **Ignore List** (🚫) - Opens the ignore list manager
+- **Quick Layout** (📌) - Creates a minimized form in the taskbar for quick layout restoration
 - **Refresh Window** (↻) - Updates the selected window's current position and size
 - **Save** (💾) - Saves the current window settings to the active profile
 - **Restore** (↔️) - Restores the selected window to its saved position and size
 - **Restore All** (↔️) - Restores all saved windows in the active profile
+- **Timer Toggle** (▶/⏹) - Starts or stops the automatic window positioning timer
 
 ### Window Properties
 - **Nickname** - Custom display name for the window
@@ -54,6 +61,8 @@ Shows all applications saved in the current profile. Select a saved app to view 
 ### Global Settings
 - **Auto Position Interval** - How often (in minutes) the application checks and restores window positions
 - **Skip confirmation dialogs** - When checked, certain operations will proceed without confirmation prompts
+- **Minimize other windows on profile switch** - When checked, all other windows will be minimized when switching profiles, showing only the windows saved in that profile
+- **Auto-start timer on application start** - When checked, the auto-positioning timer will start automatically when the application launches
 
 ## How to Use
 
@@ -69,10 +78,21 @@ Shows all applications saved in the current profile. Select a saved app to view 
 ### Quick Capture All Windows
 Use the "Capture Current Layout" option in the system tray menu to quickly save all visible windows to the current profile.
 
+### Creating Quick Layouts
+1. Arrange your windows as desired on your screen
+2. Click the "Create Quick Layout" button (📌) or select it from the system tray menu
+3. A minimized form will be created in the taskbar
+4. Click this form at any time to restore all windows to their saved positions
+
 ### Restoring Windows
 - Select a saved app and click the Restore button to restore just that window
 - Click the Restore All button to restore all saved windows in the current profile
 - Enable Auto Position for windows you want automatically maintained at their saved positions
+- Click on a Quick Layout form in the taskbar to restore all windows in that layout
+
+### Timer Controls
+- Use the start/stop button (▶/⏹) next to the countdown timer to manually control the auto-positioning feature
+- Configure the timer to auto-start when the application launches via the Settings dialog
 
 ### Removing a Saved Window
 Select a saved app in the Saved Apps list and press the Delete key to remove it from the profile.

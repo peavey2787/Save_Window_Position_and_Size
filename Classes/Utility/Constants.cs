@@ -23,6 +23,7 @@ namespace Save_Window_Position_and_Size.Classes
             public const string SkipConfirmationKey = "SkipConfirmation";
             public const string MinimizeOtherWindowsKey = "MinimizeOtherWindows";
             public const string QuickLayoutsKey = "QuickLayouts";
+            public const string AutoStartTimerKey = "AutoStartTimer";
         }
 
         // Default values

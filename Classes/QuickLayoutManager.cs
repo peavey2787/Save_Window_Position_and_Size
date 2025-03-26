@@ -54,10 +54,6 @@ namespace Save_Window_Position_and_Size.Classes
                 // Ensure it's registered with Windows
                 Application.DoEvents();
 
-                // Tell the user what we've done
-                MessageBox.Show($"Quick Layout {nextIndex} has been created. You can restore this layout by clicking its icon in the taskbar.",
-                    "Quick Layout Created", MessageBoxButtons.OK, MessageBoxIcon.Information);
-
                 return form;
             }
             catch (Exception ex)
