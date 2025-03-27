@@ -47,6 +47,7 @@ namespace Save_Window_Position_and_Size.Classes
             public const int HighlighterDurationMs = 3000; // 3 seconds
 
             public const string ProfilesFolderName = "Profiles";
+            public const string QuickLaunchFolderName = "QuickLaunch";
             public const string DefaultProfileName = "Default";
             public const string LastUsedProfileKey = "LastUsedProfile";
             public const string SettingsFileName = "settings.json";

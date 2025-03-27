@@ -1,6 +1,5 @@
 using Newtonsoft.Json;
 using Save_Window_Position_and_Size.Classes;
-using Save_Window_Position_and_Size.Forms;
 using System;
 using System.Drawing;
 using System.Windows.Forms;
@@ -8,6 +7,7 @@ using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.ToolBar;
 using Window = Save_Window_Position_and_Size.Classes.Window;
 using Timer = System.Windows.Forms.Timer;
+using System.Diagnostics;
 
 namespace Save_Window_Position_and_Size
 {
@@ -159,7 +159,8 @@ namespace Save_Window_Position_and_Size
             toolTip1.SetToolTip(RefreshWindowButton, "Refresh and get the selected app's current window size/location");
             toolTip1.SetToolTip(Restore, "Restore the selected app's saved window size/location");
             toolTip1.SetToolTip(SettingsButton, "Open application settings");
-            toolTip1.SetToolTip(CreateQuickLayoutButton, "Create a minimized form in the taskbar that saves the current window layout and can restore it with a single click");
+            toolTip1.SetToolTip(CreateQuickLayoutButton, "Create a quick layout from the current windows or a profile");
+            toolTip1.SetToolTip(CaptureScreenLayout, "Capture the current screen layout to the current or another profile");
             toolTip1.SetToolTip(TimerToggleButton, "Start/Stop auto positioning timer");
 
             // Handle the UsePercentagesCheckBox changes
@@ -277,11 +278,80 @@ namespace Save_Window_Position_and_Size
             // Add a separator
             contextMenu.Items.Add(new ToolStripSeparator());
 
-            // Add Capture Current Layout menu item
-            contextMenu.Items.Add(CreateMenuItem("Capture Current Layout", Properties.Resources.refresh_blue_arrows, OnCaptureCurrentLayout, imageSize));
+            // Add Capture Current Layout menu with submenu for profile selection
+            ToolStripMenuItem captureLayoutMenu = new ToolStripMenuItem("Capture Current Layout");
+            captureLayoutMenu.Image = new Bitmap(Properties.Resources.refresh_blue_arrows, new Size(imageSize, imageSize));
+            captureLayoutMenu.Font = new Font("Arial", 10, FontStyle.Regular);
 
-            // Add Create Quick Layout menu item
-            contextMenu.Items.Add(CreateMenuItem("Create Quick Layout", Properties.Resources.magic_wand, OnCreateQuickLayout, imageSize));
+            // Add first option to capture to current profile
+            ToolStripMenuItem captureToCurrentProfileItem = new ToolStripMenuItem("Current Profile");
+            captureToCurrentProfileItem.Font = new Font("Arial", 10, FontStyle.Bold);
+            captureToCurrentProfileItem.Click += OnCaptureCurrentLayout;
+            captureLayoutMenu.DropDownItems.Add(captureToCurrentProfileItem);
+
+            // Add separator
+            captureLayoutMenu.DropDownItems.Add(new ToolStripSeparator());
+
+            // Add remaining profiles
+            captureLayoutMenu.DropDownOpening += CaptureLayoutMenu_DropDownOpening;
+
+            contextMenu.Items.Add(captureLayoutMenu);
+
+            // Add Create Quick Layout menu with submenu options
+            ToolStripMenuItem createQuickLayoutMenu = new ToolStripMenuItem("Create Quick Layout");
+            createQuickLayoutMenu.Image = new Bitmap(Properties.Resources.magic_wand, new Size(imageSize, imageSize));
+            createQuickLayoutMenu.Font = new Font("Arial", 10, FontStyle.Regular);
+
+            // Option 1: Create from current layout
+            ToolStripMenuItem createFromCurrentItem = new ToolStripMenuItem("From Current Layout");
+            createFromCurrentItem.Click += OnCreateQuickLayout;
+            createQuickLayoutMenu.DropDownItems.Add(createFromCurrentItem);
+
+            // Add separator
+            createQuickLayoutMenu.DropDownItems.Add(new ToolStripSeparator());
+
+            // Option 2: Create from specific profile
+            ToolStripMenuItem createFromProfileMenu = new ToolStripMenuItem("From Profile");
+
+            // Create profile submenu items
+            createFromProfileMenu.DropDownOpening += (s, e) => {
+                // Clear existing items
+                createFromProfileMenu.DropDownItems.Clear();
+
+                // Get profile names
+                var profileNames = windowManager.GetAllProfileNames();
+
+                // Add each profile
+                for (int i = 0; i < profileNames.Count; i++)
+                {
+                    string profileName = profileNames[i];
+                    var profileMenuItem = new ToolStripMenuItem(profileName);
+
+                    // Store profile index
+                    int profileIndex = i;
+
+                    profileMenuItem.Click += (sender, args) => {
+                        // Temporarily switch to profile to get windows
+                        int currentProfileIndex = windowManager.GetCurrentProfileIndex();
+                        windowManager.SwitchToProfileWithoutRestore(profileIndex);
+
+                        // Get the windows from the profile
+                        var profileWindows = windowManager.GetCurrentProfileWindows();
+
+                        // Create quick layout with these windows
+                        quickLayoutManager.CreateQuickLayout(profileWindows);
+
+                        // Switch back to original profile
+                        windowManager.SwitchToProfileWithoutRestore(currentProfileIndex);
+                    };
+
+                    createFromProfileMenu.DropDownItems.Add(profileMenuItem);
+                }
+            };
+
+            createQuickLayoutMenu.DropDownItems.Add(createFromProfileMenu);
+
+            contextMenu.Items.Add(createQuickLayoutMenu);
 
             // Add profile switcher submenu
             ToolStripMenuItem profileSwitcherMenu = new ToolStripMenuItem("Switch Profile");
@@ -383,6 +453,46 @@ namespace Save_Window_Position_and_Size
             }
         }
 
+        private void CaptureLayoutMenu_DropDownOpening(object sender, EventArgs e)
+        {
+            // Get the capture layout menu
+            ToolStripMenuItem captureLayoutMenu = sender as ToolStripMenuItem;
+            if (captureLayoutMenu == null) return;
+
+            // Get all profile names
+            var profileNames = windowManager.GetAllProfileNames();
+
+            // Get current profile index for bold highlighting
+            int currentProfileIndex = windowManager.GetCurrentProfileIndex();
+
+            // Keep the "Current Profile" item (index 0) and the separator (index 1)
+            // Remove all other items
+            while (captureLayoutMenu.DropDownItems.Count > 2)
+            {
+                captureLayoutMenu.DropDownItems.RemoveAt(2);
+            }
+
+            // Add each profile to the submenu
+            for (int i = 0; i < profileNames.Count; i++)
+            {
+                string profileName = profileNames[i];
+                var profileMenuItem = new ToolStripMenuItem(profileName);
+
+                // Set font to bold for current profile
+                profileMenuItem.Font = new Font("Arial", 10,
+                    (i == currentProfileIndex) ? FontStyle.Bold : FontStyle.Regular);
+
+                // Set the profile index as the Tag property
+                profileMenuItem.Tag = i;
+
+                // Add click handler
+                profileMenuItem.Click += CaptureLayoutMenuItem_Click;
+
+                // Add to submenu
+                captureLayoutMenu.DropDownItems.Add(profileMenuItem);
+            }
+        }
+
         private void ProfileMenuItem_Click(object sender, EventArgs e)
         {
             ToolStripMenuItem menuItem = sender as ToolStripMenuItem;
@@ -410,8 +520,14 @@ namespace Save_Window_Position_and_Size
             }
         }
 
-        private void OnCaptureCurrentLayout(object sender, EventArgs e)
+        private void CaptureLayoutMenuItem_Click(object sender, EventArgs e)
         {
+            ToolStripMenuItem menuItem = sender as ToolStripMenuItem;
+            if (menuItem == null || menuItem.Tag == null) return;
+
+            // Get profile index from Tag
+            int profileIndex = (int)menuItem.Tag;
+
             // Check skip confirmation setting from AppSettings
             bool skipConfirmation = AppSettings.Load(Constants.AppSettingsConstants.SkipConfirmationKey) == "true";
 
@@ -419,7 +535,7 @@ namespace Save_Window_Position_and_Size
             if (!skipConfirmation)
             {
                 DialogResult result = MessageBox.Show(
-                    "This will replace all windows in the current profile with the current window layout. Continue?",
+                    $"This will replace all windows in profile '{menuItem.Text}' with the current window layout. Continue?",
                     "Confirm Replace",
                     MessageBoxButtons.YesNo,
                     MessageBoxIcon.Question);
@@ -427,8 +543,8 @@ namespace Save_Window_Position_and_Size
                 if (result != DialogResult.Yes) return;
             }
 
-            // Get current profile index
-            int profileIndex = windowManager.GetCurrentProfileIndex();
+            // Switch to the selected profile without restoring windows
+            windowManager.SwitchToProfileWithoutRestore(profileIndex);
 
             // Clear existing windows in the current profile
             windowManager.ClearCurrentProfileWindows();
@@ -453,29 +569,214 @@ namespace Save_Window_Position_and_Size
             // Update UI if the main form is visible
             if (this.Visible)
             {
-                // Update the profile combobox to show the current profile
+                // Update profile combobox selection
                 if (profileComboBox.SelectedIndex != profileIndex)
                 {
                     profileComboBox.SelectedIndex = profileIndex;
                 }
-                RefreshSavedWindowsListBox();
+                else
+                {
+                    // If already selected, manually refresh the window list
+                    RefreshSavedWindowsListBox();
+                }
             }
         }
 
         private void OnCreateQuickLayout(object sender, EventArgs e)
         {
-            // Create a quick layout form
-            var form = quickLayoutManager.CreateQuickLayoutForm();
-
-            // Form will automatically minimize itself when shown
+            // Create a quick layout
+            quickLayoutManager.CreateQuickLayout();
         }
 
         private void CreateQuickLayoutButton_Click(object sender, EventArgs e)
         {
-            // Create a quick layout form
-            var form = quickLayoutManager.CreateQuickLayoutForm();
+            // Create context menu for the quick layout button
+            ContextMenuStrip quickLayoutContextMenu = new ContextMenuStrip();
 
-            // Form will automatically minimize itself when shown
+            // Option 1: Create Quick Layout from current window arrangement
+            ToolStripMenuItem createCurrentItem = new ToolStripMenuItem("Create from Current Layout");
+            createCurrentItem.Image = Properties.Resources.magic_wand;
+            createCurrentItem.Click += (s, args) => OnCreateQuickLayout(s, args);
+            quickLayoutContextMenu.Items.Add(createCurrentItem);
+
+            // Add a separator
+            quickLayoutContextMenu.Items.Add(new ToolStripSeparator());
+
+            // Option 2: Create from specific profile
+            ToolStripMenuItem loadFromProfileMenu = new ToolStripMenuItem("Create from Profile");
+            loadFromProfileMenu.Image = Properties.Resources.redo;
+
+            // Get all profile names
+            var profileNames = windowManager.GetAllProfileNames();
+
+            // Add each profile to the submenu
+            for (int i = 0; i < profileNames.Count; i++)
+            {
+                string profileName = profileNames[i];
+                var profileMenuItem = new ToolStripMenuItem(profileName);
+
+                // Set the profile index as the Tag property
+                profileMenuItem.Tag = i;
+
+                // Add click handler
+                profileMenuItem.Click += (s, args) => {
+                    ToolStripMenuItem menuItem = s as ToolStripMenuItem;
+                    if (menuItem == null || menuItem.Tag == null) return;
+
+                    // Get profile index from Tag
+                    int profileIndex = (int)menuItem.Tag;
+
+                    // Temporarily switch to the selected profile to get its windows
+                    int currentProfileIndex = windowManager.GetCurrentProfileIndex();
+                    windowManager.SwitchToProfileWithoutRestore(profileIndex);
+
+                    // Get the windows from the selected profile
+                    var profileWindows = windowManager.GetCurrentProfileWindows();
+
+                    // Create a quick layout with these windows
+                    quickLayoutManager.CreateQuickLayout(profileWindows);
+
+                    // Switch back to the original profile
+                    windowManager.SwitchToProfileWithoutRestore(currentProfileIndex);
+                };
+
+                // Add to submenu
+                loadFromProfileMenu.DropDownItems.Add(profileMenuItem);
+            }
+
+            quickLayoutContextMenu.Items.Add(loadFromProfileMenu);
+
+            // Show context menu at button location
+            quickLayoutContextMenu.Show(CreateQuickLayoutButton, new Point(0, CreateQuickLayoutButton.Height));
+        }
+
+        private void CaptureScreenLayout_Click(object sender, EventArgs e)
+        {
+            // Create context menu for the capture screen layout button
+            ContextMenuStrip captureMenu = new ContextMenuStrip();
+
+            // Option 1: Capture to current profile (bold)
+            ToolStripMenuItem currentProfileItem = new ToolStripMenuItem("Current Profile");
+            currentProfileItem.Font = new Font(currentProfileItem.Font, FontStyle.Bold);
+            currentProfileItem.Click += (s, args) => {
+                // Check skip confirmation setting from AppSettings
+                bool skipConfirmation = AppSettings.Load(Constants.AppSettingsConstants.SkipConfirmationKey) == "true";
+
+                // Ask for confirmation if not configured to skip
+                if (!skipConfirmation)
+                {
+                    DialogResult result = MessageBox.Show(
+                        "This will replace all windows in the current profile with the current window layout. Continue?",
+                        "Confirm Replace",
+                        MessageBoxButtons.YesNo,
+                        MessageBoxIcon.Question);
+
+                    if (result != DialogResult.Yes) return;
+                }
+
+                // No need to switch profiles as we're already on the current profile
+
+                // Clear existing windows in the current profile
+                windowManager.ClearCurrentProfileWindows();
+
+                // Make sure the ignore list is up-to-date
+                ignoreListManager.LoadIgnoreList();
+
+                // Get all windows for layout capture using window manager
+                var windowsForCapture = windowManager.GetVisibleRunningApps();
+
+                // Add each window to current profile
+                foreach (var window in windowsForCapture)
+                {
+                    // Set each window's Auto Position to true
+                    window.AutoPosition = true;
+                    windowManager.AddOrUpdateWindow(window);
+                }
+
+                // Save changes explicitly to ensure they're persisted
+                windowManager.SaveChanges();
+
+                // Update UI if the main form is visible
+                if (this.Visible)
+                {
+                    RefreshSavedWindowsListBox();
+                }
+            };
+
+            captureMenu.Items.Add(currentProfileItem);
+
+            // Add separator
+            captureMenu.Items.Add(new ToolStripSeparator());
+
+            // Option 2: Capture to specific profile
+            // Get all profile names
+            var profileNames = windowManager.GetAllProfileNames();
+
+            // Add each profile to the menu
+            for (int i = 0; i < profileNames.Count; i++)
+            {
+                string profileName = profileNames[i];
+                var profileMenuItem = new ToolStripMenuItem(profileName);
+
+                // Set the profile index as the Tag property
+                profileMenuItem.Tag = i;
+
+                // Add click handler - use the existing CaptureLayoutMenuItem_Click method
+                profileMenuItem.Click += CaptureLayoutMenuItem_Click;
+
+                // Add to menu
+                captureMenu.Items.Add(profileMenuItem);
+            }
+
+            // Show context menu at button location
+            captureMenu.Show(CaptureScreenLayout, new Point(0, CaptureScreenLayout.Height));
+        }
+
+        private void OnCaptureCurrentLayout(object sender, EventArgs e)
+        {
+            // This method is called from the tray icon context menu
+            // Check skip confirmation setting from AppSettings
+            bool skipConfirmation = AppSettings.Load(Constants.AppSettingsConstants.SkipConfirmationKey) == "true";
+
+            // Ask for confirmation if not configured to skip
+            if (!skipConfirmation)
+            {
+                DialogResult result = MessageBox.Show(
+                    "This will replace all windows in the current profile with the current window layout. Continue?",
+                    "Confirm Replace",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Question);
+
+                if (result != DialogResult.Yes) return;
+            }
+
+            // No need to switch profiles here since we're already on the current profile
+
+            // Clear existing windows in the current profile
+            windowManager.ClearCurrentProfileWindows();
+
+            // Make sure the ignore list is up-to-date
+            ignoreListManager.LoadIgnoreList();
+
+            // Get all windows for layout capture using window manager
+            var windowsForCapture = windowManager.GetVisibleRunningApps();
+
+            // Add each window to current profile
+            foreach (var window in windowsForCapture)
+            {
+                // Set each window's Auto Position to true
+                window.AutoPosition = true;
+                windowManager.AddOrUpdateWindow(window);
+            }
+
+            // Save changes explicitly to ensure they're persisted
+            windowManager.SaveChanges();
+
+            // Update UI if the main form is visible
+            if (this.Visible)
+            {
+                RefreshSavedWindowsListBox();
+            }
         }
 
         #endregion
@@ -1142,6 +1443,67 @@ namespace Save_Window_Position_and_Size
 
             // Update the timer button state
             UpdateTimerButtonState();
+        }
+
+        private void LaunchExternalApp(List<Window> windows, string appPath)
+        {
+            try
+            {
+                // Serialize the list of windows to JSON
+                string windowsJson = JsonConvert.SerializeObject(windows);
+
+                // Launch the external app with the JSON as a command line argument
+                // Surround with quotes to handle spaces and special characters
+                Process.Start(appPath, $"\"{windowsJson}\"");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error launching external app: {ex.Message}",
+                    "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private List<Window> ProcessCommandLineArgs(string[] args)
+        {
+            var windows = new List<Window>();
+            if (args.Length > 0)
+            {
+                try
+                {
+                    // Get the first argument which should be a path to the JSON file
+                    string jsonFilePath = args[0].Trim('"');
+
+                    // Check if the file exists
+                    if (!File.Exists(jsonFilePath))
+                    {
+                        MessageBox.Show($"JSON file not found: {jsonFilePath}",
+                            "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return windows;
+                    }
+
+                    // Read JSON data from the file
+                    string jsonData = File.ReadAllText(jsonFilePath);
+
+                    // Deserialize the window list
+                    windows = JsonConvert.DeserializeObject<List<Window>>(jsonData);
+
+                    // Delete the temporary file after reading it
+                    try
+                    {
+                        File.Delete(jsonFilePath);
+                    }
+                    catch
+                    {
+                        // Ignore deletion errors
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error processing command line arguments: {ex.Message}",
+                        "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+            return windows;
         }
         #endregion
 

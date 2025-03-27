@@ -108,6 +108,19 @@ namespace Save_Window_Position_and_Size.Classes
         }
 
         /// <summary>
+        /// Sets the current profile index without restoring windows
+        /// </summary>
+        public void SwitchToProfileWithoutRestore(int profileIndex)
+        {
+            if (profileIndex < 0 || profileIndex >= profileCollection.Profiles.Count)
+                return;
+
+            // Update current profile index
+            profileCollection.SelectedProfileIndex = profileIndex;
+            AppSettings<int>.Save(Constants.AppSettingsConstants.SelectedProfileKey, profileIndex);
+        }
+
+        /// <summary>
         /// Gets all profile names
         /// </summary>
         public List<string> GetAllProfileNames()
@@ -533,24 +546,6 @@ namespace Save_Window_Position_and_Size.Classes
         #endregion
 
         #region Private Methods
-
-        /// <summary>
-        /// Gets the saved window position and size
-        /// </summary>
-        private WindowPosAndSize GetSavedWindowPosAndSize(Window window)
-        {
-            var windowPosAndSize = new WindowPosAndSize();
-
-            var currentWindows = GetCurrentProfileWindows();
-
-            foreach (var currentWindow in currentWindows)
-            {
-                if (currentWindow.Id == window.Id)
-                    windowPosAndSize = window.WindowPosAndSize;
-            }
-
-            return windowPosAndSize;
-        }
 
         /// <summary>
         /// Gets the window handle using window title or process name

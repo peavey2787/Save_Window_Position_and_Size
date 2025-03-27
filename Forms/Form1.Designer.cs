@@ -35,7 +35,7 @@
             Time = new Label();
             TimerToggleButton = new Button();
             panel1 = new Panel();
-            CreateQuickLayoutButton = new Button();
+            CaptureScreenLayout = new Button();
             SettingsButton = new Button();
             UsePercentagesCheckBox = new CheckBox();
             profileComboBox = new ComboBox();
@@ -57,6 +57,7 @@
             lblAllRunningApps = new Label();
             lblSavedApps = new Label();
             toolTip1 = new ToolTip(components);
+            CreateQuickLayoutButton = new Button();
             panel1.SuspendLayout();
             SuspendLayout();
             // 
@@ -227,6 +228,7 @@
             panel1.BackColor = Color.Transparent;
             panel1.Controls.Add(TimerToggleButton);
             panel1.Controls.Add(CreateQuickLayoutButton);
+            panel1.Controls.Add(CaptureScreenLayout);
             panel1.Controls.Add(SettingsButton);
             panel1.Controls.Add(UsePercentagesCheckBox);
             panel1.Controls.Add(profileComboBox);
@@ -267,16 +269,16 @@
             panel1.Size = new Size(958, 397);
             panel1.TabIndex = 19;
             // 
-            // CreateQuickLayoutButton
+            // CaptureScreenLayout
             // 
-            CreateQuickLayoutButton.BackgroundImage = Properties.Resources.magic_wand;
-            CreateQuickLayoutButton.BackgroundImageLayout = ImageLayout.Zoom;
-            CreateQuickLayoutButton.Location = new Point(228, 360);
-            CreateQuickLayoutButton.Name = "CreateQuickLayoutButton";
-            CreateQuickLayoutButton.Size = new Size(36, 34);
-            CreateQuickLayoutButton.TabIndex = 43;
-            CreateQuickLayoutButton.UseVisualStyleBackColor = true;
-            CreateQuickLayoutButton.Click += CreateQuickLayoutButton_Click;
+            CaptureScreenLayout.BackgroundImage = Properties.Resources.refresh_blue_arrows;
+            CaptureScreenLayout.BackgroundImageLayout = ImageLayout.Zoom;
+            CaptureScreenLayout.Location = new Point(270, 360);
+            CaptureScreenLayout.Name = "CaptureScreenLayout";
+            CaptureScreenLayout.Size = new Size(36, 34);
+            CaptureScreenLayout.TabIndex = 44;
+            CaptureScreenLayout.UseVisualStyleBackColor = true;
+            CaptureScreenLayout.Click += CaptureScreenLayout_Click;
             // 
             // SettingsButton
             // 
@@ -485,6 +487,17 @@
             // 
             toolTip1.ToolTipIcon = ToolTipIcon.Info;
             // 
+            // CreateQuickLayoutButton
+            // 
+            CreateQuickLayoutButton.BackgroundImage = Properties.Resources.magic_wand;
+            CreateQuickLayoutButton.BackgroundImageLayout = ImageLayout.Zoom;
+            CreateQuickLayoutButton.Location = new Point(228, 360);
+            CreateQuickLayoutButton.Name = "CreateQuickLayoutButton";
+            CreateQuickLayoutButton.Size = new Size(36, 34);
+            CreateQuickLayoutButton.TabIndex = 43;
+            CreateQuickLayoutButton.UseVisualStyleBackColor = true;
+            CreateQuickLayoutButton.Click += CreateQuickLayoutButton_Click;
+            // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
@@ -547,6 +560,7 @@
         private CheckBox UsePercentagesCheckBox;
         private Button SettingsButton;
         private Button ClearAllButton;
+        private Button CaptureScreenLayout;
         private Button CreateQuickLayoutButton;
     }
 }
