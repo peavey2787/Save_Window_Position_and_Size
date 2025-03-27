@@ -19,6 +19,7 @@ namespace Save_Window_Position_and_Size
         private Dictionary<IntPtr, String> runningApps = new Dictionary<IntPtr, String>();
         private System.Windows.Forms.Timer refreshTimer = new System.Windows.Forms.Timer();
         private bool loading = false;
+        private bool switchingProfiles = false;
 
         // Manager classes
         private WindowManager windowManager;
@@ -501,6 +502,9 @@ namespace Save_Window_Position_and_Size
             // Get profile index from Tag
             int profileIndex = (int)menuItem.Tag;
 
+            // Set the flag to prevent duplicate switching
+            switchingProfiles = true;
+
             // Switch to the selected profile
             windowManager.SwitchToProfile(profileIndex);
 
@@ -518,6 +522,9 @@ namespace Save_Window_Position_and_Size
                     RefreshSavedWindowsListBox();
                 }
             }
+
+            // Reset the flag
+            switchingProfiles = false;
         }
 
         private void CaptureLayoutMenuItem_Click(object sender, EventArgs e)
@@ -543,7 +550,10 @@ namespace Save_Window_Position_and_Size
                 if (result != DialogResult.Yes) return;
             }
 
-            // Switch to the selected profile without restoring windows
+            // Save the current profile index
+            int currentProfileIndex = windowManager.GetCurrentProfileIndex();
+
+            // Temporarily switch to the selected profile without restoring windows
             windowManager.SwitchToProfileWithoutRestore(profileIndex);
 
             // Clear existing windows in the current profile
@@ -566,19 +576,14 @@ namespace Save_Window_Position_and_Size
             // Save changes explicitly to ensure they're persisted
             windowManager.SaveChanges();
 
+            // Switch back to the original profile
+            windowManager.SwitchToProfileWithoutRestore(currentProfileIndex);
+
             // Update UI if the main form is visible
             if (this.Visible)
             {
-                // Update profile combobox selection
-                if (profileComboBox.SelectedIndex != profileIndex)
-                {
-                    profileComboBox.SelectedIndex = profileIndex;
-                }
-                else
-                {
-                    // If already selected, manually refresh the window list
-                    RefreshSavedWindowsListBox();
-                }
+                // No need to update profile selection as we've switched back to the original
+                RefreshSavedWindowsListBox();
             }
         }
 
@@ -721,8 +726,65 @@ namespace Save_Window_Position_and_Size
                 // Set the profile index as the Tag property
                 profileMenuItem.Tag = i;
 
-                // Add click handler - use the existing CaptureLayoutMenuItem_Click method
-                profileMenuItem.Click += CaptureLayoutMenuItem_Click;
+                // Add click handler that captures to profile without changing the current profile
+                profileMenuItem.Click += (s, args) => {
+                    ToolStripMenuItem menuItem = s as ToolStripMenuItem;
+                    if (menuItem == null || menuItem.Tag == null) return;
+
+                    // Get profile index from Tag
+                    int profileIndex = (int)menuItem.Tag;
+
+                    // Check skip confirmation setting from AppSettings
+                    bool skipConfirmation = AppSettings.Load(Constants.AppSettingsConstants.SkipConfirmationKey) == "true";
+
+                    // Ask for confirmation if not configured to skip
+                    if (!skipConfirmation)
+                    {
+                        DialogResult result = MessageBox.Show(
+                            $"This will replace all windows in profile '{menuItem.Text}' with the current window layout. Continue?",
+                            "Confirm Replace",
+                            MessageBoxButtons.YesNo,
+                            MessageBoxIcon.Question);
+
+                        if (result != DialogResult.Yes) return;
+                    }
+
+                    // Save the current profile index
+                    int currentProfileIndex = windowManager.GetCurrentProfileIndex();
+
+                    // Temporarily switch to the selected profile without restoring windows
+                    windowManager.SwitchToProfileWithoutRestore(profileIndex);
+
+                    // Clear existing windows in the current profile
+                    windowManager.ClearCurrentProfileWindows();
+
+                    // Make sure the ignore list is up-to-date
+                    ignoreListManager.LoadIgnoreList();
+
+                    // Get all windows for layout capture using window manager
+                    var windowsForCapture = windowManager.GetVisibleRunningApps();
+
+                    // Add each window to current profile
+                    foreach (var window in windowsForCapture)
+                    {
+                        // Set each window's Auto Position to true
+                        window.AutoPosition = true;
+                        windowManager.AddOrUpdateWindow(window);
+                    }
+
+                    // Save changes explicitly to ensure they're persisted
+                    windowManager.SaveChanges();
+
+                    // Switch back to the original profile
+                    windowManager.SwitchToProfileWithoutRestore(currentProfileIndex);
+
+                    // Update UI if the main form is visible
+                    if (this.Visible)
+                    {
+                        // No need to update profile selection as we've switched back to the original
+                        RefreshSavedWindowsListBox();
+                    }
+                };
 
                 // Add to menu
                 captureMenu.Items.Add(profileMenuItem);
@@ -1010,7 +1072,7 @@ namespace Save_Window_Position_and_Size
         // ComboBoxes
         private void profileComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (loading) return;
+            if (loading || switchingProfiles) return;
 
             AppsSaved.SelectedIndex = -1;
             ClearWindowGUI();
