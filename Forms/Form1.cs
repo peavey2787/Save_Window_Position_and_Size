@@ -1506,67 +1506,6 @@ namespace Save_Window_Position_and_Size
             // Update the timer button state
             UpdateTimerButtonState();
         }
-
-        private void LaunchExternalApp(List<Window> windows, string appPath)
-        {
-            try
-            {
-                // Serialize the list of windows to JSON
-                string windowsJson = JsonConvert.SerializeObject(windows);
-
-                // Launch the external app with the JSON as a command line argument
-                // Surround with quotes to handle spaces and special characters
-                Process.Start(appPath, $"\"{windowsJson}\"");
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error launching external app: {ex.Message}",
-                    "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
-        private List<Window> ProcessCommandLineArgs(string[] args)
-        {
-            var windows = new List<Window>();
-            if (args.Length > 0)
-            {
-                try
-                {
-                    // Get the first argument which should be a path to the JSON file
-                    string jsonFilePath = args[0].Trim('"');
-
-                    // Check if the file exists
-                    if (!File.Exists(jsonFilePath))
-                    {
-                        MessageBox.Show($"JSON file not found: {jsonFilePath}",
-                            "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        return windows;
-                    }
-
-                    // Read JSON data from the file
-                    string jsonData = File.ReadAllText(jsonFilePath);
-
-                    // Deserialize the window list
-                    windows = JsonConvert.DeserializeObject<List<Window>>(jsonData);
-
-                    // Delete the temporary file after reading it
-                    try
-                    {
-                        File.Delete(jsonFilePath);
-                    }
-                    catch
-                    {
-                        // Ignore deletion errors
-                    }
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"Error processing command line arguments: {ex.Message}",
-                        "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-            }
-            return windows;
-        }
         #endregion
 
         protected override void Dispose(bool disposing)
