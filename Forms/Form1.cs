@@ -201,12 +201,6 @@ namespace Save_Window_Position_and_Size
                 // Stop any active highlighting
                 windowHighlighter.StopHighlighting();
 
-                // Close all quick layout forms
-                if (quickLayoutManager != null)
-                {
-                    quickLayoutManager.CloseAll();
-                }
-
                 // Clean up notify icon (make invisible first to prevent ghost icons)
                 if (notify_icon != null)
                 {
