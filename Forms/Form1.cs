@@ -11,7 +11,7 @@ using System.Diagnostics;
 
 namespace Save_Window_Position_and_Size
 {
-    public partial class Form1 : Form
+    internal partial class Form1 : Form
     {
         #region Variables
         private NotifyIcon notify_icon = new NotifyIcon();
@@ -20,6 +20,7 @@ namespace Save_Window_Position_and_Size
         private System.Windows.Forms.Timer refreshTimer = new System.Windows.Forms.Timer();
         private bool loading = false;
         private bool switchingProfiles = false;
+        private bool savedAppsWasLastClickedListBox = false;
 
         // Manager classes
         private WindowManager windowManager;
@@ -64,7 +65,7 @@ namespace Save_Window_Position_and_Size
 
         #region Startup/Shutdown
         // Startup
-        public Form1()
+        internal Form1()
         {
             InitializeComponent();
 
@@ -72,7 +73,7 @@ namespace Save_Window_Position_and_Size
             ignoreListManager = new IgnoreListManager();
 
             // Initialize the window manager with the ignore list manager
-            windowManager = new WindowManager(ignoreListManager);
+            windowManager = new WindowManager();
 
             // Initialize the window highlighter
             InitializeHighlighter();
@@ -275,7 +276,7 @@ namespace Save_Window_Position_and_Size
 
             // Add Capture Current Layout menu with submenu for profile selection
             ToolStripMenuItem captureLayoutMenu = new ToolStripMenuItem("Capture Current Layout");
-            captureLayoutMenu.Image = new Bitmap(Properties.Resources.refresh_blue_arrows, new Size(imageSize, imageSize));
+            captureLayoutMenu.Image = new Bitmap(Properties.Resources.screenshoticon, new Size(imageSize, imageSize));
             captureLayoutMenu.Font = new Font("Arial", 10, FontStyle.Regular);
 
             // Add first option to capture to current profile
@@ -309,7 +310,8 @@ namespace Save_Window_Position_and_Size
             ToolStripMenuItem createFromProfileMenu = new ToolStripMenuItem("From Profile");
 
             // Create profile submenu items
-            createFromProfileMenu.DropDownOpening += (s, e) => {
+            createFromProfileMenu.DropDownOpening += (s, e) =>
+            {
                 // Clear existing items
                 createFromProfileMenu.DropDownItems.Clear();
 
@@ -325,7 +327,8 @@ namespace Save_Window_Position_and_Size
                     // Store profile index
                     int profileIndex = i;
 
-                    profileMenuItem.Click += (sender, args) => {
+                    profileMenuItem.Click += (sender, args) =>
+                    {
                         // Temporarily switch to profile to get windows
                         int currentProfileIndex = windowManager.GetCurrentProfileIndex();
                         windowManager.SwitchToProfileWithoutRestore(profileIndex);
@@ -500,7 +503,7 @@ namespace Save_Window_Position_and_Size
             switchingProfiles = true;
 
             // Switch to the selected profile
-            windowManager.SwitchToProfile(profileIndex);
+            windowManager.SwitchToProfileAndRestore(profileIndex);
 
             // Update UI if the main form is visible
             if (this.Visible)
@@ -521,7 +524,7 @@ namespace Save_Window_Position_and_Size
             switchingProfiles = false;
         }
 
-        private void CaptureLayoutMenuItem_Click(object sender, EventArgs e)
+        private async void CaptureLayoutMenuItem_Click(object sender, EventArgs e)
         {
             ToolStripMenuItem menuItem = sender as ToolStripMenuItem;
             if (menuItem == null || menuItem.Tag == null) return;
@@ -553,11 +556,8 @@ namespace Save_Window_Position_and_Size
             // Clear existing windows in the current profile
             windowManager.ClearCurrentProfileWindows();
 
-            // Make sure the ignore list is up-to-date
-            ignoreListManager.LoadIgnoreList();
-
             // Get all windows for layout capture using window manager
-            var windowsForCapture = windowManager.GetVisibleRunningApps();
+            var windowsForCapture = await windowManager.GetVisibleRunningApps();
 
             // Add each window to current profile
             foreach (var window in windowsForCapture)
@@ -618,7 +618,8 @@ namespace Save_Window_Position_and_Size
                 profileMenuItem.Tag = i;
 
                 // Add click handler
-                profileMenuItem.Click += (s, args) => {
+                profileMenuItem.Click += (s, args) =>
+                {
                     ToolStripMenuItem menuItem = s as ToolStripMenuItem;
                     if (menuItem == null || menuItem.Tag == null) return;
 
@@ -654,10 +655,11 @@ namespace Save_Window_Position_and_Size
             // Create context menu for the capture screen layout button
             ContextMenuStrip captureMenu = new ContextMenuStrip();
 
-            // Option 1: Capture to current profile (bold)
+            // Option 1: Capture to current profile
             ToolStripMenuItem currentProfileItem = new ToolStripMenuItem("Current Profile");
             currentProfileItem.Font = new Font(currentProfileItem.Font, FontStyle.Bold);
-            currentProfileItem.Click += (s, args) => {
+            currentProfileItem.Click += async (s, args) =>
+            {
                 // Check skip confirmation setting from AppSettings
                 bool skipConfirmation = AppSettings.Load(Constants.AppSettingsConstants.SkipConfirmationKey) == "true";
 
@@ -678,11 +680,8 @@ namespace Save_Window_Position_and_Size
                 // Clear existing windows in the current profile
                 windowManager.ClearCurrentProfileWindows();
 
-                // Make sure the ignore list is up-to-date
-                ignoreListManager.LoadIgnoreList();
-
                 // Get all windows for layout capture using window manager
-                var windowsForCapture = windowManager.GetVisibleRunningApps();
+                var windowsForCapture = await windowManager.GetVisibleRunningApps();
 
                 // Add each window to current profile
                 foreach (var window in windowsForCapture)
@@ -691,9 +690,6 @@ namespace Save_Window_Position_and_Size
                     window.AutoPosition = true;
                     windowManager.AddOrUpdateWindow(window);
                 }
-
-                // Save changes explicitly to ensure they're persisted
-                windowManager.SaveChanges();
 
                 // Update UI if the main form is visible
                 if (this.Visible)
@@ -721,7 +717,8 @@ namespace Save_Window_Position_and_Size
                 profileMenuItem.Tag = i;
 
                 // Add click handler that captures to profile without changing the current profile
-                profileMenuItem.Click += (s, args) => {
+                profileMenuItem.Click += async (s, args) =>
+                {
                     ToolStripMenuItem menuItem = s as ToolStripMenuItem;
                     if (menuItem == null || menuItem.Tag == null) return;
 
@@ -752,11 +749,8 @@ namespace Save_Window_Position_and_Size
                     // Clear existing windows in the current profile
                     windowManager.ClearCurrentProfileWindows();
 
-                    // Make sure the ignore list is up-to-date
-                    ignoreListManager.LoadIgnoreList();
-
                     // Get all windows for layout capture using window manager
-                    var windowsForCapture = windowManager.GetVisibleRunningApps();
+                    var windowsForCapture = await windowManager.GetVisibleRunningApps();
 
                     // Add each window to current profile
                     foreach (var window in windowsForCapture)
@@ -788,7 +782,7 @@ namespace Save_Window_Position_and_Size
             captureMenu.Show(CaptureScreenLayout, new Point(0, CaptureScreenLayout.Height));
         }
 
-        private void OnCaptureCurrentLayout(object sender, EventArgs e)
+        private async void OnCaptureCurrentLayout(object sender, EventArgs e)
         {
             // This method is called from the tray icon context menu
             // Check skip confirmation setting from AppSettings
@@ -815,7 +809,7 @@ namespace Save_Window_Position_and_Size
             ignoreListManager.LoadIgnoreList();
 
             // Get all windows for layout capture using window manager
-            var windowsForCapture = windowManager.GetVisibleRunningApps();
+            var windowsForCapture = await windowManager.GetVisibleRunningApps();
 
             // Add each window to current profile
             foreach (var window in windowsForCapture)
@@ -891,16 +885,6 @@ namespace Save_Window_Position_and_Size
 
             if (!window.IsValid()) return;
 
-            // Get the saved window from current profile
-            if (window.Id > 0)
-            {
-                var saved = windowManager.GetWindowById(window.Id);
-                if (saved.IsValid())
-                {
-                    windowManager.UpdateWindowPositionAndSize(saved);
-                }
-            }
-
             // Restore the window
             windowManager.RestoreWindow(window);
 
@@ -963,25 +947,26 @@ namespace Save_Window_Position_and_Size
         }
 
         // ListBoxes
-        private void AppsSaved_SelectedIndexChanged(object sender, EventArgs e)
+        private async void AppsSaved_SelectedIndexChanged(object sender, EventArgs e)
         {
-            // Deselect any running apps when a saved app is selected
-            AllRunningApps.SelectedIndex = -1;
-
             if (AppsSaved.SelectedIndex == -1)
             {
                 ClearWindowGUI();
                 return;
             }
 
-            // Get selected window directly from the listbox
-            Window window = (Window)AppsSaved.SelectedItem;
+            // Deselect any running apps when a saved app is selected
+            AllRunningApps.SelectedIndex = -1;
 
-            if (!window.IsValid())
-            {
-                MessageBox.Show("Selected window is not valid.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
+            savedAppsWasLastClickedListBox = true;
+
+            // Get selected window directly from the listbox
+            Window window = GetWindowFromGui();
+
+            window.hWnd = await windowManager.GetCurrentWindowHandle(window);
+
+            // Get saved window position and size
+            window.WindowPosAndSize = windowManager.GetSavedWindowPosAndSize(window);
 
             // Fill GUI with window data using the existing helper method
             SetWindowGui(window);
@@ -998,7 +983,16 @@ namespace Save_Window_Position_and_Size
 
         private void AllRunningApps_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (AllRunningApps.SelectedIndex == -1) return;
+            if (AllRunningApps.SelectedIndex == -1)
+            {
+                ClearWindowGUI();
+                return;
+            }
+
+            // Deselect any saved apps when a running app is selected
+            AppsSaved.SelectedIndex = -1;
+
+            savedAppsWasLastClickedListBox = false;
 
             ClearWindowGUI();
 
@@ -1075,10 +1069,19 @@ namespace Save_Window_Position_and_Size
             int profileIndex = profileComboBox.SelectedIndex;
 
             // Switch to the selected profile
-            windowManager.SwitchToProfile(profileIndex);
+            windowManager.SwitchToProfileAndRestore(profileIndex);
 
             // Update UI
             RefreshSavedWindowsListBox();
+        }
+        private void profileComboBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter && profileComboBox.Text.Length > 0)
+            {
+                windowManager.RenameCurrentProfile(profileComboBox.Text);
+
+                profileComboBox.Items[windowManager.GetCurrentProfileIndex()] = profileComboBox.Text;
+            }
         }
 
 
@@ -1109,19 +1112,11 @@ namespace Save_Window_Position_and_Size
             if (!window.IsValid())
                 return;
 
-            // Skip for file explorer windows as we can't use keep on top with them
-            if (window.IsFileExplorer)
-            {
-                window.KeepOnTop = false;
-                KeepWindowOnTop.Checked = false;
-                return;
-            }
-
             // Set the keep on top flag on the window object
             window.KeepOnTop = KeepWindowOnTop.Checked;
 
             // Apply keep on top setting to actual window
-            windowManager.SetWindowAlwaysOnTop(window, window.KeepOnTop);
+            windowManager.SetWindowAlwaysOnTop(window);
 
             // Save the window
             windowManager.AddOrUpdateWindow(window);
@@ -1225,11 +1220,11 @@ namespace Save_Window_Position_and_Size
 
         #region Helpers
         // UI Changes
-        private void UpdateRunningApps()
+        private async void UpdateRunningApps()
         {
             AllRunningApps.Items.Clear();
 
-            var taskbarApps = windowManager.GetAllRunningApps();
+            var taskbarApps = await windowManager.GetAllRunningApps();
 
             // Add each application to the listbox
             foreach (var app in taskbarApps)
@@ -1240,59 +1235,27 @@ namespace Save_Window_Position_and_Size
 
         private Window GetWindowFromGui()
         {
-            Window window;
+            Window window = new Window();
 
-            // Try to parse window ID
-            if (int.TryParse(WindowId.Text, out int id) && id > 0)
+            // Determine which selected listbox has focus
+            if (!savedAppsWasLastClickedListBox && AllRunningApps.SelectedItem != null)
             {
-                // Try to get existing window
-                window = windowManager.GetWindowById(id);
-                if (window.IsValid())
-                {
-                    // Update existing window with UI values
-                    UpdateWindowFromUI(window);
-                    return window;
-                }
+                window = AllRunningApps.SelectedItem as Window;
+            }
+            else if (savedAppsWasLastClickedListBox && AppsSaved.SelectedItem != null)
+            {
+                window = AppsSaved.SelectedItem as Window;
+            }
+
+            if (window != null && window.IsValid())
+            {
+                return window;
             }
 
             // Create a new window
             window = new Window();
-            UpdateWindowFromUI(window);
-
             return window;
         }
-
-        private void UpdateWindowFromUI(Window window)
-        {
-            if (IntPtr.TryParse(this.hWnd.Text, out var handle))
-                window.hWnd = handle;
-
-            window.ProcessName = ProcessName.Text;
-            window.IsFileExplorer = window.ProcessName == Constants.ProcessNames.FileExplorer;
-
-            // Update DisplayName
-            if (!string.IsNullOrWhiteSpace(WindowDisplayName.Text))
-                window.DisplayName = WindowDisplayName.Text;
-
-            window.TitleName = WindowTitle.Text;
-
-            // Parse values removing any % sign
-            string xText = WindowPosX.Text.Replace("%", "");
-            string yText = WindowPosY.Text.Replace("%", "");
-            string widthText = WindowWidth.Text.Replace("%", "");
-            string heightText = WindowHeight.Text.Replace("%", "");
-
-            window.WindowPosAndSize.X = int.TryParse(xText, out int X) ? X : 0;
-            window.WindowPosAndSize.Y = int.TryParse(yText, out int Y) ? Y : 0;
-            window.WindowPosAndSize.Height = int.TryParse(heightText, out int Height) ? Height : 0;
-            window.WindowPosAndSize.Width = int.TryParse(widthText, out int Width) ? Width : 0;
-            window.WindowPosAndSize.IsPercentageBased = UsePercentagesCheckBox.Checked;
-            window.UsePercentages = UsePercentagesCheckBox.Checked;
-
-            window.AutoPosition = AutoPosition.Checked;
-            window.KeepOnTop = KeepWindowOnTop.Checked;
-        }
-
         private void SetWindowGui(Window window)
         {
             loading = true;
@@ -1302,11 +1265,6 @@ namespace Save_Window_Position_and_Size
                 ClearWindowGUI();
                 return;
             }
-
-            WindowId.Text = window.Id.ToString();
-
-            if (window.hWnd != IntPtr.Zero)
-                this.hWnd.Text = window.hWnd.ToString();
 
             ProcessName.Text = !string.IsNullOrWhiteSpace(window.ProcessName)
                 ? window.ProcessName
@@ -1399,7 +1357,7 @@ namespace Save_Window_Position_and_Size
 
         private Task UpdateAllRunningAppsTask()
         {
-            return Task.Run(() =>
+            return Task.Run(async () =>
             {
                 try
                 {
@@ -1407,7 +1365,7 @@ namespace Save_Window_Position_and_Size
                     AllRunningApps.ClearItemsThreadSafe();
 
                     // Get running applications through window manager (which already includes filtering by the ignore list)
-                    var allApps = windowManager.GetAllRunningApps();
+                    var allApps = await windowManager.GetAllRunningApps();
 
                     // Add each application to the listbox safely
                     foreach (var app in allApps)
@@ -1518,6 +1476,8 @@ namespace Save_Window_Position_and_Size
             }
             base.Dispose(disposing);
         }
+
+
     }
 }
 

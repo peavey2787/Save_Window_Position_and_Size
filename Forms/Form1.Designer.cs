@@ -35,6 +35,7 @@
             Time = new Label();
             TimerToggleButton = new Button();
             panel1 = new Panel();
+            CreateQuickLayoutButton = new Button();
             CaptureScreenLayout = new Button();
             SettingsButton = new Button();
             UsePercentagesCheckBox = new CheckBox();
@@ -43,9 +44,7 @@
             WindowTitle = new Label();
             ProcessName = new Label();
             label3 = new Label();
-            hWnd = new Label();
             RefreshWindowButton = new Button();
-            WindowId = new Label();
             WindowDisplayName = new TextBox();
             label1 = new Label();
             AutoPosition = new CheckBox();
@@ -57,7 +56,6 @@
             lblAllRunningApps = new Label();
             lblSavedApps = new Label();
             toolTip1 = new ToolTip(components);
-            CreateQuickLayoutButton = new Button();
             panel1.SuspendLayout();
             SuspendLayout();
             // 
@@ -238,9 +236,7 @@
             panel1.Controls.Add(WindowTitle);
             panel1.Controls.Add(ProcessName);
             panel1.Controls.Add(label3);
-            panel1.Controls.Add(hWnd);
             panel1.Controls.Add(RefreshWindowButton);
-            panel1.Controls.Add(WindowId);
             panel1.Controls.Add(WindowDisplayName);
             panel1.Controls.Add(label1);
             panel1.Controls.Add(Restore);
@@ -269,9 +265,20 @@
             panel1.Size = new Size(958, 397);
             panel1.TabIndex = 19;
             // 
+            // CreateQuickLayoutButton
+            // 
+            CreateQuickLayoutButton.BackgroundImage = Properties.Resources.magic_wand;
+            CreateQuickLayoutButton.BackgroundImageLayout = ImageLayout.Zoom;
+            CreateQuickLayoutButton.Location = new Point(228, 360);
+            CreateQuickLayoutButton.Name = "CreateQuickLayoutButton";
+            CreateQuickLayoutButton.Size = new Size(36, 34);
+            CreateQuickLayoutButton.TabIndex = 43;
+            CreateQuickLayoutButton.UseVisualStyleBackColor = true;
+            CreateQuickLayoutButton.Click += CreateQuickLayoutButton_Click;
+            // 
             // CaptureScreenLayout
             // 
-            CaptureScreenLayout.BackgroundImage = Properties.Resources.refresh_blue_arrows;
+            CaptureScreenLayout.BackgroundImage = Properties.Resources.screenshoticon;
             CaptureScreenLayout.BackgroundImageLayout = ImageLayout.Zoom;
             CaptureScreenLayout.Location = new Point(270, 360);
             CaptureScreenLayout.Name = "CaptureScreenLayout";
@@ -310,6 +317,7 @@
             profileComboBox.Size = new Size(103, 23);
             profileComboBox.TabIndex = 41;
             profileComboBox.SelectedIndexChanged += profileComboBox_SelectedIndexChanged;
+            profileComboBox.KeyDown += profileComboBox_KeyDown;
             // 
             // label2
             // 
@@ -349,16 +357,6 @@
             label3.TabIndex = 35;
             label3.Text = "Process Name";
             // 
-            // hWnd
-            // 
-            hWnd.AutoSize = true;
-            hWnd.Location = new Point(636, 58);
-            hWnd.Name = "hWnd";
-            hWnd.Size = new Size(39, 15);
-            hWnd.TabIndex = 34;
-            hWnd.Text = "hWnd";
-            hWnd.Visible = false;
-            // 
             // RefreshWindowButton
             // 
             RefreshWindowButton.BackgroundImage = Properties.Resources.refresh_blue_arrows;
@@ -369,16 +367,6 @@
             RefreshWindowButton.TabIndex = 33;
             RefreshWindowButton.UseVisualStyleBackColor = true;
             RefreshWindowButton.Click += RefreshWindowButton_Click;
-            // 
-            // WindowId
-            // 
-            WindowId.AutoSize = true;
-            WindowId.Location = new Point(279, 54);
-            WindowId.Name = "WindowId";
-            WindowId.Size = new Size(18, 15);
-            WindowId.TabIndex = 32;
-            WindowId.Text = "ID";
-            WindowId.Visible = false;
             // 
             // WindowDisplayName
             // 
@@ -487,17 +475,6 @@
             // 
             toolTip1.ToolTipIcon = ToolTipIcon.Info;
             // 
-            // CreateQuickLayoutButton
-            // 
-            CreateQuickLayoutButton.BackgroundImage = Properties.Resources.magic_wand;
-            CreateQuickLayoutButton.BackgroundImageLayout = ImageLayout.Zoom;
-            CreateQuickLayoutButton.Location = new Point(228, 360);
-            CreateQuickLayoutButton.Name = "CreateQuickLayoutButton";
-            CreateQuickLayoutButton.Size = new Size(36, 34);
-            CreateQuickLayoutButton.TabIndex = 43;
-            CreateQuickLayoutButton.UseVisualStyleBackColor = true;
-            CreateQuickLayoutButton.Click += CreateQuickLayoutButton_Click;
-            // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
@@ -548,7 +525,6 @@
         private Button IgnoreButton;
         private TextBox WindowDisplayName;
         private Label label1;
-        private Label WindowId;
         private Button RefreshWindowButton;
         private Label ProcessName;
         private Label label3;
@@ -556,7 +532,6 @@
         private Label label2;
         private ToolTip toolTip1;
         private ComboBox profileComboBox;
-        private Label hWnd;
         private CheckBox UsePercentagesCheckBox;
         private Button SettingsButton;
         private Button ClearAllButton;

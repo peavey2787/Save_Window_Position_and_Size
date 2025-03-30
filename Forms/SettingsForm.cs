@@ -5,12 +5,12 @@ using Save_Window_Position_and_Size.Classes;
 
 namespace Save_Window_Position_and_Size
 {
-    public partial class SettingsForm : Form
+    internal partial class SettingsForm : Form
     {
         // Event to notify Form1 when settings change
-        public event EventHandler<EventArgs> SettingsChanged;
+        internal event EventHandler<EventArgs> SettingsChanged;
 
-        public SettingsForm()
+        internal SettingsForm()
         {
             InitializeComponent();
             LoadSettings();
@@ -29,6 +29,10 @@ namespace Save_Window_Position_and_Size
             // Load auto-start timer setting
             string autoStartTimer = AppSettings.Load(Constants.AppSettingsConstants.AutoStartTimerKey);
             AutoStartTimerCheckbox.Checked = autoStartTimer == "true";
+
+            // Load start applications if not running setting
+            string startAppsIfNotRunning = AppSettings.Load(Constants.AppSettingsConstants.StartAppsIfNotRunningKey);
+            StartAppsCheckbox.Checked = startAppsIfNotRunning == "true";
 
             // Load refresh timer interval
             if (int.TryParse(AppSettings.Load(Constants.AppSettingsConstants.RefreshTimeKey), out int refreshTime))
@@ -54,6 +58,10 @@ namespace Save_Window_Position_and_Size
             // Save auto-start timer setting
             AppSettings.Save(Constants.AppSettingsConstants.AutoStartTimerKey,
                 AutoStartTimerCheckbox.Checked ? "true" : "false");
+
+            // Save start applications if not running setting
+            AppSettings.Save(Constants.AppSettingsConstants.StartAppsIfNotRunningKey,
+                StartAppsCheckbox.Checked ? "true" : "false");
 
             // Save refresh timer interval
             if (int.TryParse(UpdateTimerInterval.Text, out int refreshTime))

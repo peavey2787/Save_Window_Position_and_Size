@@ -12,64 +12,65 @@ namespace Save_Window_Position_and_Size.Classes
     internal static class Constants
     {
         // AppSettings keys
-        public static class AppSettingsConstants
+        internal static class AppSettingsConstants
         {
-            public const string SavedWindowsKey = "SavedWindows";
-            public const string SelectedProfileKey = "SelectedProfile";
-            public const string IgnoreListKey = "IgnoreList";
-            public const string RefreshTimeKey = "RefreshTime";
-            public const string HighlighterEnabledKey = "HighlighterEnabled";
-            public const string HighlighterColorKey = "HighlighterColor";
-            public const string SkipConfirmationKey = "SkipConfirmation";
-            public const string MinimizeOtherWindowsKey = "MinimizeOtherWindows";
-            public const string QuickLayoutsKey = "QuickLayouts";
-            public const string AutoStartTimerKey = "AutoStartTimer";
+            internal const string SavedWindowsKey = "SavedWindows";
+            internal const string SelectedProfileKey = "SelectedProfile";
+            internal const string IgnoreListKey = "IgnoreList";
+            internal const string RefreshTimeKey = "RefreshTime";
+            internal const string HighlighterEnabledKey = "HighlighterEnabled";
+            internal const string HighlighterColorKey = "HighlighterColor";
+            internal const string SkipConfirmationKey = "SkipConfirmation";
+            internal const string MinimizeOtherWindowsKey = "MinimizeOtherWindows";
+            internal const string QuickLayoutsKey = "QuickLayouts";
+            internal const string AutoStartTimerKey = "AutoStartTimer";
+            internal const string StartAppsIfNotRunningKey = "StartAppsIfNotRunning";
         }
 
         // Default values
-        public static class Defaults
+        internal static class Defaults
         {
-            public const int MaxProfiles = 5;
-            public const int DefaultRefreshTime = 1;
-            public const int DefaultRandomIdMin = 300;
-            public const int DefaultRandomIdMax = 32034;
-            public const int TimerIntervalMs = 1000;
-            public const int MaxQuickLayouts = 25;
+            internal const int MaxProfiles = 5;
+            internal const int DefaultRefreshTime = 1;
+            internal const int DefaultRandomIdMin = 300;
+            internal const int DefaultRandomIdMax = 32034;
+            internal const int TimerIntervalMs = 1000;
+            internal const int MaxQuickLayouts = 25;
 
             // Window Highlighter defaults
-            public const int HighlighterBorderThickness = 3;
-            public const int HighlighterBlinkIntervalMs = 500;
-            public const int HighlighterPositionUpdateIntervalMs = 100;
-            public const int HighlighterRedColor = 255;
-            public const int HighlighterGreenColor = 0;
-            public const int HighlighterBlueColor = 0;
-            public const int InnerHighlighterBorderThickness = 1;
-            public const int HighlighterDurationMs = 3000; // 3 seconds
+            internal const int HighlighterBorderThickness = 3;
+            internal const int HighlighterBlinkIntervalMs = 500;
+            internal const int HighlighterPositionUpdateIntervalMs = 100;
+            internal const int HighlighterRedColor = 255;
+            internal const int HighlighterGreenColor = 0;
+            internal const int HighlighterBlueColor = 0;
+            internal const int InnerHighlighterBorderThickness = 1;
+            internal const int HighlighterDurationMs = 3000; // 3 seconds
 
-            public const string ProfilesFolderName = "Profiles";
-            public const string QuickLaunchFolderName = "QuickLaunch";
-            public const string DefaultProfileName = "Default";
-            public const string LastUsedProfileKey = "LastUsedProfile";
-            public const string SettingsFileName = "settings.json";
-            public const string ConfigManagerAppSettingsKey = "appSettings";
+            internal const string ProfilesFolderName = "Profiles";
+            internal const string QuickLaunchFolderName = "QuickLaunch";
+            internal const string DefaultProfileName = "Default";
+            internal const string LastUsedProfileKey = "LastUsedProfile";
+            internal const string SettingsFileName = "settings.json";
+            internal const string ConfigManagerAppSettingsKey = "appSettings";
 
-            public const int RefreshTimerInterval = 1000;  // 1 second
-            public const int AutoSaveInterval = 30000;     // 30 seconds
+            internal const int RefreshTimerInterval = 1000;  // 1 second
+            internal const int AutoSaveInterval = 30000;     // 30 seconds
         }
 
         // Process names
-        public static class ProcessNames
+        internal static class ProcessNames
         {
-            public const string FileExplorer = "File Explorer";
+            internal const string FileExplorer = "File Explorer";
         }
 
         // UI strings
-        public static class UI
+        internal static class UI
         {
-            public const string FileExplorerPrefix = "FileExplorer: ";
-            public const string UnnamedWindowFormat = "Unnamed Window ({0})";
-            public const string DefaultProfileNameFormat = "Profile {0}";
-            public const string QuickLayoutTitleFormat = "{0} Quick Layout";
+            internal const string FileExplorerPrefix = "FileExplorer: ";
+            internal const string UnnamedWindowFormat = "Unnamed Window ({0})";
+            internal const string DefaultProfileNameFormat = "Profile {0}";
+            internal const string QuickLayoutTitleFormat = "{0} Quick Layout";
         }
     }
 }

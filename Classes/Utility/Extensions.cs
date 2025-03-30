@@ -16,12 +16,12 @@ namespace Save_Window_Position_and_Size.Classes
     /// <summary>
     /// Provides thread-safe extension methods for ListBox controls
     /// </summary>
-    public static class ListBoxExtensions
+    internal static class ListBoxExtensions
     {
         /// <summary>
         /// Adds a string item to a ListBox in a thread-safe manner
         /// </summary>
-        public static void AddItemThreadSafe(this ListBox listBox, string item)
+        internal static void AddItemThreadSafe(this ListBox listBox, string item)
         {
             try
             {
@@ -89,7 +89,7 @@ namespace Save_Window_Position_and_Size.Classes
         /// <summary>
         /// Clears all items from a ListBox in a thread-safe manner
         /// </summary>
-        public static void ClearItemsThreadSafe(this ListBox listBox)
+        internal static void ClearItemsThreadSafe(this ListBox listBox)
         {
             try
             {

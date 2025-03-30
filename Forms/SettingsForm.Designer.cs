@@ -32,6 +32,7 @@
             SkipConfirmationCheckbox = new CheckBox();
             MinimizeOtherWindowsCheckbox = new CheckBox();
             AutoStartTimerCheckbox = new CheckBox();
+            StartAppsCheckbox = new CheckBox();
             lblUpdateTimerInterval = new Label();
             UpdateTimerInterval = new TextBox();
             SaveButton = new Button();
@@ -68,45 +69,56 @@
             AutoStartTimerCheckbox.BackColor = Color.Transparent;
             AutoStartTimerCheckbox.Location = new Point(30, 160);
             AutoStartTimerCheckbox.Name = "AutoStartTimerCheckbox";
-            AutoStartTimerCheckbox.Size = new Size(216, 19);
+            AutoStartTimerCheckbox.Size = new Size(184, 19);
             AutoStartTimerCheckbox.TabIndex = 2;
             AutoStartTimerCheckbox.Text = "Auto-start timer on application start";
             AutoStartTimerCheckbox.UseVisualStyleBackColor = false;
+            // 
+            // StartAppsCheckbox
+            // 
+            StartAppsCheckbox.AutoSize = true;
+            StartAppsCheckbox.BackColor = Color.Transparent;
+            StartAppsCheckbox.Location = new Point(30, 200);
+            StartAppsCheckbox.Name = "StartAppsCheckbox";
+            StartAppsCheckbox.Size = new Size(198, 19);
+            StartAppsCheckbox.TabIndex = 3;
+            StartAppsCheckbox.Text = "Start applications if not running";
+            StartAppsCheckbox.UseVisualStyleBackColor = false;
             // 
             // lblUpdateTimerInterval
             // 
             lblUpdateTimerInterval.AutoSize = true;
             lblUpdateTimerInterval.BackColor = Color.Transparent;
-            lblUpdateTimerInterval.Location = new Point(30, 200);
+            lblUpdateTimerInterval.Location = new Point(30, 240);
             lblUpdateTimerInterval.Name = "lblUpdateTimerInterval";
             lblUpdateTimerInterval.Size = new Size(164, 15);
-            lblUpdateTimerInterval.TabIndex = 3;
+            lblUpdateTimerInterval.TabIndex = 4;
             lblUpdateTimerInterval.Text = "Auto Position Interval (mins): ";
             // 
             // UpdateTimerInterval
             // 
-            UpdateTimerInterval.Location = new Point(200, 197);
+            UpdateTimerInterval.Location = new Point(200, 237);
             UpdateTimerInterval.Name = "UpdateTimerInterval";
             UpdateTimerInterval.Size = new Size(40, 23);
-            UpdateTimerInterval.TabIndex = 4;
+            UpdateTimerInterval.TabIndex = 5;
             UpdateTimerInterval.KeyDown += UpdateTimerInterval_KeyDown;
             // 
             // SaveButton
             // 
-            SaveButton.Location = new Point(59, 240);
+            SaveButton.Location = new Point(80, 270);
             SaveButton.Name = "SaveButton";
             SaveButton.Size = new Size(75, 23);
-            SaveButton.TabIndex = 5;
+            SaveButton.TabIndex = 6;
             SaveButton.Text = "Save";
             SaveButton.UseVisualStyleBackColor = true;
             SaveButton.Click += SaveButton_Click;
             // 
             // CancelButton
             // 
-            CancelButton.Location = new Point(181, 240);
+            CancelButton.Location = new Point(180, 270);
             CancelButton.Name = "CancelButton";
             CancelButton.Size = new Size(75, 23);
-            CancelButton.TabIndex = 6;
+            CancelButton.TabIndex = 7;
             CancelButton.Text = "Cancel";
             CancelButton.UseVisualStyleBackColor = true;
             CancelButton.Click += CancelButton_Click;
@@ -119,7 +131,7 @@
             titleLabel.Location = new Point(100, 30);
             titleLabel.Name = "titleLabel";
             titleLabel.Size = new Size(126, 25);
-            titleLabel.TabIndex = 7;
+            titleLabel.TabIndex = 8;
             titleLabel.Text = "App Settings";
             // 
             // SettingsForm
@@ -127,14 +139,15 @@
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackgroundImage = Properties.Resources.blue_mesh_background;
-            ClientSize = new Size(334, 299);
+            ClientSize = new Size(334, 321);
             Controls.Add(titleLabel);
             Controls.Add(CancelButton);
             Controls.Add(SaveButton);
             Controls.Add(UpdateTimerInterval);
             Controls.Add(lblUpdateTimerInterval);
-            Controls.Add(AutoStartTimerCheckbox);
+            Controls.Add(StartAppsCheckbox);
             Controls.Add(MinimizeOtherWindowsCheckbox);
+            Controls.Add(AutoStartTimerCheckbox);
             Controls.Add(SkipConfirmationCheckbox);
             FormBorderStyle = FormBorderStyle.FixedDialog;
             MaximizeBox = false;
@@ -151,6 +164,7 @@
         private CheckBox SkipConfirmationCheckbox;
         private CheckBox MinimizeOtherWindowsCheckbox;
         private CheckBox AutoStartTimerCheckbox;
+        private CheckBox StartAppsCheckbox;
         private Label lblUpdateTimerInterval;
         private TextBox UpdateTimerInterval;
         private Button SaveButton;

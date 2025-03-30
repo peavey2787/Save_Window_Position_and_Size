@@ -15,7 +15,7 @@ namespace Save_Window_Position_and_Size.Classes
         private Dictionary<int, Process> activeProcesses;
         private string quickLaunchPath;
 
-        public QuickLayoutManager(WindowManager windowManager)
+        internal QuickLayoutManager(WindowManager windowManager)
         {
             this.windowManager = windowManager;
             this.activeProcesses = new Dictionary<int, Process>();
@@ -39,7 +39,7 @@ namespace Save_Window_Position_and_Size.Classes
             }
         }
 
-        public bool CreateQuickLayout()
+        internal async Task<bool> CreateQuickLayout()
         {
             try
             {
@@ -55,7 +55,7 @@ namespace Save_Window_Position_and_Size.Classes
                 }
 
                 // Get all currently visible windows 
-                var windows = windowManager.GetVisibleRunningApps();
+                var windows = await windowManager.GetVisibleRunningApps();
 
                 // Create deep copies to avoid reference issues
                 List<Window> windowCopies = new List<Window>();
@@ -83,7 +83,7 @@ namespace Save_Window_Position_and_Size.Classes
         /// </summary>
         /// <param name="profileWindows">List of windows from a specific profile</param>
         /// <returns>True if the layout was created successfully</returns>
-        public bool CreateQuickLayout(List<Window> profileWindows)
+        internal bool CreateQuickLayout(List<Window> profileWindows)
         {
             try
             {
@@ -194,7 +194,7 @@ namespace Save_Window_Position_and_Size.Classes
             }
         }
 
-        public void CloseAll()
+        internal void CloseAll()
         {
             // Create a copy of the dictionary keys to avoid modification during enumeration
             var processIndicesToClose = new List<int>(activeProcesses.Keys);

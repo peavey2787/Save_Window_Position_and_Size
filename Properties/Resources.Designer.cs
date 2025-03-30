@@ -10,8 +10,9 @@
 
 namespace Save_Window_Position_and_Size.Properties {
     using System;
-    
-    
+    using System.Drawing;
+
+
     /// <summary>
     ///   A strongly-typed resource class, for looking up localized strings, etc.
     /// </summary>
@@ -22,8 +23,7 @@ namespace Save_Window_Position_and_Size.Properties {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    public class Resources {
-        
+    internal class Resources {
         private static global::System.Resources.ResourceManager resourceMan;
         
         private static global::System.Globalization.CultureInfo resourceCulture;
@@ -36,7 +36,7 @@ namespace Save_Window_Position_and_Size.Properties {
         ///   Returns the cached ResourceManager instance used by this class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        public static global::System.Resources.ResourceManager ResourceManager {
+        internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
                     global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Save_Window_Position_and_Size.Properties.Resources", typeof(Resources).Assembly);
@@ -51,7 +51,7 @@ namespace Save_Window_Position_and_Size.Properties {
         ///   resource lookups using this strongly typed resource class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        public static global::System.Globalization.CultureInfo Culture {
+        internal static global::System.Globalization.CultureInfo Culture {
             get {
                 return resourceCulture;
             }
@@ -59,11 +59,23 @@ namespace Save_Window_Position_and_Size.Properties {
                 resourceCulture = value;
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap blue_circle {
+        internal static System.Drawing.Bitmap screenshoticon
+        {
+            get
+            {
+                object obj = ResourceManager.GetObject("screenshoticon", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap blue_circle {
             get {
                 object obj = ResourceManager.GetObject("blue-circle", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -73,7 +85,7 @@ namespace Save_Window_Position_and_Size.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap blue_mesh_background {
+        internal static System.Drawing.Bitmap blue_mesh_background {
             get {
                 object obj = ResourceManager.GetObject("blue-mesh-background", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -83,7 +95,7 @@ namespace Save_Window_Position_and_Size.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap blue_square {
+        internal static System.Drawing.Bitmap blue_square {
             get {
                 object obj = ResourceManager.GetObject("blue-square", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -93,7 +105,7 @@ namespace Save_Window_Position_and_Size.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap blue_triangle {
+        internal static System.Drawing.Bitmap blue_triangle {
             get {
                 object obj = ResourceManager.GetObject("blue-triangle", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -103,7 +115,7 @@ namespace Save_Window_Position_and_Size.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap exit_button {
+        internal static System.Drawing.Bitmap exit_button {
             get {
                 object obj = ResourceManager.GetObject("exit-button", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -113,8 +125,8 @@ namespace Save_Window_Position_and_Size.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap floppy_disk {
-            get {
+        internal static System.Drawing.Bitmap floppy_disk {
+            get { 
                 object obj = ResourceManager.GetObject("floppy-disk", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
@@ -123,7 +135,7 @@ namespace Save_Window_Position_and_Size.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap green_circle {
+        internal static System.Drawing.Bitmap green_circle {
             get {
                 object obj = ResourceManager.GetObject("green-circle", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -133,7 +145,7 @@ namespace Save_Window_Position_and_Size.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap green_square {
+        internal static System.Drawing.Bitmap green_square {
             get {
                 object obj = ResourceManager.GetObject("green-square", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -143,7 +155,7 @@ namespace Save_Window_Position_and_Size.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap green_triangle {
+        internal static System.Drawing.Bitmap green_triangle {
             get {
                 object obj = ResourceManager.GetObject("green-triangle", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -153,7 +165,7 @@ namespace Save_Window_Position_and_Size.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap ignore_list {
+        internal static System.Drawing.Bitmap ignore_list {
             get {
                 object obj = ResourceManager.GetObject("ignore-list", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -163,7 +175,7 @@ namespace Save_Window_Position_and_Size.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap magic_wand {
+        internal static System.Drawing.Bitmap magic_wand {
             get {
                 object obj = ResourceManager.GetObject("magic-wand", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -173,7 +185,7 @@ namespace Save_Window_Position_and_Size.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap pin {
+        internal static System.Drawing.Bitmap pin {
             get {
                 object obj = ResourceManager.GetObject("pin", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -183,7 +195,7 @@ namespace Save_Window_Position_and_Size.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap play_button {
+        internal static System.Drawing.Bitmap play_button {
             get {
                 object obj = ResourceManager.GetObject("play-button", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -193,7 +205,7 @@ namespace Save_Window_Position_and_Size.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap red_circle {
+        internal static System.Drawing.Bitmap red_circle {
             get {
                 object obj = ResourceManager.GetObject("red-circle", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -203,7 +215,7 @@ namespace Save_Window_Position_and_Size.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap red_square {
+        internal static System.Drawing.Bitmap red_square {
             get {
                 object obj = ResourceManager.GetObject("red-square", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -213,7 +225,7 @@ namespace Save_Window_Position_and_Size.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap red_triangle {
+        internal static System.Drawing.Bitmap red_triangle {
             get {
                 object obj = ResourceManager.GetObject("red-triangle", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -223,7 +235,7 @@ namespace Save_Window_Position_and_Size.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap redo {
+        internal static System.Drawing.Bitmap redo {
             get {
                 object obj = ResourceManager.GetObject("redo", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -233,7 +245,7 @@ namespace Save_Window_Position_and_Size.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap redo_all {
+        internal static System.Drawing.Bitmap redo_all {
             get {
                 object obj = ResourceManager.GetObject("redo-all", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -243,7 +255,7 @@ namespace Save_Window_Position_and_Size.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap refresh_blue_arrows {
+        internal static System.Drawing.Bitmap refresh_blue_arrows {
             get {
                 object obj = ResourceManager.GetObject("refresh-blue-arrows", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -253,7 +265,7 @@ namespace Save_Window_Position_and_Size.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap settings {
+        internal static System.Drawing.Bitmap settings {
             get {
                 object obj = ResourceManager.GetObject("settings", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -263,7 +275,7 @@ namespace Save_Window_Position_and_Size.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap stop_button {
+        internal static System.Drawing.Bitmap stop_button {
             get {
                 object obj = ResourceManager.GetObject("stop-button", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -273,7 +285,7 @@ namespace Save_Window_Position_and_Size.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap trash_can {
+        internal static System.Drawing.Bitmap trash_can {
             get {
                 object obj = ResourceManager.GetObject("trash-can", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -283,7 +295,7 @@ namespace Save_Window_Position_and_Size.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap yellow_circle {
+        internal static System.Drawing.Bitmap yellow_circle {
             get {
                 object obj = ResourceManager.GetObject("yellow-circle", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -293,7 +305,7 @@ namespace Save_Window_Position_and_Size.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap yellow_square {
+        internal static System.Drawing.Bitmap yellow_square {
             get {
                 object obj = ResourceManager.GetObject("yellow-square", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -303,7 +315,7 @@ namespace Save_Window_Position_and_Size.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap yellow_triangle {
+        internal static System.Drawing.Bitmap yellow_triangle {
             get {
                 object obj = ResourceManager.GetObject("yellow-triangle", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));

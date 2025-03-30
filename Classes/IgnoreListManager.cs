@@ -20,19 +20,19 @@ namespace Save_Window_Position_and_Size.Classes
     /// 
     /// The ignore list is automatically saved to application settings whenever it is modified.
     /// </summary>
-    public class IgnoreListManager
+    internal class IgnoreListManager
     {
         private List<string> _ignoreList = new List<string>();
 
         /// <summary>
         /// Gets the current ignore list
         /// </summary>
-        public List<string> IgnoreList => _ignoreList;
+        internal List<string> IgnoreList => _ignoreList;
 
         /// <summary>
         /// Creates a new IgnoreListManager and loads any existing ignore list from settings
         /// </summary>
-        public IgnoreListManager()
+        internal IgnoreListManager()
         {
             LoadIgnoreList();
         }
@@ -40,7 +40,7 @@ namespace Save_Window_Position_and_Size.Classes
         /// <summary>
         /// Loads the ignore list from app settings
         /// </summary>
-        public void LoadIgnoreList()
+        internal void LoadIgnoreList()
         {
             string json = AppSettings.Load(Constants.AppSettingsConstants.IgnoreListKey);
             if (string.IsNullOrEmpty(json))
@@ -65,7 +65,7 @@ namespace Save_Window_Position_and_Size.Classes
         /// <summary>
         /// Saves the current ignore list to app settings
         /// </summary>
-        public void SaveIgnoreList()
+        internal void SaveIgnoreList()
         {
             try
             {
@@ -84,7 +84,7 @@ namespace Save_Window_Position_and_Size.Classes
         /// </summary>
         /// <param name="windowTitle">The window title to add</param>
         /// <returns>True if the item was added, false if it already exists</returns>
-        public bool AddToIgnoreList(string windowTitle)
+        internal bool AddToIgnoreList(string windowTitle)
         {
             if (string.IsNullOrWhiteSpace(windowTitle)) return false;
 
@@ -109,7 +109,7 @@ namespace Save_Window_Position_and_Size.Classes
         /// </summary>
         /// <param name="windowTitle">The window title to remove</param>
         /// <returns>True if the item was removed, false if it wasn't found</returns>
-        public bool RemoveFromIgnoreList(string windowTitle)
+        internal bool RemoveFromIgnoreList(string windowTitle)
         {
             if (string.IsNullOrWhiteSpace(windowTitle)) return false;
 
@@ -135,7 +135,7 @@ namespace Save_Window_Position_and_Size.Classes
         /// Updates the ignore list with a new list of items
         /// </summary>
         /// <param name="newList">The new list of window titles to ignore</param>
-        public void UpdateIgnoreList(List<string> newList)
+        internal void UpdateIgnoreList(List<string> newList)
         {
             if (newList == null) return;
 
@@ -164,7 +164,7 @@ namespace Save_Window_Position_and_Size.Classes
         /// </summary>
         /// <param name="windowTitle">The window title to check</param>
         /// <returns>True if the window should be ignored, false otherwise</returns>
-        public bool ShouldIgnoreWindow(string windowTitle)
+        internal bool ShouldIgnoreWindow(string windowTitle)
         {
             // Perform basic validation
             if (string.IsNullOrWhiteSpace(windowTitle)) return false;
@@ -209,7 +209,7 @@ namespace Save_Window_Position_and_Size.Classes
         /// <summary>
         /// Clears the ignore list
         /// </summary>
-        public void ClearIgnoreList()
+        internal void ClearIgnoreList()
         {
             _ignoreList.Clear();
             Debug.WriteLine("Cleared ignore list");
@@ -221,7 +221,7 @@ namespace Save_Window_Position_and_Size.Classes
         /// <summary>
         /// Gets a copy of the current ignore list
         /// </summary>
-        public List<string> GetIgnoreList()
+        internal List<string> GetIgnoreList()
         {
             return new List<string>(_ignoreList);
         }
@@ -231,7 +231,7 @@ namespace Save_Window_Position_and_Size.Classes
         /// </summary>
         /// <param name="selectedText">The text from the running apps list</param>
         /// <returns>The extracted window title</returns>
-        public string ExtractWindowTitle(string selectedText)
+        internal string ExtractWindowTitle(string selectedText)
         {
             if (string.IsNullOrWhiteSpace(selectedText)) return string.Empty;
 
@@ -249,7 +249,7 @@ namespace Save_Window_Position_and_Size.Classes
         /// Sets the ignore list directly from an external list
         /// </summary>
         /// <param name="list">The new list to set</param>
-        public void SetIgnoreList(List<string> list)
+        internal void SetIgnoreList(List<string> list)
         {
             if (list == null)
             {

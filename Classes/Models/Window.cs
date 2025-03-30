@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,18 +7,41 @@ using System.Threading.Tasks;
 
 namespace Save_Window_Position_and_Size.Classes
 {
+    [Serializable]
     internal class Window
     {
-        public IntPtr hWnd { get; set; }
-        public WindowPosAndSize WindowPosAndSize { get; set; }
-        public bool KeepOnTop { get; set; }
-        public bool AutoPosition { get; set; }
-        public int Id { get; set; }
-        public string ProcessName { get; set; }
-        public string TitleName { get; set; }
-        public string DisplayName { get; set; }
-        public bool IsFileExplorer { get; set; }
-        public bool UsePercentages { get; set; }
+        [JsonProperty]
+        internal IntPtr hWnd { get; set; }
+
+        [JsonProperty]
+        internal WindowPosAndSize WindowPosAndSize { get; set; }
+
+        [JsonProperty]
+        internal bool KeepOnTop { get; set; }
+
+        [JsonProperty]
+        internal bool AutoPosition { get; set; }
+
+        [JsonProperty]
+        internal int Id { get; set; }
+
+        [JsonProperty]
+        internal string ProcessName { get; set; }
+
+        [JsonProperty]
+        internal string TitleName { get; set; }
+
+        [JsonProperty]
+        internal string DisplayName { get; set; }
+
+        [JsonProperty]
+        internal bool IsFileExplorer { get; set; }
+
+        [JsonProperty]
+        internal string FilePath { get; set; }
+
+        [JsonProperty]
+        internal bool UsePercentages { get; set; }
 
         internal Window()
         {
@@ -25,21 +49,23 @@ namespace Save_Window_Position_and_Size.Classes
             ProcessName = string.Empty;
             TitleName = string.Empty;
             DisplayName = string.Empty;
+            FilePath = string.Empty;
             this.Id = GenerateRandomId();
         }
 
-        public Window(IntPtr hWnd, string windowTitle, string displayName)
+        internal Window(IntPtr hWnd, string windowTitle, string displayName)
         {
             WindowPosAndSize = new WindowPosAndSize();
             this.hWnd = hWnd;
             this.TitleName = windowTitle;
             this.DisplayName = displayName;
             this.ProcessName = string.Empty;
+            this.FilePath = string.Empty;
             this.Id = GenerateRandomId();
             EnsureValidDisplayName();
         }
 
-        public Window Clone()
+        internal Window Clone()
         {
             return new Window
             {
@@ -48,6 +74,7 @@ namespace Save_Window_Position_and_Size.Classes
                 hWnd = this.hWnd,
                 Id = this.Id,
                 IsFileExplorer = this.IsFileExplorer,
+                FilePath = this.FilePath,
                 KeepOnTop = this.KeepOnTop,
                 ProcessName = this.ProcessName,
                 TitleName = this.TitleName,
@@ -63,29 +90,43 @@ namespace Save_Window_Position_and_Size.Classes
             };
         }
 
-        public bool IsValid()
+        internal bool IsValid()
         {
             if (string.IsNullOrWhiteSpace(DisplayName) && string.IsNullOrWhiteSpace(TitleName) && string.IsNullOrWhiteSpace(ProcessName))
                 return false;
 
-            // For regular windows, check if we have a valid handle
-            if (!IsFileExplorer && hWnd == IntPtr.Zero)
-                return false;
-
-            // For file explorers, check if we have a title
-            if (IsFileExplorer && string.IsNullOrWhiteSpace(TitleName))
-                return false;
-
             return true;
         }
+        internal bool IsSameWindowWithoutHandle(Window window)
+        {
+            if (window.Id == this.Id) return true;
 
+            // Check if adding a * to end of window title will cause a match
+            if ((string.Equals(window.TitleName, this.TitleName, StringComparison.Ordinal) 
+                || string.Equals(window.TitleName + "*", this.TitleName, StringComparison.Ordinal))
+                && string.Equals(window.ProcessName, this.ProcessName, StringComparison.Ordinal))
+            {
+                return true;
+            }
+            
+            return false;
+        }
+        internal bool IsSameWindowWithHandle(Window window)
+        {
+            if (window.Id == this.Id) return true;
+
+            if (window.TitleName == this.TitleName && window.ProcessName == this.ProcessName && window.hWnd == this.hWnd)
+                return true;
+
+            return false;
+        }
         private static int GenerateRandomId()
         {
             Random _random = new Random();
             return _random.Next(Constants.Defaults.DefaultRandomIdMin, Constants.Defaults.DefaultRandomIdMax);
         }
 
-        public void EnsureValidDisplayName()
+        internal void EnsureValidDisplayName()
         {
             if (string.IsNullOrWhiteSpace(DisplayName))
             {

@@ -1,4 +1,5 @@
 ﻿using System.Configuration;
+using System.Text;
 using Newtonsoft.Json;
 
 namespace Save_Window_Position_and_Size.Classes
@@ -44,24 +45,38 @@ namespace Save_Window_Position_and_Size.Classes
         }
     }
 
+
+
     public static class AppSettings<T>
     {
         public static void Save(string key, T value)
         {
-            string jsonValue = JsonConvert.SerializeObject(value);
-            AppSettings.Save(key, jsonValue);
+            // Serialize the object to JSON using Newtonsoft.Json
+            string jsonString = JsonConvert.SerializeObject(value);
+
+            // Convert the JSON string to a Base64-encoded string
+            string base64String = Convert.ToBase64String(Encoding.UTF8.GetBytes(jsonString));
+
+            // Save the Base64 string using AppSettings logic
+            AppSettings.Save(key, base64String);
         }
 
         public static T Load(string key)
         {
-            string jsonValue = AppSettings.Load(key);
+            // Load the Base64 string
+            string base64String = AppSettings.Load(key);
 
-            if (string.IsNullOrEmpty(jsonValue))
+            if (string.IsNullOrEmpty(base64String) || base64String == "{}" || base64String == "0")
             {
                 return default;
             }
 
-            return JsonConvert.DeserializeObject<T>(jsonValue);
+            // Decode the Base64 string back to a JSON string
+            string jsonString = Encoding.UTF8.GetString(Convert.FromBase64String(base64String));
+
+            // Deserialize the JSON string into the original object using Newtonsoft.Json
+            return JsonConvert.DeserializeObject<T>(jsonString);
         }
     }
+
 }

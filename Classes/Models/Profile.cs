@@ -1,25 +1,35 @@
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Save_Window_Position_and_Size.Classes
 {
     /// <summary>
     /// Represents a profile containing a collection of windows
     /// </summary>
+    [Serializable]
     internal class Profile
     {
-        public string Name { get; set; }
-        public List<Window> Windows { get; set; } = new List<Window>();
+        [JsonProperty] // Ensures the property is serialized
+        internal string Name { get; set; }
 
-        public Profile(string name)
+        [JsonProperty] // Ensures the property is serialized
+        internal List<Window> Windows { get; set; } = new List<Window>();
+
+        // Parameterless constructor for JSON deserialization
+        [JsonConstructor]
+        internal Profile()
+        {
+            Windows = new List<Window>();
+        }
+
+        internal Profile(string name)
         {
             Name = name;
         }
 
-        public Profile Clone()
+        internal Profile Clone()
         {
             Profile clone = new Profile(this.Name);
             foreach (Window window in this.Windows.Where(w => w.IsValid()))
@@ -33,11 +43,30 @@ namespace Save_Window_Position_and_Size.Classes
     /// <summary>
     /// Collection of profiles with active profile tracking
     /// </summary>
+    [Serializable]
     internal class ProfileCollection
     {
-        public List<Profile> Profiles { get; set; } = new List<Profile>();
-        public Profile SelectedProfile { get; set; }
-        public int SelectedProfileIndex
+        [JsonProperty] // Ensures the property is serialized
+        internal List<Profile> Profiles { get; set; } = new List<Profile>();
+
+        [JsonProperty] // Ensures the property is serialized
+        internal Profile SelectedProfile { get; set; }
+
+        [JsonConstructor]
+        internal ProfileCollection(List<Profile> profiles, Profile selectedProfile)
+        {
+            Profiles = profiles ?? new List<Profile>();
+            SelectedProfile = selectedProfile ?? Profiles.FirstOrDefault();
+        }
+
+        internal ProfileCollection()
+        {
+            Profiles = new List<Profile>();
+            SelectedProfile = null;
+        }
+
+        [JsonIgnore] // Prevents this property from being serialized
+        internal int SelectedProfileIndex
         {
             get
             {
@@ -52,7 +81,7 @@ namespace Save_Window_Position_and_Size.Classes
             }
         }
 
-        public ProfileCollection(int maxProfiles)
+        internal ProfileCollection(int maxProfiles)
         {
             // Initialize with default profiles
             for (int i = 0; i < maxProfiles; i++)

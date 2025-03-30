@@ -11,7 +11,7 @@ namespace Save_Window_Position_and_Size.Classes
     /// <summary>
     /// Handles drawing a blinking highlight around a window
     /// </summary>
-    public class WindowHighlighter : IDisposable
+    internal class WindowHighlighter
     {
         // P/Invoke declarations
         [DllImport("user32.dll")]
@@ -28,7 +28,7 @@ namespace Save_Window_Position_and_Size.Classes
         private static extern bool GetCursorPos(out POINT lpPoint);
 
         [DllImport("user32.dll")]
-        public static extern IntPtr WindowFromPoint(POINT Point);
+        internal static extern IntPtr WindowFromPoint(POINT Point);
 
         [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
         private static extern int GetClassName(IntPtr hWnd, System.Text.StringBuilder lpClassName, int nMaxCount);
@@ -43,19 +43,19 @@ namespace Save_Window_Position_and_Size.Classes
         private const int DWMWA_EXTENDED_FRAME_BOUNDS = 9;
 
         [StructLayout(LayoutKind.Sequential)]
-        public struct RECT
+        internal struct RECT
         {
-            public int Left;
-            public int Top;
-            public int Right;
-            public int Bottom;
+            internal int Left;
+            internal int Top;
+            internal int Right;
+            internal int Bottom;
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        public struct POINT
+        internal struct POINT
         {
-            public int X;
-            public int Y;
+            internal int X;
+            internal int Y;
         }
 
         private HighlighterForm _highlighterForm;
@@ -74,7 +74,7 @@ namespace Save_Window_Position_and_Size.Classes
         /// <summary>
         /// Gets or sets the border width in pixels
         /// </summary>
-        public int BorderWidth
+        internal int BorderWidth
         {
             get { return _borderWidth; }
             set { _borderWidth = value; }
@@ -83,7 +83,7 @@ namespace Save_Window_Position_and_Size.Classes
         /// <summary>
         /// Gets or sets the inner border thickness
         /// </summary>
-        public int InnerBorderThickness
+        internal int InnerBorderThickness
         {
             get { return _innerBorderWidth; }
             set { _innerBorderWidth = value; }
@@ -92,7 +92,7 @@ namespace Save_Window_Position_and_Size.Classes
         /// <summary>
         /// Gets or sets the border color
         /// </summary>
-        public Color BorderColor
+        internal Color BorderColor
         {
             get { return _borderColor; }
             set { _borderColor = value; }
@@ -101,7 +101,7 @@ namespace Save_Window_Position_and_Size.Classes
         /// <summary>
         /// Gets or sets the inner border color
         /// </summary>
-        public Color InnerBorderColor
+        internal Color InnerBorderColor
         {
             get { return _innerBorderColor; }
             set { _innerBorderColor = value; }
@@ -110,13 +110,13 @@ namespace Save_Window_Position_and_Size.Classes
         /// <summary>
         /// Gets or sets the highlight duration in milliseconds
         /// </summary>
-        public int HighlightDurationMs
+        internal int HighlightDurationMs
         {
             get { return _highlightDurationMs; }
             set { _highlightDurationMs = value; }
         }
 
-        public WindowHighlighter()
+        internal WindowHighlighter()
         {
             // Configure blink timer
             _blinkTimer.Interval = 500;
@@ -130,7 +130,7 @@ namespace Save_Window_Position_and_Size.Classes
         /// <summary>
         /// Highlights a window
         /// </summary>
-        public void HighlightWindow(IntPtr hWnd)
+        internal void HighlightWindow(IntPtr hWnd)
         {
             try
             {
@@ -316,7 +316,7 @@ namespace Save_Window_Position_and_Size.Classes
         /// <summary>
         /// Stop the highlighter
         /// </summary>
-        public void StopHighlighting()
+        internal void StopHighlighting()
         {
             try
             {
@@ -340,7 +340,7 @@ namespace Save_Window_Position_and_Size.Classes
             }
         }
 
-        public void Dispose()
+        internal void Dispose()
         {
             StopHighlighting();
             _blinkTimer.Dispose();
@@ -350,7 +350,7 @@ namespace Save_Window_Position_and_Size.Classes
         /// <summary>
         /// Get the handle of the window under the cursor
         /// </summary>
-        public static IntPtr GetWindowUnderCursor()
+        internal static IntPtr GetWindowUnderCursor()
         {
             POINT cursorPos;
             GetCursorPos(out cursorPos);
@@ -382,7 +382,7 @@ namespace Save_Window_Position_and_Size.Classes
         {
             private readonly WindowHighlighter _owner;
 
-            public HighlighterForm(WindowHighlighter owner)
+            internal HighlighterForm(WindowHighlighter owner)
             {
                 _owner = owner ?? throw new ArgumentNullException(nameof(owner));
 

@@ -12,11 +12,11 @@ using System.Windows.Forms;
 
 namespace Save_Window_Position_and_Size
 {
-    public partial class IgnoreForm : Form
+    internal partial class IgnoreForm : Form
     {
         private IgnoreListManager _ignoreListManager;
         
-        public IgnoreForm(IgnoreListManager ignoreListManager)
+        internal IgnoreForm(IgnoreListManager ignoreListManager)
         {
             InitializeComponent();
             _ignoreListManager = ignoreListManager;
