@@ -11,7 +11,7 @@ namespace Save_Window_Position_and_Size.Classes
 
     internal class InteractWithWindow
     {
-        IgnoreListManager ignoreListManager;
+        IgnoreListManager ignoreListManager = new IgnoreListManager();
 
         #region P/Invoke Constants
         // P/Invoke constants
